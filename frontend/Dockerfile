@@ -14,7 +14,7 @@ RUN npm run build
 # ---------- Serve it with nginx, as a non-root user ----------
 # nginx-unprivileged: the same nginx, running as uid 101 on port 8080 (no root, no privileged port), so Kubernetes can
 # enforce runAsNonRoot and a read-only root file system (the config is written to /etc/nginx/conf.d, temp files to /tmp).
-FROM nginxinc/nginx-unprivileged:1.30.6-alpine
+FROM nginxinc/nginx-unprivileged:1.31.7-alpine
 # Security updates of the base image's OS packages (the dependency scan in TESTING_GUIDE.md checks the result).
 USER root
 RUN apk upgrade --no-cache
