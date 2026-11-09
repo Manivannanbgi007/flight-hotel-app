@@ -1,0 +1,14 @@
+{
+  "type": "record", "name": "AuthEmailRequested", "namespace": "com.flighthotel.events.identity",
+  "doc": "Ask notification-service to send an account email. Published to identity-email.events, a topic with SHORT retention, because the token is a secret.",
+  "fields": [
+    { "name": "userId", "type": "string" },
+    { "name": "email", "type": "string" },
+    { "name": "firstName", "type": "string" },
+    { "name": "emailType", "type": "string", "doc": "VERIFY_EMAIL, RESET_PASSWORD, ACCOUNT_INVITATION, PASSWORD_CHANGED, ACCOUNT_EXISTS, WELCOME" },
+    { "name": "token", "type": ["null", "string"], "default": null, "doc": "single-use token for VERIFY_EMAIL, RESET_PASSWORD, ACCOUNT_INVITATION" },
+    { "name": "expiresAt", "type": ["null", { "type": "long", "logicalType": "timestamp-millis" }], "default": null },
+    { "name": "requestedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "portal", "type": ["null", "string"], "default": null, "doc": "ACCOUNT_INVITATION (Phase 11): the sign-in page of the staff account's role, for after the password is set: admin, hotel-manager or support" }
+  ]
+}

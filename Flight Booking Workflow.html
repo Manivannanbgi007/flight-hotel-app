@@ -1,0 +1,708 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Flight Booking Workflow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Shantell+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: one sheet of graph paper (a chalkboard in dark mode). Title and how to read it, a path filter and the legend,
+   the full-width swimlane drawing, then the status track, the rules and the event names behind the arrows. */
+:root {
+  --paper: #fbfcfe;
+  --grid: #e2e9f3;
+  --ink: #1f242c;
+  --ink-soft: #566070;
+  --ink-faint: #b3bccb;
+  --pencil: #2c56a3;
+  --red: #c2352b;
+  --green: #28803d;
+  --amber: #a15f00;
+  --hl-cust: rgb(255 210 0 / 0.42);
+  --hl-flight: rgb(64 160 255 / 0.30);
+  --hl-book: rgb(150 110 255 / 0.26);
+  --hl-pay: rgb(255 140 40 / 0.30);
+  --hl-note: rgb(240 90 150 / 0.24);
+  --hl-ok: rgb(60 190 90 / 0.34);
+  --hl-amber: rgb(255 170 0 / 0.32);
+  --lane-cust: rgb(255 210 0 / 0.07);
+  --lane-flight: rgb(64 160 255 / 0.06);
+  --lane-book: rgb(150 110 255 / 0.06);
+  --lane-pay: rgb(255 140 40 / 0.06);
+  --lane-note: rgb(240 90 150 / 0.05);
+  --tape: rgb(196 182 140 / 0.55);
+  --font-hand: 'Shantell Sans', 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
+  --font-scribble: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b2321;
+    --grid: rgb(255 255 255 / 0.045);
+    --ink: #eef1ea;
+    --ink-soft: #b3bdb6;
+    --ink-faint: #56635e;
+    --pencil: #a3c8ff;
+    --red: #ff8f85;
+    --green: #8be39b;
+    --amber: #ffc46b;
+    --hl-cust: rgb(255 220 80 / 0.22);
+    --hl-flight: rgb(110 180 255 / 0.20);
+    --hl-book: rgb(180 150 255 / 0.20);
+    --hl-pay: rgb(255 160 80 / 0.20);
+    --hl-note: rgb(255 120 170 / 0.18);
+    --hl-ok: rgb(110 220 130 / 0.22);
+    --hl-amber: rgb(255 190 80 / 0.20);
+    --lane-cust: rgb(255 220 80 / 0.04);
+    --lane-flight: rgb(110 180 255 / 0.04);
+    --lane-book: rgb(180 150 255 / 0.04);
+    --lane-pay: rgb(255 160 80 / 0.04);
+    --lane-note: rgb(255 120 170 / 0.035);
+    --tape: rgb(255 255 255 / 0.16);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #1b2321;
+  --grid: rgb(255 255 255 / 0.045);
+  --ink: #eef1ea;
+  --ink-soft: #b3bdb6;
+  --ink-faint: #56635e;
+  --pencil: #a3c8ff;
+  --red: #ff8f85;
+  --green: #8be39b;
+  --amber: #ffc46b;
+  --hl-cust: rgb(255 220 80 / 0.22);
+  --hl-flight: rgb(110 180 255 / 0.20);
+  --hl-book: rgb(180 150 255 / 0.20);
+  --hl-pay: rgb(255 160 80 / 0.20);
+  --hl-note: rgb(255 120 170 / 0.18);
+  --hl-ok: rgb(110 220 130 / 0.22);
+  --hl-amber: rgb(255 190 80 / 0.20);
+  --lane-cust: rgb(255 220 80 / 0.04);
+  --lane-flight: rgb(110 180 255 / 0.04);
+  --lane-book: rgb(180 150 255 / 0.04);
+  --lane-pay: rgb(255 160 80 / 0.04);
+  --lane-note: rgb(255 120 170 / 0.035);
+  --tape: rgb(255 255 255 / 0.16);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: var(--font-hand);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 40px;
+}
+
+/* ---- Header ---- */
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+h1 {
+  margin: 4px 0 0;
+  font-family: var(--font-scribble);
+  font-weight: 700;
+  font-size: clamp(46px, 8vw, 80px);
+  line-height: 0.95;
+  text-wrap: balance;
+}
+.squiggle { display: block; width: min(420px, 80%); height: 18px; margin-top: 2px; }
+.squiggle path { fill: none; stroke: var(--red); stroke-width: 3; stroke-linecap: round; }
+.lede { margin: 14px 0 0; max-width: 64ch; color: var(--ink-soft); font-size: 16px; }
+.lede strong { color: var(--ink); font-weight: 600; }
+
+/* ---- Path filter and legend ---- */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; }
+.view { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.view-label { font-family: var(--font-scribble); font-size: 21px; font-weight: 700; }
+.view button {
+  font: 600 14px var(--font-hand);
+  color: var(--ink);
+  background: transparent;
+  border: 1.6px solid var(--ink);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  padding: 5px 14px;
+  cursor: pointer;
+}
+.view button:hover { background: var(--hl-cust); }
+.view button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.view button:focus-visible { outline: 2.5px dashed var(--pencil); outline-offset: 3px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--ink-soft); }
+.legend li { display: inline-flex; align-items: center; gap: 8px; }
+.legend svg { width: 34px; height: 12px; flex: none; overflow: visible; }
+.legend .tag-sample {
+  font: 600 10px var(--font-mono);
+  color: var(--ink);
+  border: 1.2px solid var(--ink);
+  border-radius: 9px;
+  padding: 0 7px;
+  background: var(--paper);
+}
+
+/* ---- Figures ---- */
+figure { margin: 0; display: grid; gap: 12px; min-width: 0; }
+.sheet { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+.flow { display: block; width: 100%; min-width: 960px; height: auto; }
+.track { display: block; width: 100%; min-width: 760px; height: auto; }
+figcaption { max-width: 72ch; font-size: 14px; color: var(--ink-soft); }
+.scroll-hint { display: none; font-family: var(--font-scribble); font-size: 18px; color: var(--pencil); margin: 0; }
+@media (max-width: 980px) { .scroll-hint { display: block; } }
+
+/* Drawing: shapes */
+.band { stroke: none; }
+.band-cust { fill: var(--lane-cust); }
+.band-flight { fill: var(--lane-flight); }
+.band-book { fill: var(--lane-book); }
+.band-pay { fill: var(--lane-pay); }
+.band-note { fill: var(--lane-note); }
+.hl, .hl-head { stroke: none; }
+.hl-cust { fill: var(--hl-cust); }
+.hl-flight { fill: var(--hl-flight); }
+.hl-book { fill: var(--hl-book); }
+.hl-pay { fill: var(--hl-pay); }
+.hl-note { fill: var(--hl-note); }
+.hl-ok { fill: var(--hl-ok); }
+.hl-amber { fill: var(--hl-amber); }
+.bx { fill: none; stroke: var(--ink); stroke-width: 1.7; }
+.bx-red { stroke: var(--red); }
+.bx-green { stroke: var(--green); stroke-width: 2.2; }
+.bx-amber { stroke: var(--amber); }
+.dm { fill: var(--paper); stroke: var(--ink); stroke-width: 1.7; }
+.tag { fill: var(--paper); stroke: var(--ink); stroke-width: 1.2; }
+.tag-red { stroke: var(--red); }
+.tag-green { stroke: var(--green); }
+.ln, .ln-note { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.ln { stroke-width: 1.8; }
+.ln-note { stroke-width: 1.3; }
+.ln-ink { stroke: var(--ink); }
+.ln-red { stroke: var(--red); }
+.ln-green { stroke: var(--green); }
+.ln-amber { stroke: var(--amber); }
+.ln-pencil { stroke: var(--pencil); }
+.dash { stroke-dasharray: 8 6; }
+.dot { stroke-dasharray: 0.5 6; stroke-width: 2.4; }
+.mk { fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.mk-ink { stroke: var(--ink); }
+.mk-red { stroke: var(--red); }
+.mk-green { stroke: var(--green); }
+.mk-amber { stroke: var(--amber); }
+.mk-pencil { stroke: var(--pencil); }
+.ln-lane { fill: none; stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 3 7; }
+.ln-phase { fill: none; stroke: var(--ink-soft); stroke-width: 1.2; stroke-dasharray: 10 8; }
+.ln-tape { stroke: var(--tape); stroke-width: 10; stroke-linecap: round; }
+.ph-dot { fill: var(--paper); stroke: var(--ink); stroke-width: 1.6; }
+.hatch-red { stroke: var(--red); stroke-width: 1.2; opacity: 0.45; }
+.st { fill: var(--paper); stroke: var(--ink); stroke-width: 1.8; }
+.st-ok { fill: var(--hl-ok); stroke: var(--green); stroke-width: 2.2; }
+
+/* Drawing: words */
+.t-title { font: 600 13.5px var(--font-hand); fill: var(--ink); }
+.t-sub { font: 400 11px var(--font-hand); fill: var(--ink-soft); }
+.t-tag { font: 700 9.5px var(--font-mono); fill: var(--ink); letter-spacing: 0.02em; }
+.t-lbl {
+  font: 700 16.5px var(--font-scribble);
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.t-note { font: 500 16.5px var(--font-scribble); fill: var(--pencil); }
+.t-head { font: 700 14px var(--font-hand); fill: var(--ink); }
+.t-headsub { font: 600 16px var(--font-scribble); fill: var(--ink-soft); }
+.t-phnum { font: 700 23px var(--font-scribble); fill: var(--ink); }
+.t-phase { font: 700 11.5px var(--font-hand); letter-spacing: 0.16em; fill: var(--ink-soft); }
+.c-ink { fill: var(--ink); }
+.c-red { fill: var(--red); }
+.c-green { fill: var(--green); }
+.c-amber { fill: var(--amber); }
+.c-pencil { fill: var(--pencil); }
+
+/* Path filter */
+[data-c] { transition: opacity 0.25s ease; }
+#flowfig[data-view="happy"] [data-c="fx"] { opacity: 0.08; }
+#flowfig[data-view="fail"] [data-c="hp"] { opacity: 0.2; }
+@media (prefers-reduced-motion: reduce) { [data-c] { transition: none; } }
+
+/* ---- Text sections ---- */
+h2 {
+  margin: 0;
+  font-family: var(--font-scribble);
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+section { display: grid; gap: 14px; min-width: 0; }
+.rules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+  gap: 14px 36px;
+}
+.rules li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: start; }
+.rules svg { width: 24px; height: 24px; margin-top: 2px; }
+.rules svg path { fill: none; stroke: var(--green); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.rules p { margin: 0; color: var(--ink-soft); max-width: 60ch; }
+.rules strong { color: var(--ink); font-weight: 700; }
+
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 14px; }
+th {
+  text-align: left;
+  font-family: var(--font-scribble);
+  font-size: 19px;
+  font-weight: 700;
+  padding: 4px 14px 6px 0;
+  border-bottom: 2px solid var(--ink);
+}
+td { padding: 8px 14px 8px 0; border-bottom: 1.4px dashed var(--ink-faint); vertical-align: top; color: var(--ink-soft); }
+td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
+code { font: 600 12.5px var(--font-mono); color: var(--ink); overflow-wrap: anywhere; }
+.small { margin: 0; font-size: 13px; color: var(--ink-soft); max-width: 80ch; }
+footer { border-top: 1.5px dashed var(--ink-faint); padding-top: 16px; }
+</style>
+
+<div class="page">
+  <header>
+    <p class="eyebrow">FlightHotel · flight bookings, start to finish</p>
+    <h1>Flight Booking Workflow</h1>
+    <svg class="squiggle" viewBox="0 0 420 18" aria-hidden="true"><path d="M4,11 C 60,4 110,15 170,9 S 290,5 350,10 S 400,12 416,7"/></svg>
+    <p class="lede">What the customer does, and what the flight, booking, payment and notification services do in reply, from
+      the first search to a ticketed booking. Read it <strong>top to bottom</strong>: each column is one part of the system,
+      and the four bands are the stages of the booking.</p>
+  </header>
+
+  <div class="controls">
+    <div class="view" role="group" aria-label="Paths to show in the diagram">
+      <span class="view-label" aria-hidden="true">Show:</span>
+      <button type="button" id="view-all" data-view-btn="all" aria-pressed="true">Every path</button>
+      <button type="button" id="view-happy" data-view-btn="happy" aria-pressed="false">Happy path</button>
+      <button type="button" id="view-fail" data-view-btn="fail" aria-pressed="false">What can go wrong</button>
+    </div>
+    <ul class="legend" aria-label="Legend">
+      <li><svg viewBox="0 0 34 12" aria-hidden="true"><path class="ln ln-ink" d="M2,6 L30,6"/><path class="mk mk-ink" d="M25,2 L31,6 L25,10"/></svg>next step or request</li>
+      <li><svg viewBox="0 0 34 12" aria-hidden="true"><path class="ln ln-ink dash" d="M2,6 L30,6"/><path class="mk mk-ink" d="M25,2 L31,6 L25,10"/></svg>message between services</li>
+      <li><svg viewBox="0 0 34 12" aria-hidden="true"><path class="ln ln-ink dot" d="M2,6 L30,6"/><path class="mk mk-ink" d="M25,2 L31,6 L25,10"/></svg>what the screen follows</li>
+      <li><svg viewBox="0 0 34 12" aria-hidden="true"><path class="ln ln-red" d="M2,6 L30,6"/><path class="mk mk-red" d="M25,2 L31,6 L25,10"/></svg>something went wrong</li>
+      <li><svg viewBox="0 0 34 12" aria-hidden="true"><path class="ln ln-green" d="M2,6 L30,6"/><path class="mk mk-green" d="M25,2 L31,6 L25,10"/></svg>confirmed</li>
+      <li><svg viewBox="0 0 34 12" aria-hidden="true"><path class="ln ln-amber" d="M2,6 L30,6"/><path class="mk mk-amber" d="M25,2 L31,6 L25,10"/></svg>no answer yet</li>
+      <li><span class="tag-sample">CONFIRMED</span>booking status</li>
+    </ul>
+  </div>
+
+  <figure id="flowfig" data-view="all">
+    <p class="scroll-hint" aria-hidden="true">scroll sideways to follow all five columns →</p>
+    <div class="sheet" tabindex="0" aria-label="Flight booking diagram, scrolls sideways on small screens">
+<svg class="flow" viewBox="0 0 1160 2210" role="img" aria-label="Swimlane diagram of the FlightHotel flight booking flow across the customer, flight, booking, payment and notification services. 1, search and select: the customer searches, picks a fare and the flight service re-checks the price. 2, book and hold seats: after sign-in, passenger details and review, the booking service creates the booking and the flight service holds the seats; if the hold fails the booking ends without a charge. 3, payment approval: the payment service creates a Razorpay order with the server&#x27;s amount, the customer pays in Razorpay Checkout, the payment is verified by signature and with Razorpay; a failed payment can be retried until the deadline. 4, confirmation: the airline order is placed with the booking id as its key; on yes the booking is confirmed with a PNR and the customer is notified; on a rejection the payment is refunded in full; with no answer the order is looked up again, never placed twice.">
+<defs>
+  <filter id="f1-sketch" x="-2%" y="-2%" width="104%" height="104%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.032" numOctaves="2" seed="7" result="n1"/>
+    <feDisplacementMap in="SourceGraphic" in2="n1" scale="3.4" xChannelSelector="R" yChannelSelector="G" result="d1"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.058" numOctaves="1" seed="23" result="n2"/>
+    <feDisplacementMap in="SourceGraphic" in2="n2" scale="4.2" xChannelSelector="G" yChannelSelector="R" result="d2"/>
+    <feComponentTransfer in="d2" result="d2f"><feFuncA type="linear" slope="0.38"/></feComponentTransfer>
+    <feMerge><feMergeNode in="d2f"/><feMergeNode in="d1"/></feMerge>
+  </filter>
+  <pattern id="f1-hatch-red" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="7" class="hatch hatch-red"/>
+  </pattern>
+  <marker id="f1-ah-ink" viewBox="0 0 12 12" refX="10.5" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk mk-ink" d="M1.5,1.5 L10.5,6 L1.5,10.5"/></marker>
+  <marker id="f1-ah-red" viewBox="0 0 12 12" refX="10.5" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk mk-red" d="M1.5,1.5 L10.5,6 L1.5,10.5"/></marker>
+  <marker id="f1-ah-green" viewBox="0 0 12 12" refX="10.5" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk mk-green" d="M1.5,1.5 L10.5,6 L1.5,10.5"/></marker>
+  <marker id="f1-ah-amber" viewBox="0 0 12 12" refX="10.5" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk mk-amber" d="M1.5,1.5 L10.5,6 L1.5,10.5"/></marker>
+  <marker id="f1-ah-pencil" viewBox="0 0 12 12" refX="10.5" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk mk-pencil" d="M1.5,1.5 L10.5,6 L1.5,10.5"/></marker>
+</defs>
+<g class="bands"><rect class="band band-cust" x="70" y="76" width="214" height="2124"/><rect class="band band-flight" x="284" y="76" width="214" height="2124"/><rect class="band band-book" x="498" y="76" width="214" height="2124"/><rect class="band band-pay" x="712" y="76" width="214" height="2124"/><rect class="band band-note" x="926" y="76" width="214" height="2124"/></g>
+<g class="ink" filter="url(#f1-sketch)">
+<g transform="rotate(-1.4 177 40)"><rect class="hl-head hl-cust" x="85" y="14" width="184" height="52" rx="4"/><path class="ln-tape" d="M155,10 L199,12"/></g>
+<g transform="rotate(0.9 391 40)"><rect class="hl-head hl-flight" x="299" y="14" width="184" height="52" rx="4"/><path class="ln-tape" d="M369,10 L413,12"/></g>
+<g transform="rotate(-0.7 605 40)"><rect class="hl-head hl-book" x="513" y="14" width="184" height="52" rx="4"/><path class="ln-tape" d="M583,10 L627,12"/></g>
+<g transform="rotate(1.1 819 40)"><rect class="hl-head hl-pay" x="727" y="14" width="184" height="52" rx="4"/><path class="ln-tape" d="M797,10 L841,12"/></g>
+<g transform="rotate(-1.0 1033 40)"><rect class="hl-head hl-note" x="941" y="14" width="184" height="52" rx="4"/><path class="ln-tape" d="M1011,10 L1055,12"/></g>
+<path class="ln-lane" d="M284,80 L284,2198"/>
+<path class="ln-lane" d="M498,80 L498,2198"/>
+<path class="ln-lane" d="M712,80 L712,2198"/>
+<path class="ln-lane" d="M926,80 L926,2198"/>
+<circle class="ph-dot" cx="32" cy="118" r="17"/>
+<path class="ln-phase" d="M8,540 L1148,540"/>
+<circle class="ph-dot" cx="32" cy="574" r="17"/>
+<path class="ln-phase" d="M8,1180 L1148,1180"/>
+<circle class="ph-dot" cx="32" cy="1214" r="17"/>
+<path class="ln-phase" d="M8,1615 L1148,1615"/>
+<circle class="ph-dot" cx="32" cy="1649" r="17"/>
+<rect data-c="hp" class="hl hl-cust" x="101" y="101" width="156" height="28" rx="15"/>
+<rect data-c="hp" class="bx" x="95" y="97" width="164" height="34" rx="17"/>
+<path data-c="hp" class="ln ln-ink" d="M177,131 L177,145" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-cust" x="101" y="152" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="95" y="147" width="164" height="66" rx="8"/>
+<rect data-c="hp" class="hl hl-flight" x="315" y="152" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="309" y="147" width="164" height="66" rx="8"/>
+<path data-c="hp" class="ln ln-ink" d="M259,168 L307,168" marker-end="url(#f1-ah-ink)"/>
+<path data-c="hp" class="ln ln-ink" d="M309,193 L261,193" marker-end="url(#f1-ah-ink)"/>
+<path class="ln-note ln-pencil" d="M528,184 C 510,190 495,186 478,183" marker-end="url(#f1-ah-pencil)"/>
+<path data-c="hp" class="ln ln-ink" d="M177,213 L177,250" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-cust" x="101" y="257" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="95" y="252" width="164" height="66" rx="8"/>
+<path data-c="hp" class="ln ln-ink" d="M177,318 L177,358" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-cust" x="101" y="365" width="156" height="43" rx="5"/>
+<rect data-c="hp" class="bx" x="95" y="360" width="164" height="50" rx="8"/>
+<rect data-c="hp" class="hl hl-flight" x="315" y="357" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="309" y="352" width="164" height="66" rx="8"/>
+<path data-c="hp" class="ln ln-ink" d="M259,374 L307,374" marker-end="url(#f1-ah-ink)"/>
+<path data-c="hp" class="ln ln-ink" d="M309,397 L261,397" marker-end="url(#f1-ah-ink)"/>
+<path data-c="hp" class="ln ln-ink" d="M177,410 L177,450" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-cust" x="101" y="457" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="95" y="452" width="164" height="66" rx="8"/>
+<path data-c="fx" class="ln-note ln-red" d="M314,490 C 296,500 280,494 264,488" marker-end="url(#f1-ah-red)"/>
+<path data-c="hp" class="ln ln-ink" d="M177,518 L177,563" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-cust" x="101" y="570" width="156" height="43" rx="5"/>
+<rect data-c="hp" class="bx" x="95" y="565" width="164" height="50" rx="8"/>
+<path data-c="hp" class="ln ln-ink" d="M177,615 L177,645" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-cust" x="101" y="652" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="95" y="647" width="164" height="66" rx="8"/>
+<path data-c="hp" class="ln ln-ink" d="M177,713 L177,753" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-cust" x="101" y="760" width="156" height="43" rx="5"/>
+<rect data-c="hp" class="bx" x="95" y="755" width="164" height="50" rx="8"/>
+<rect data-c="hp" class="hl hl-book" x="529" y="752" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="523" y="747" width="164" height="66" rx="8"/>
+<rect data-c="hp" class="tag" x="533" y="738" width="69.8" height="17" rx="8.5"/>
+<path data-c="hp" class="ln ln-ink" d="M259,780 L521,780" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-flight" x="315" y="852" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="309" y="847" width="164" height="66" rx="8"/>
+<path data-c="hp" class="ln ln-ink dash" d="M605,813 L605,880 L475,880" marker-end="url(#f1-ah-ink)"/>
+<path data-c="hp" class="ln ln-ink" d="M391,913 L391,948" marker-end="url(#f1-ah-ink)"/>
+<polygon class="dm" points="391,950 461,990 391,1030 321,990"/>
+<path data-c="fx" class="ln ln-red" d="M461,990 L521,990" marker-end="url(#f1-ah-red)"/>
+<rect data-c="fx" x="527" y="961" width="156" height="58" rx="6" fill="url(#f1-hatch-red)"/>
+<rect data-c="fx" class="bx bx-red" x="523" y="957" width="164" height="66" rx="8"/>
+<rect data-c="fx" class="tag tag-red" x="533" y="948" width="51.2" height="17" rx="8.5"/>
+<path data-c="fx" class="ln-note ln-red" d="M741,992 C 722,998 706,994 690,990" marker-end="url(#f1-ah-red)"/>
+<path data-c="hp" class="ln ln-ink dash" d="M391,1030 L391,1090 L521,1090" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-book" x="529" y="1062" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="523" y="1057" width="164" height="66" rx="8"/>
+<rect data-c="hp" class="tag" x="533" y="1048" width="107" height="17" rx="8.5"/>
+<path data-c="hp" class="ln ln-ink dash" d="M687,1090 L819,1090 L819,1200" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-cust" x="101" y="1215" width="156" height="43" rx="5"/>
+<rect data-c="hp" class="bx" x="95" y="1210" width="164" height="50" rx="8"/>
+<rect data-c="hp" class="hl hl-pay" x="743" y="1207" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="737" y="1202" width="164" height="66" rx="8"/>
+<path data-c="hp" class="ln ln-ink" d="M259,1235 L735,1235" marker-end="url(#f1-ah-ink)"/>
+<path data-c="hp" class="ln ln-ink" d="M819,1268 L819,1310" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-pay" x="743" y="1317" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="737" y="1312" width="164" height="66" rx="8"/>
+<path data-c="hp" class="ln ln-ink dot" d="M177,1260 L177,1345 L735,1345" marker-end="url(#f1-ah-ink)"/>
+<path data-c="hp" class="ln ln-ink" d="M819,1378 L819,1415" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-pay" x="743" y="1422" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="737" y="1417" width="164" height="66" rx="8"/>
+<path class="ln-note ln-pencil" d="M941,1426 C 926,1438 918,1442 906,1444" marker-end="url(#f1-ah-pencil)"/>
+<path class="ln-note ln-pencil" d="M941,1470 C 926,1462 918,1460 906,1458" marker-end="url(#f1-ah-pencil)"/>
+<path data-c="hp" class="ln ln-ink" d="M819,1483 L819,1511" marker-end="url(#f1-ah-ink)"/>
+<polygon class="dm" points="819,1513 894,1555 819,1597 744,1555"/>
+<path data-c="fx" class="ln ln-red dash" d="M744,1555 L84,1555 L84,1235 L93,1235" marker-end="url(#f1-ah-red)"/>
+<path data-c="hp" class="ln ln-ink dash" d="M819,1597 L819,1660 L689,1660" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-book" x="529" y="1632" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="523" y="1627" width="164" height="66" rx="8"/>
+<rect data-c="hp" class="tag" x="533" y="1618" width="113.2" height="17" rx="8.5"/>
+<rect data-c="hp" class="hl hl-cust" x="101" y="1632" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="95" y="1627" width="164" height="66" rx="8"/>
+<path data-c="hp" class="ln ln-ink dot" d="M523,1660 L261,1660" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-flight" x="315" y="1737" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="309" y="1732" width="164" height="66" rx="8"/>
+<path data-c="hp" class="ln ln-ink dash" d="M605,1693 L605,1765 L475,1765" marker-end="url(#f1-ah-ink)"/>
+<path data-c="hp" class="ln ln-ink" d="M391,1798 L391,1836" marker-end="url(#f1-ah-ink)"/>
+<polygon class="dm" points="391,1838 466,1880 391,1922 316,1880"/>
+<path data-c="hp" class="ln ln-green" d="M466,1880 L521,1880" marker-end="url(#f1-ah-green)"/>
+<rect data-c="hp" class="hl hl-ok" x="529" y="1852" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx bx-green" x="523" y="1847" width="164" height="66" rx="8"/>
+<rect data-c="hp" class="tag tag-green" x="533" y="1838" width="69.8" height="17" rx="8.5"/>
+<path data-c="hp" class="ln ln-ink dash" d="M687,1880 L949,1880" marker-end="url(#f1-ah-ink)"/>
+<rect data-c="hp" class="hl hl-note" x="957" y="1852" width="156" height="59" rx="5"/>
+<rect data-c="hp" class="bx" x="951" y="1847" width="164" height="66" rx="8"/>
+<path data-c="hp" class="ln ln-green" d="M177,1693 L177,1845" marker-end="url(#f1-ah-green)"/>
+<rect data-c="hp" class="hl hl-ok" x="101" y="1852" width="156" height="59" rx="17"/>
+<rect data-c="hp" class="bx bx-green" x="95" y="1847" width="164" height="66" rx="20"/>
+<path data-c="fx" class="ln ln-red" d="M438,1896 L438,1990 L521,1990" marker-end="url(#f1-ah-red)"/>
+<rect data-c="fx" x="527" y="1961" width="156" height="58" rx="6" fill="url(#f1-hatch-red)"/>
+<rect data-c="fx" class="bx bx-red" x="523" y="1957" width="164" height="66" rx="8"/>
+<rect data-c="fx" class="tag tag-red" x="533" y="1948" width="63.6" height="17" rx="8.5"/>
+<path data-c="fx" class="ln ln-red dash" d="M687,1990 L735,1990" marker-end="url(#f1-ah-red)"/>
+<rect data-c="fx" class="hl hl-pay" x="743" y="1962" width="156" height="59" rx="5"/>
+<rect data-c="fx" class="bx" x="737" y="1957" width="164" height="66" rx="8"/>
+<path data-c="fx" class="ln ln-red dash" d="M901,1990 L949,1990" marker-end="url(#f1-ah-red)"/>
+<rect data-c="fx" class="hl hl-note" x="957" y="1970" width="156" height="43" rx="5"/>
+<rect data-c="fx" class="bx" x="951" y="1965" width="164" height="50" rx="8"/>
+<path data-c="fx" class="ln ln-amber" d="M391,1922 L391,2061" marker-end="url(#f1-ah-amber)"/>
+<rect data-c="fx" class="hl hl-amber" x="315" y="2068" width="156" height="59" rx="5"/>
+<rect data-c="fx" class="bx bx-amber" x="309" y="2063" width="164" height="66" rx="8"/>
+<path data-c="fx" class="ln ln-amber" d="M309,2096 L296,2096 L296,1818 L387,1818" marker-end="url(#f1-ah-amber)"/>
+</g>
+<g class="words">
+<g transform="rotate(-1.4 177 40)"><text class="t-head" x="177" y="36" text-anchor="middle">Customer</text><text class="t-headsub" x="177" y="55" text-anchor="middle">web app</text></g>
+<g transform="rotate(0.9 391 40)"><text class="t-head" x="391" y="36" text-anchor="middle">Flight service</text><text class="t-headsub" x="391" y="55" text-anchor="middle">+ airline (DEMO for now)</text></g>
+<g transform="rotate(-0.7 605 40)"><text class="t-head" x="605" y="36" text-anchor="middle">Booking service</text><text class="t-headsub" x="605" y="55" text-anchor="middle">keeps the status</text></g>
+<g transform="rotate(1.1 819 40)"><text class="t-head" x="819" y="36" text-anchor="middle">Payment service</text><text class="t-headsub" x="819" y="55" text-anchor="middle">+ Razorpay</text></g>
+<g transform="rotate(-1.0 1033 40)"><text class="t-head" x="1033" y="36" text-anchor="middle">Notifications</text><text class="t-headsub" x="1033" y="55" text-anchor="middle">e-mail · bell · PDF</text></g>
+<text class="t-phnum" x="32" y="126" text-anchor="middle">1</text>
+<text class="t-phase" x="32" y="342" text-anchor="middle" transform="rotate(-90 32 342)">SEARCH &amp; SELECT</text>
+<text class="t-phnum" x="32" y="582" text-anchor="middle">2</text>
+<text class="t-phase" x="32" y="890" text-anchor="middle" transform="rotate(-90 32 890)">BOOK &amp; HOLD SEATS</text>
+<text class="t-phnum" x="32" y="1222" text-anchor="middle">3</text>
+<text class="t-phase" x="32" y="1427.5" text-anchor="middle" transform="rotate(-90 32 1427.5)">PAYMENT APPROVAL</text>
+<text class="t-phnum" x="32" y="1657" text-anchor="middle">4</text>
+<text class="t-phase" x="32" y="1937.5" text-anchor="middle" transform="rotate(-90 32 1937.5)">CONFIRMATION</text>
+<text data-c="hp" class="t-title" x="177" y="119" text-anchor="middle">Opens the Flights page</text>
+<text data-c="hp" class="t-title" x="177" y="169" text-anchor="middle">Search flights</text>
+<text data-c="hp" class="t-sub" x="177" y="186" text-anchor="middle">from · to · dates</text>
+<text data-c="hp" class="t-sub" x="177" y="201" text-anchor="middle">one way or round trip</text>
+<text data-c="hp" class="t-title" x="391" y="169" text-anchor="middle">Search the airline</text>
+<text data-c="hp" class="t-sub" x="391" y="186" text-anchor="middle">Saver + Flex fares</text>
+<text data-c="hp" class="t-sub" x="391" y="201" text-anchor="middle">per flight</text>
+<text data-c="hp" class="t-lbl c-ink" x="284" y="161" text-anchor="middle">search</text>
+<text data-c="hp" class="t-lbl c-ink" x="284" y="211" text-anchor="middle">offers</text>
+<text class="t-note c-pencil" x="531" y="175" text-anchor="start">offers cached 20 min</text>
+<text data-c="hp" class="t-title" x="177" y="274" text-anchor="middle">Pick a fare</text>
+<text data-c="hp" class="t-sub" x="177" y="291" text-anchor="middle">filters: stops · times</text>
+<text data-c="hp" class="t-sub" x="177" y="306" text-anchor="middle">return trip: 2 picks</text>
+<text data-c="hp" class="t-title" x="177" y="381" text-anchor="middle">Select a flight</text>
+<text data-c="hp" class="t-sub" x="177" y="398" text-anchor="middle">out + back = 1 offer</text>
+<text data-c="hp" class="t-title" x="391" y="374" text-anchor="middle">Re-check the fare</text>
+<text data-c="hp" class="t-sub" x="391" y="391" text-anchor="middle">today&#x27;s price + seats</text>
+<text data-c="hp" class="t-sub" x="391" y="406" text-anchor="middle">nothing is held yet</text>
+<text data-c="hp" class="t-lbl c-ink" x="284" y="367" text-anchor="middle">check</text>
+<text data-c="hp" class="t-lbl c-ink" x="284" y="415" text-anchor="middle">price</text>
+<text data-c="hp" class="t-title" x="177" y="474" text-anchor="middle">Check the trip</text>
+<text data-c="hp" class="t-sub" x="177" y="491" text-anchor="middle">itinerary · baggage</text>
+<text data-c="hp" class="t-sub" x="177" y="506" text-anchor="middle">fare rules</text>
+<text data-c="fx" class="t-note c-red" x="318" y="466" text-anchor="start">fare went up?</text>
+<text data-c="fx" class="t-note c-red" x="318" y="484" text-anchor="start">tick &#x27;I accept the</text>
+<text data-c="fx" class="t-note c-red" x="318" y="502" text-anchor="start">new price&#x27; first</text>
+<text data-c="hp" class="t-title" x="177" y="586" text-anchor="middle">Sign in</text>
+<text data-c="hp" class="t-sub" x="177" y="603" text-anchor="middle">needed from here on</text>
+<text data-c="hp" class="t-title" x="177" y="669" text-anchor="middle">Passenger details</text>
+<text data-c="hp" class="t-sub" x="177" y="686" text-anchor="middle">names · birth dates</text>
+<text data-c="hp" class="t-sub" x="177" y="701" text-anchor="middle">contact · coupon</text>
+<text data-c="hp" class="t-title" x="177" y="776" text-anchor="middle">Review &amp; confirm</text>
+<text data-c="hp" class="t-sub" x="177" y="793" text-anchor="middle">accept the fare rules</text>
+<text data-c="hp" class="t-title" x="605" y="769" text-anchor="middle">Create booking</text>
+<text data-c="hp" class="t-sub" x="605" y="786" text-anchor="middle">prices from the server</text>
+<text data-c="hp" class="t-sub" x="605" y="801" text-anchor="middle">double click = 1 booking</text>
+<text data-c="hp" class="t-tag" x="540" y="750.5" text-anchor="start">INITIATED</text>
+<text data-c="hp" class="t-lbl c-ink" x="391" y="772" text-anchor="middle">confirm</text>
+<text data-c="hp" class="t-title" x="391" y="869" text-anchor="middle">Hold the seats</text>
+<text data-c="hp" class="t-sub" x="391" y="886" text-anchor="middle">all seats or none</text>
+<text data-c="hp" class="t-sub" x="391" y="901" text-anchor="middle">held for 20 min</text>
+<text data-c="hp" class="t-lbl c-ink" x="540" y="872" text-anchor="middle">hold seats</text>
+<text class="t-title" x="391" y="995" text-anchor="middle">Seats held?</text>
+<text data-c="fx" class="t-lbl c-red" x="490" y="982" text-anchor="middle">no</text>
+<text data-c="fx" class="t-title" x="605" y="979" text-anchor="middle">Not booked</text>
+<text data-c="fx" class="t-sub" x="605" y="996" text-anchor="middle">offer expired, sold out</text>
+<text data-c="fx" class="t-sub" x="605" y="1011" text-anchor="middle">or the fare changed</text>
+<text data-c="fx" class="t-tag" x="540" y="960.5" text-anchor="start">FAILED</text>
+<text data-c="fx" class="t-note c-red" x="745" y="974" text-anchor="start">the customer sees why</text>
+<text data-c="fx" class="t-note c-red" x="745" y="992" text-anchor="start">and searches again;</text>
+<text data-c="fx" class="t-note c-red" x="745" y="1010" text-anchor="start">nothing is charged</text>
+<text data-c="hp" class="t-lbl c-ink" x="399" y="1052" text-anchor="start">yes</text>
+<text data-c="hp" class="t-lbl c-ink" x="457" y="1082" text-anchor="middle">seats held</text>
+<text data-c="hp" class="t-title" x="605" y="1079" text-anchor="middle">Awaiting payment</text>
+<text data-c="hp" class="t-sub" x="605" y="1096" text-anchor="middle">price is now fixed</text>
+<text data-c="hp" class="t-sub" x="605" y="1111" text-anchor="middle">pay within 15 min</text>
+<text data-c="hp" class="t-tag" x="540" y="1060.5" text-anchor="start">PENDING_PAYMENT</text>
+<text data-c="fx" class="t-note c-red" x="527" y="1146" text-anchor="start">not paid in time? EXPIRED,</text>
+<text data-c="fx" class="t-note c-red" x="527" y="1164" text-anchor="start">the seats go back</text>
+<text data-c="hp" class="t-lbl c-ink" x="753" y="1082" text-anchor="middle">amount + deadline</text>
+<text data-c="hp" class="t-title" x="177" y="1231" text-anchor="middle">Pay the total</text>
+<text data-c="hp" class="t-sub" x="177" y="1248" text-anchor="middle">before the timer ends</text>
+<text data-c="hp" class="t-title" x="819" y="1224" text-anchor="middle">Create order</text>
+<text data-c="hp" class="t-sub" x="819" y="1241" text-anchor="middle">amount from the server,</text>
+<text data-c="hp" class="t-sub" x="819" y="1256" text-anchor="middle">never from the browser</text>
+<text data-c="hp" class="t-lbl c-ink" x="498" y="1227" text-anchor="middle">pay</text>
+<text data-c="hp" class="t-lbl c-ink" x="827" y="1294" text-anchor="start">order id</text>
+<text data-c="hp" class="t-title" x="819" y="1334" text-anchor="middle">Razorpay Checkout</text>
+<text data-c="hp" class="t-sub" x="819" y="1351" text-anchor="middle">card · UPI · net banking</text>
+<text data-c="hp" class="t-sub" x="819" y="1366" text-anchor="middle">we never see card data</text>
+<text data-c="hp" class="t-lbl c-ink" x="457" y="1337" text-anchor="middle">pays in the pop-up</text>
+<text data-c="hp" class="t-lbl c-ink" x="827" y="1401" text-anchor="start">signed result</text>
+<text data-c="hp" class="t-title" x="819" y="1439" text-anchor="middle">Verify the payment</text>
+<text data-c="hp" class="t-sub" x="819" y="1456" text-anchor="middle">signature check (HMAC)</text>
+<text data-c="hp" class="t-sub" x="819" y="1471" text-anchor="middle">+ ask Razorpay itself</text>
+<text class="t-note c-pencil" x="945" y="1386" text-anchor="start">Razorpay also calls our</text>
+<text class="t-note c-pencil" x="945" y="1404" text-anchor="start">webhook: a 2nd check,</text>
+<text class="t-note c-pencil" x="945" y="1422" text-anchor="start">repeats are ignored</text>
+<text class="t-note c-pencil" x="945" y="1476" text-anchor="start">every 5 min: look up</text>
+<text class="t-note c-pencil" x="945" y="1494" text-anchor="start">payments a closed tab</text>
+<text class="t-note c-pencil" x="945" y="1512" text-anchor="start">never reported</text>
+<text class="t-title" x="819" y="1552" text-anchor="middle">Captured,</text>
+<text class="t-title" x="819" y="1569" text-anchor="middle">right amount?</text>
+<text data-c="fx" class="t-lbl c-red" x="470" y="1547" text-anchor="middle">no: payment failed, try again</text>
+<text data-c="fx" class="t-note c-red" x="300" y="1578" text-anchor="start">the seats stay held until the deadline</text>
+<text data-c="hp" class="t-lbl c-ink" x="827" y="1631" text-anchor="start">yes</text>
+<text data-c="hp" class="t-lbl c-ink" x="753" y="1652" text-anchor="middle">paid</text>
+<text data-c="hp" class="t-title" x="605" y="1649" text-anchor="middle">Payment received</text>
+<text data-c="hp" class="t-sub" x="605" y="1666" text-anchor="middle">now the airline</text>
+<text data-c="hp" class="t-sub" x="605" y="1681" text-anchor="middle">has to confirm</text>
+<text data-c="hp" class="t-tag" x="540" y="1630.5" text-anchor="start">SUPPLIER_PENDING</text>
+<text data-c="hp" class="t-title" x="177" y="1649" text-anchor="middle">Waiting page</text>
+<text data-c="hp" class="t-sub" x="177" y="1666" text-anchor="middle">shows “Confirming</text>
+<text data-c="hp" class="t-sub" x="177" y="1681" text-anchor="middle">with the airline…”</text>
+<text data-c="hp" class="t-lbl c-ink" x="391" y="1652" text-anchor="middle">live status</text>
+<text data-c="hp" class="t-title" x="391" y="1754" text-anchor="middle">Airline order</text>
+<text data-c="hp" class="t-sub" x="391" y="1771" text-anchor="middle">booking id = order key</text>
+<text data-c="hp" class="t-sub" x="391" y="1786" text-anchor="middle">30-second timeout</text>
+<text data-c="hp" class="t-lbl c-ink" x="540" y="1757" text-anchor="middle">issue tickets</text>
+<text class="t-title" x="391" y="1877" text-anchor="middle">Airline</text>
+<text class="t-title" x="391" y="1894" text-anchor="middle">answers?</text>
+<text data-c="hp" class="t-lbl c-green" x="494" y="1872" text-anchor="middle">yes</text>
+<text data-c="hp" class="t-title" x="605" y="1869" text-anchor="middle">Confirmed</text>
+<text data-c="hp" class="t-sub" x="605" y="1886" text-anchor="middle">PNR + one ticket</text>
+<text data-c="hp" class="t-sub" x="605" y="1901" text-anchor="middle">per traveller</text>
+<text data-c="hp" class="t-tag" x="540" y="1850.5" text-anchor="start">CONFIRMED</text>
+<text data-c="hp" class="t-lbl c-ink" x="819" y="1872" text-anchor="middle">send confirmation</text>
+<text data-c="hp" class="t-title" x="1033" y="1869" text-anchor="middle">Confirmation sent</text>
+<text data-c="hp" class="t-sub" x="1033" y="1886" text-anchor="middle">e-mail + bell notice</text>
+<text data-c="hp" class="t-sub" x="1033" y="1901" text-anchor="middle">+ confirmation PDF</text>
+<text data-c="hp" class="t-lbl c-green" x="185" y="1774" text-anchor="start">when confirmed</text>
+<text data-c="hp" class="t-title" x="177" y="1869" text-anchor="middle">You&#x27;re booked!</text>
+<text data-c="hp" class="t-sub" x="177" y="1886" text-anchor="middle">PNR · tickets · PDF</text>
+<text data-c="hp" class="t-sub" x="177" y="1901" text-anchor="middle">in My Trips</text>
+<text data-c="fx" class="t-lbl c-red" x="481" y="1982" text-anchor="middle">rejected</text>
+<text data-c="fx" class="t-title" x="605" y="1979" text-anchor="middle">Refund in full</text>
+<text data-c="fx" class="t-sub" x="605" y="1996" text-anchor="middle">seats released,</text>
+<text data-c="fx" class="t-sub" x="605" y="2011" text-anchor="middle">coupon given back</text>
+<text data-c="fx" class="t-tag" x="540" y="1960.5" text-anchor="start">REFUNDED</text>
+<text data-c="fx" class="t-lbl c-red" x="712" y="1982" text-anchor="middle">refund</text>
+<text data-c="fx" class="t-title" x="819" y="1979" text-anchor="middle">Refund payment</text>
+<text data-c="fx" class="t-sub" x="819" y="1996" text-anchor="middle">full amount back to</text>
+<text data-c="fx" class="t-sub" x="819" y="2011" text-anchor="middle">the same card or UPI</text>
+<text data-c="fx" class="t-lbl c-red" x="926" y="1982" text-anchor="middle">done</text>
+<text data-c="fx" class="t-title" x="1033" y="1986" text-anchor="middle">Refund notices</text>
+<text data-c="fx" class="t-sub" x="1033" y="2003" text-anchor="middle">started, then completed</text>
+<text data-c="fx" class="t-lbl c-amber" x="383" y="1990" text-anchor="end">no answer</text>
+<text data-c="fx" class="t-title" x="391" y="2085" text-anchor="middle">Look the order up</text>
+<text data-c="fx" class="t-sub" x="391" y="2102" text-anchor="middle">by booking id after</text>
+<text data-c="fx" class="t-sub" x="391" y="2117" text-anchor="middle">1, 2, 5 and 10 min</text>
+<text data-c="fx" class="t-lbl c-amber" x="304" y="2046" text-anchor="start">found it</text>
+<text data-c="fx" class="t-note c-amber" x="318" y="2152" text-anchor="start">not at the airline → refund</text>
+<text data-c="fx" class="t-note c-amber" x="318" y="2170" text-anchor="start">unknown after 2 h → support</text>
+</g>
+</svg>
+    </div>
+    <figcaption>The seats are only reserved once the hold succeeds (stage 2), and the booking is only confirmed when the
+      airline issues the PNR (stage 4), never just because the payment went through (stage 3).</figcaption>
+  </figure>
+
+  <section aria-labelledby="track-title">
+    <h2 id="track-title">The booking's status along the way</h2>
+    <figure>
+      <div class="sheet" tabindex="0" aria-label="Status track, scrolls sideways on small screens">
+<svg class="track" viewBox="0 0 1010 300" role="img" aria-label="Booking status track: INITIATED, PENDING_PAYMENT, PAYMENT_SUCCESS, SUPPLIER_PENDING, CONFIRMED, with what the customer sees at each. A failed payment keeps the booking in PENDING_PAYMENT for a retry. Exits: FAILED when the seats cannot be held, EXPIRED when nothing is paid in time, REFUNDED when the airline says no or a payment arrives after the booking expired.">
+<defs>
+  <filter id="f2-sketch" x="-3%" y="-6%" width="106%" height="112%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="n1"/>
+    <feDisplacementMap in="SourceGraphic" in2="n1" scale="3.2" xChannelSelector="R" yChannelSelector="G" result="d1"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="1" seed="31" result="n2"/>
+    <feDisplacementMap in="SourceGraphic" in2="n2" scale="4" xChannelSelector="G" yChannelSelector="R" result="d2"/>
+    <feComponentTransfer in="d2" result="d2f"><feFuncA type="linear" slope="0.38"/></feComponentTransfer>
+    <feMerge><feMergeNode in="d2f"/><feMergeNode in="d1"/></feMerge>
+  </filter>
+  <marker id="f2-ah-ink" viewBox="0 0 12 12" refX="10.5" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk mk-ink" d="M1.5,1.5 L10.5,6 L1.5,10.5"/></marker>
+  <marker id="f2-ah-red" viewBox="0 0 12 12" refX="10.5" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk mk-red" d="M1.5,1.5 L10.5,6 L1.5,10.5"/></marker>
+</defs>
+<g class="ink" filter="url(#f2-sketch)"><circle class="st" cx="95" cy="112" r="12"/><path class="ln ln-ink" d="M111,112 L283,112" marker-end="url(#f2-ah-ink)"/><circle class="st" cx="300" cy="112" r="12"/><path class="ln ln-ink" d="M316,112 L488,112" marker-end="url(#f2-ah-ink)"/><circle class="st" cx="505" cy="112" r="12"/><path class="ln ln-ink" d="M521,112 L693,112" marker-end="url(#f2-ah-ink)"/><circle class="st" cx="710" cy="112" r="12"/><path class="ln ln-ink" d="M726,112 L898,112" marker-end="url(#f2-ah-ink)"/><circle class="st st-ok" cx="915" cy="112" r="15"/><path class="ln ln-green" d="M908,112 L913,118 L923,106"/><path class="ln ln-red dash" d="M291,100 C 260,42 340,42 309,99" marker-end="url(#f2-ah-red)"/><path class="ln ln-red" d="M95,182 L95,238" marker-end="url(#f2-ah-red)"/><rect class="tag tag-red" x="67.4" y="240" width="55.2" height="20" rx="10"/><path class="ln ln-red" d="M300,182 L300,238" marker-end="url(#f2-ah-red)"/><rect class="tag tag-red" x="269.3" y="240" width="61.4" height="20" rx="10"/><path class="ln ln-red" d="M710,182 L710,238" marker-end="url(#f2-ah-red)"/><rect class="tag tag-red" x="676.2" y="240" width="67.6" height="20" rx="10"/><path class="ln ln-red dash" d="M340,250 L664,250" marker-end="url(#f2-ah-red)"/></g>
+<g class="words"><text class="t-tag" x="95" y="148" text-anchor="middle">INITIATED</text><text class="t-note" x="95" y="170" text-anchor="middle">“Checking availability…”</text><text class="t-tag" x="300" y="148" text-anchor="middle">PENDING_PAYMENT</text><text class="t-note" x="300" y="170" text-anchor="middle">“Awaiting payment” + timer</text><text class="t-tag" x="505" y="148" text-anchor="middle">PAYMENT_SUCCESS</text><text class="t-note" x="505" y="170" text-anchor="middle">“Payment received”</text><text class="t-tag" x="710" y="148" text-anchor="middle">SUPPLIER_PENDING</text><text class="t-note" x="710" y="170" text-anchor="middle">“Confirming with the airline…”</text><text class="t-tag c-green" x="915" y="148" text-anchor="middle">CONFIRMED</text><text class="t-note" x="915" y="170" text-anchor="middle">“Confirmed” + PNR</text><text class="t-lbl c-ink" x="197.5" y="102" text-anchor="middle">seats held</text><text class="t-lbl c-ink" x="402.5" y="102" text-anchor="middle">paid</text><text class="t-lbl c-ink" x="607.5" y="102" text-anchor="middle">tickets asked</text><text class="t-lbl c-ink" x="812.5" y="102" text-anchor="middle">PNR issued</text><text class="t-lbl c-red" x="300" y="50" text-anchor="middle">payment failed: try again</text><text class="t-tag c-red" x="95" y="254" text-anchor="middle">FAILED</text><text class="t-note c-red" x="95" y="280" text-anchor="middle">seats could not be held</text><text class="t-tag c-red" x="300" y="254" text-anchor="middle">EXPIRED</text><text class="t-note c-red" x="300" y="280" text-anchor="middle">not paid in time</text><text class="t-tag c-red" x="710" y="254" text-anchor="middle">REFUNDED</text><text class="t-note c-red" x="710" y="280" text-anchor="middle">airline said no: full refund</text><text class="t-lbl c-red" x="505" y="242" text-anchor="middle">payment arrived too late: full refund</text></g>
+</svg>
+      </div>
+      <figcaption>What the booking service records at each stage, and what the customer sees. The red exits end the
+        booking; if money was taken, the full amount goes back.</figcaption>
+    </figure>
+  </section>
+
+  <section aria-labelledby="rules-title">
+    <h2 id="rules-title">Rules the flow keeps</h2>
+    <ul class="rules">
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4,13 L10,19 L21,5"/></svg>
+        <p><strong>Picking a flight reserves nothing.</strong> Only a successful seat hold does, and it lasts 20 minutes.
+          The payment deadline is 5 minutes earlier.</p></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4,13 L10,19 L21,5"/></svg>
+        <p><strong>Prices come from the server.</strong> The browser only shows them. The payment order takes its amount
+          from the booking service, never from the page.</p></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4,13 L10,19 L21,5"/></svg>
+        <p><strong>Paid is not booked.</strong> The booking is confirmed only when the airline returns a PNR and the
+          tickets. No ticket is shown before that.</p></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4,13 L10,19 L21,5"/></svg>
+        <p><strong>Nothing happens twice.</strong> A double click returns the same booking. The airline order uses the
+          booking id as its key, so after a timeout the order is looked up, never placed again.</p></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4,13 L10,19 L21,5"/></svg>
+        <p><strong>Payments are checked twice.</strong> The signature from the checkout is verified and the payment is
+          fetched from Razorpay; the webhook confirms it again, and a job every 5 minutes catches closed tabs.</p></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4,13 L10,19 L21,5"/></svg>
+        <p><strong>Money always comes back.</strong> If the airline rejects the order, or a payment arrives after the
+          booking expired, the full amount is refunded.</p></li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="events-title">
+    <h2 id="events-title">Behind the dashed arrows</h2>
+    <p class="small">The services talk through Kafka events. Each service skips an event it has already handled, so a
+      repeated or late message changes nothing.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">On the diagram</th><th scope="col">Event</th><th scope="col">From → to</th></tr></thead>
+        <tbody>
+          <tr><td>hold seats</td><td><code>BookingInitiated</code></td><td>Booking → Flight</td></tr>
+          <tr><td>seats held / no</td><td><code>FlightOfferHeld</code> · <code>FlightOfferHoldFailed</code></td><td>Flight → Booking</td></tr>
+          <tr><td>amount + deadline</td><td><code>BookingAwaitingPayment</code></td><td>Booking → Payment</td></tr>
+          <tr><td>paid / payment failed</td><td><code>PaymentSucceeded</code> · <code>PaymentFailed</code></td><td>Payment → Booking</td></tr>
+          <tr><td>issue tickets</td><td><code>BookingPaid</code></td><td>Booking → Flight</td></tr>
+          <tr><td>yes / rejected / no answer</td><td><code>FlightBookingConfirmed</code> · <code>FlightBookingFailed</code> · <code>FlightBookingUncertain</code></td><td>Flight → Booking</td></tr>
+          <tr><td>send confirmation</td><td><code>BookingConfirmed</code></td><td>Booking → Notifications</td></tr>
+          <tr><td>refund / done</td><td><code>BookingRefundRequested</code> · <code>RefundCompleted</code></td><td>Booking ↔ Payment</td></tr>
+          <tr><td>live status</td><td><code>booking.status-changed</code> (server-sent events)</td><td>Booking → browser</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <p class="small">Drawn from the project's BOOKING_WORKFLOW.md (§1 states, §3 flight saga), PAYMENT_INTEGRATION.md
+      (§3 payment flow, §6 reconciliation) and the flight journey end-to-end test
+      (frontend/e2e/flight-journey.spec.ts). Flights come from the DEMO airline provider for now.</p>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var fig = document.getElementById('flowfig');
+    var buttons = document.querySelectorAll('[data-view-btn]');
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        fig.dataset.view = btn.dataset.viewBtn;
+        buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
+      });
+    });
+  })();
+</script>
+
+</body></html>

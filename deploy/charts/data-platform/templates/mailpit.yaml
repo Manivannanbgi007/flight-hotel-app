@@ -1,0 +1,68 @@
+{{- if .Values.mailpit.enabled }}
+{{- $ctx := dict "root" . "name" "mailpit" }}
+# Mailpit: catches every e-mail the application sends (SMTP 1025); the mailbox UI on port 8025.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailpit
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  selector: {{- include "dp.selector" $ctx | nindent 4 }}
+  ports:
+    - { name: http, port: 8025, targetPort: http }
+    - { name: smtp, port: 1025, targetPort: smtp }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailpit
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {{- include "dp.selector" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "dp.labels" $ctx | nindent 8 }}
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: mailpit
+          image: {{ include "dp.image" (dict "root" . "image" .Values.mailpit.image) }}
+          ports:
+            - { name: http, containerPort: 8025 }
+            - { name: smtp, containerPort: 1025 }
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /livez, port: http }
+            periodSeconds: 20
+          resources: {{- toYaml .Values.mailpit.resources | nindent 12 }}
+          {{- include "dp.containerSecurity" . | nindent 10 }}
+{{- if .Values.mailpit.hostnames }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: mailpit
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.global.gateway.name }}
+      namespace: {{ .Values.global.gateway.namespace }}
+  hostnames:
+    {{- toYaml .Values.mailpit.hostnames | nindent 4 }}
+  rules:
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: mailpit
+          port: 8025
+{{- end }}
+{{- end }}

@@ -1,0 +1,35 @@
+{
+  "type": "record", "name": "FlightOfferHeld", "namespace": "com.flighthotel.events.flight",
+  "doc": "The seats are held for the booking until holdExpiresAt at the price below (authoritative; booking-service never takes prices from the browser). Topic flight.events, key booking id.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "holdId", "type": "string" },
+    { "name": "provider", "type": "string", "doc": "DEMO, ..." },
+    { "name": "demo", "type": "boolean", "default": false },
+    { "name": "title", "type": "string", "doc": "e.g. Delhi to Mumbai, for lists and payment pages" },
+    { "name": "tripType", "type": "string", "doc": "ONE_WAY or ROUND_TRIP" },
+    { "name": "cabin", "type": "string" },
+    { "name": "fareName", "type": "string" },
+    { "name": "refundable", "type": "boolean" },
+    { "name": "checkedBaggageKg", "type": "int" },
+    { "name": "cabinBaggageKg", "type": "int" },
+    { "name": "cancellationFeePercent", "type": "int" },
+    { "name": "cancellationPolicy", "type": "string" },
+    { "name": "slices", "type": { "type": "array", "items": "com.flighthotel.events.common.FlightSlice" } },
+    { "name": "adults", "type": "int" },
+    { "name": "children", "type": "int" },
+    { "name": "infants", "type": "int" },
+    { "name": "subtotal", "type": "com.flighthotel.events.common.Money", "doc": "base fares of all passengers" },
+    { "name": "taxes", "type": "com.flighthotel.events.common.Money", "doc": "taxes and airline fees" },
+    { "name": "priceLines", "type": { "type": "array", "items": {
+      "type": "record", "name": "FlightPriceLine",
+      "fields": [
+        { "name": "label", "type": "string" },
+        { "name": "amount", "type": "com.flighthotel.events.common.Money" }
+      ] } } },
+    { "name": "total", "type": "com.flighthotel.events.common.Money" },
+    { "name": "holdExpiresAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "heldAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "departureAt", "type": ["null", { "type": "long", "logicalType": "timestamp-millis" }], "default": null, "doc": "the first departure (origin airport time zone), for cancellation deadlines (Phase 7)" }
+  ]
+}

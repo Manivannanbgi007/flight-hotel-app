@@ -1,0 +1,189 @@
+{{- $name := include "ms.name" . -}}
+{{- $port := include "ms.port" . -}}
+{{- if include "ms.isRollout" . }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+{{- else }}
+apiVersion: apps/v1
+kind: Deployment
+{{- end }}
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "ms.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicas }}
+  {{- end }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      {{- include "ms.selectorLabels" . | nindent 6 }}
+  {{- if eq .Values.strategy.type "canary" }}
+  strategy:
+    canary:
+      stableService: {{ $name }}
+      canaryService: {{ $name }}-canary
+      {{- if .Values.strategy.canary.trafficRouting }}
+      trafficRouting:
+        plugins:
+          argoproj-labs/gatewayAPI:
+            httpRoute: {{ $name }}
+            namespace: {{ .Release.Namespace }}
+      {{- end }}
+      steps:
+        {{- range .Values.strategy.canary.steps }}
+        {{- if hasKey . "smokeTest" }}
+        - analysis:
+            templates:
+              - templateName: http-smoke-test
+                clusterScope: true
+            args:
+              - name: url
+                value: {{ include "ms.smokeUrl" $ | quote }}
+        {{- else }}
+        - {{ toYaml . | indent 10 | trim }}
+        {{- end }}
+        {{- end }}
+  {{- else if eq .Values.strategy.type "blueGreen" }}
+  strategy:
+    blueGreen:
+      activeService: {{ $name }}
+      previewService: {{ $name }}-preview
+      autoPromotionEnabled: {{ .Values.strategy.blueGreen.autoPromotionEnabled }}
+      {{- if gt (int .Values.strategy.blueGreen.autoPromotionSeconds) 0 }}
+      autoPromotionSeconds: {{ .Values.strategy.blueGreen.autoPromotionSeconds }}
+      {{- end }}
+      scaleDownDelaySeconds: {{ .Values.strategy.blueGreen.scaleDownDelaySeconds }}
+      prePromotionAnalysis:
+        templates:
+          - templateName: http-smoke-test
+            clusterScope: true
+        args:
+          - name: url
+            value: {{ include "ms.smokeUrl" . | quote }}
+  {{- else }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "ms.labels" . | nindent 8 }}
+        app.kubernetes.io/version: {{ include "ms.tag" . | trunc 63 | quote }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        # A changed setting restarts the pods (and, for a rollout, goes through the same canary / blue-green steps).
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ $name }}
+      automountServiceAccountToken: false
+      # No *_PORT/*_HOST variables for every service in the namespace (they clash with real settings).
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      # Spread the pods over zones and nodes (best effort: a single replica still starts when a zone is full).
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "ms.selectorLabels" . | nindent 14 }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "ms.selectorLabels" . | nindent 14 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          image: {{ include "ms.image" . }}
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+          envFrom:
+            {{- if .Values.useSharedConfig }}
+            - configMapRef:
+                name: {{ .Values.global.sharedConfigMap }}
+            {{- end }}
+            - configMapRef:
+                name: {{ $name }}-config
+          {{- if .Values.secretEnv }}
+          env:
+            {{- range $envName, $key := .Values.secretEnv }}
+            - name: {{ $envName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.global.secretName }}
+                  key: {{ $key }}
+            {{- end }}
+          {{- end }}
+          startupProbe:
+            httpGet: { path: {{ .Values.probes.startupPath }}, port: http }
+            {{- toYaml .Values.probes.startup | nindent 12 }}
+          readinessProbe:
+            httpGet: { path: {{ .Values.probes.readinessPath }}, port: http }
+            {{- toYaml .Values.probes.readiness | nindent 12 }}
+          livenessProbe:
+            httpGet: { path: {{ .Values.probes.livenessPath }}, port: http }
+            {{- toYaml .Values.probes.liveness | nindent 12 }}
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: {{ .Values.preStopSleepSeconds }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            {{- range $index, $dir := .Values.writableDirs }}
+            - name: writable-{{ $index }}
+              mountPath: {{ $dir }}
+            {{- end }}
+            {{- if .Values.persistence.enabled }}
+            - name: storage
+              mountPath: {{ .Values.persistence.mountPath }}
+            {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: {{ .Values.tmpSizeLimit | default "256Mi" }}
+        {{- range $index, $dir := .Values.writableDirs }}
+        - name: writable-{{ $index }}
+          emptyDir:
+            sizeLimit: 16Mi
+        {{- end }}
+        {{- if .Values.persistence.enabled }}
+        - name: storage
+          persistentVolumeClaim:
+            claimName: {{ $name }}-storage
+        {{- end }}

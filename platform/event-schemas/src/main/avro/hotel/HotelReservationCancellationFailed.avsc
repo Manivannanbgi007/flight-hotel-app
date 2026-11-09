@@ -1,0 +1,11 @@
+{
+  "type": "record", "name": "HotelReservationCancellationFailed", "namespace": "com.flighthotel.events.hotel",
+  "doc": "The hotel could not cancel the reservation; it stays booked.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "cancellationId", "type": "string" },
+    { "name": "reason", "type": "string", "doc": "TOO_LATE (check-in time passed), NOT_CANCELLABLE (not a confirmed reservation)" },
+    { "name": "message", "type": "string" },
+    { "name": "failedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

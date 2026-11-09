@@ -1,0 +1,46 @@
+# Argo CD projects: what the flight-hotel Applications may deploy, and where (KUBERNETES_DEPLOYMENT.md, section 9).
+# Applied once by deploy/scripts/argocd-bootstrap.ps1. The repository URL is set by that script (-RepoUrl).
+#
+#   flight-hotel-gitops   the root Application ("app of apps"): may only create Applications and ApplicationSets
+#                         in the argocd namespace.
+#   flight-hotel          the workloads: the two application namespaces, the Argo Rollouts dashboard route and one
+#                         cluster-wide object (the smoke-test ClusterAnalysisTemplate). Namespaces, CRDs and RBAC
+#                         stay with the platform installation (deploy/scripts/install-platform.ps1).
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: flight-hotel-gitops
+  namespace: argocd
+spec:
+  description: Root application of flight-hotel-app (creates the other Applications)
+  sourceRepos:
+    - https://github.com/YOUR-GITHUB-USER/flight-hotel-app.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: argoproj.io
+      kind: Application
+    - group: argoproj.io
+      kind: ApplicationSet
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: flight-hotel
+  namespace: argocd
+spec:
+  description: flight-hotel-app services, data platform and shared settings
+  sourceRepos:
+    - https://github.com/YOUR-GITHUB-USER/flight-hotel-app.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: flight-hotel
+    - server: https://kubernetes.default.svc
+      namespace: flight-hotel-data
+    - server: https://kubernetes.default.svc
+      namespace: argo-rollouts
+  clusterResourceWhitelist:
+    - group: argoproj.io
+      kind: ClusterAnalysisTemplate

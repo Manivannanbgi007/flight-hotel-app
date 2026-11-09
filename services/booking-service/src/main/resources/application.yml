@@ -1,0 +1,54 @@
+# Booking Service: only service-specific settings here.
+# Shared defaults (Kafka, Redis, JPA, actuator, logging, ...) come from common-lib's travel-defaults.yml.
+spring:
+  application:
+    name: booking-service
+  config:
+    # Local runs ("mvn spring-boot:run" in this folder) read secrets from the project's .env file.
+    import: optional:file:../../.env[.properties]
+
+server:
+  port: ${SERVER_PORT:8104}
+
+booking:
+  # hotel-service holds rooms for payment window + grace (20 min). New payments are accepted until hold end - grace,
+  # so a payment completed at the last moment can still be confirmed (BOOKING_WORKFLOW.md §2).
+  payment-grace: 5m
+  # A booking hotel-service did not answer within this time fails (nothing was charged).
+  initiated-timeout: 10m
+  # Flights can be cancelled online until this long before the first departure (the DEMO airline's rule).
+  flight-cancel-cutoff: 4h
+  # Phase 7 reconciliation: unanswered cancellations / refunds are asked again, then flagged for support.
+  reconcile:
+    cancellation-after: 10m
+    refund-after: 30m
+    max-attempts: 3
+  demo-data:
+    # Labelled demo coupons (WELCOME10, STAY500, GOA15). Always off in prod.
+    enabled: ${DEMO_DATA_ENABLED:true}
+  # Local development only: the bookings of the dev.* customers in every state (docs/DEVELOPMENT_TEST_ACCOUNTS.md).
+  # Off unless DEV_SEED_ENABLED=true, always off in prod.
+  dev-seed:
+    enabled: ${DEV_SEED_ENABLED:false}
+
+travel:
+  db:
+    name: booking_db
+    username: ${DB_USERNAME:booking_user}
+    password: ${BOOKING_DB_PASSWORD:}
+  security:
+    # Passport numbers of flight passengers are stored encrypted (AES-256-GCM), like in identity-service.
+    data-encryption-key: ${DATA_ENCRYPTION_KEY:}
+    public-paths:
+      - "GET /api/offers/**"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+booking:
+  demo-data:
+    enabled: false
+  dev-seed:
+    enabled: false

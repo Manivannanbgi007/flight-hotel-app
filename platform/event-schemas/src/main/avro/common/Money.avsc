@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "Money",
+  "namespace": "com.flighthotel.events.common",
+  "doc": "An amount of money. Never use floating point for money.",
+  "fields": [
+    {
+      "name": "amount",
+      "type": { "type": "bytes", "logicalType": "decimal", "precision": 12, "scale": 2 }
+    },
+    { "name": "currency", "type": "string", "doc": "ISO 4217 code, e.g. INR" }
+  ]
+}

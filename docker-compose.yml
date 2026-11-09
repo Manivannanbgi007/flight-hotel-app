@@ -1,0 +1,658 @@
+# Hotel & Flight Travel Reservation System: full local stack.
+#
+#   1. copy .env.example .env   (and set passwords)
+#   2. docker compose up -d --build
+#   3. open http://localhost:3000   (API gateway: http://localhost:8080, Swagger: http://localhost:8080/swagger-ui.html)
+#
+# Optional tools (Kafka UI on http://localhost:8090):  docker compose --profile tools up -d
+# Optional assistant voice (speech server, about 1.5 GB more memory):  docker compose --profile voice up -d
+# The AI assistant (Ollama + mcp-client/mcp-server) is part of the default start: see AI_ASSISTANT.md.
+# See DOCKER_SETUP.md for details and troubleshooting.
+
+name: flight-hotel
+
+x-backend-build: &backend-build
+  context: .
+  dockerfile: docker/backend.Dockerfile
+  target: runtime
+
+x-backend-env: &backend-env
+  SPRING_PROFILES_ACTIVE: docker
+  DB_HOST: mysql
+  KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+  SCHEMA_REGISTRY_URL: http://schema-registry:8081
+  REDIS_HOST: redis
+  JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+  JWT_ISSUER: ${JWT_ISSUER:-flight-hotel-identity}
+
+x-backend-depends: &backend-depends
+  mysql:
+    condition: service_healthy
+  redis:
+    condition: service_healthy
+  kafka-init:
+    condition: service_completed_successfully
+  schema-registry:
+    condition: service_healthy
+
+x-backend-healthcheck: &backend-healthcheck
+  interval: 10s
+  timeout: 5s
+  retries: 18
+  start_period: 60s
+
+services:
+  # ======================= Infrastructure =======================
+  mysql:
+    image: mysql:8.4.13
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?Set IDENTITY_DB_PASSWORD in .env}
+      HOTEL_DB_PASSWORD: ${HOTEL_DB_PASSWORD:?Set HOTEL_DB_PASSWORD in .env}
+      FLIGHT_DB_PASSWORD: ${FLIGHT_DB_PASSWORD:?Set FLIGHT_DB_PASSWORD in .env}
+      BOOKING_DB_PASSWORD: ${BOOKING_DB_PASSWORD:?Set BOOKING_DB_PASSWORD in .env}
+      PAYMENT_DB_PASSWORD: ${PAYMENT_DB_PASSWORD:?Set PAYMENT_DB_PASSWORD in .env}
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?Set NOTIFICATION_DB_PASSWORD in .env}
+      REPORTING_DB_PASSWORD: ${REPORTING_DB_PASSWORD:?Set REPORTING_DB_PASSWORD in .env}
+      DEBEZIUM_DB_PASSWORD: ${DEBEZIUM_DB_PASSWORD:?Set DEBEZIUM_DB_PASSWORD in .env}
+    ports:
+      # Host port 3307 by default, so it does not clash with a MySQL already installed on Windows.
+      - "${MYSQL_HOST_PORT:-3307}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./infra/mysql/conf.d:/etc/mysql/conf.d:ro
+      - ./infra/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    mem_limit: 1g
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.4.8
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "100mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 160m
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:8.4.0
+    environment:
+      CLUSTER_ID: q1Sh-9_ISia_zwGINzRvyQ
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_HEAP_OPTS: -Xms384m -Xmx768m
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server kafka:29092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 20s
+    mem_limit: 1g
+    restart: unless-stopped
+
+  kafka-init:
+    image: confluentinc/cp-kafka:8.4.0
+    entrypoint: ["bash", "/scripts/create-topics.sh"]
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+    volumes:
+      - ./infra/kafka/create-topics.sh:/scripts/create-topics.sh:ro
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: "no"
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:8.4.0
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:29092
+      SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL: backward
+      SCHEMA_REGISTRY_HEAP_OPTS: -Xms128m -Xmx256m
+    ports:
+      - "8081:8081"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      # The image has no curl/wget, so speak HTTP over bash's /dev/tcp.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8081 && printf 'GET /subjects HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -1 <&3 | grep -q ' 200 '"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    mem_limit: 384m
+    restart: unless-stopped
+
+  kafka-connect:
+    image: quay.io/debezium/connect:3.7.0.Final
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: flighthotel-connect
+      CONFIG_STORAGE_TOPIC: _connect_configs
+      OFFSET_STORAGE_TOPIC: _connect_offsets
+      STATUS_STORAGE_TOPIC: _connect_statuses
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+      HEAP_OPTS: -Xms256m -Xmx640m
+      # Lets connector configs read secrets from environment variables: ${env:NAME}
+      CONNECT_CONFIG_PROVIDERS: env
+      CONNECT_CONFIG_PROVIDERS_ENV_CLASS: org.apache.kafka.common.config.provider.EnvVarConfigProvider
+      DEBEZIUM_DB_HOST: mysql
+      DEBEZIUM_DB_PASSWORD: ${DEBEZIUM_DB_PASSWORD:?Set DEBEZIUM_DB_PASSWORD in .env}
+    ports:
+      - "8083:8083"
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/connectors > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    mem_limit: 1g
+    restart: unless-stopped
+
+  connect-init:
+    image: quay.io/debezium/connect:3.7.0.Final
+    entrypoint: ["sh", "/scripts/register-connectors.sh"]
+    environment:
+      CONNECT_URL: http://kafka-connect:8083
+      CONNECTORS_DIR: /connectors
+    volumes:
+      - ./infra/kafka-connect/register-connectors.sh:/scripts/register-connectors.sh:ro
+      - ./infra/kafka-connect/connectors:/connectors:ro
+    depends_on:
+      kafka-connect:
+        condition: service_healthy
+    restart: "no"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.8
+    environment:
+      discovery.type: single-node
+      # Local development only. Production uses a secured, managed cluster.
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms768m -Xmx768m
+      cluster.routing.allocation.disk.threshold_enabled: "false"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' > /dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+    mem_limit: 1536m
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.33.0
+    ports:
+      - "8025:8025"   # web UI
+      - "1025:1025"   # SMTP
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    mem_limit: 96m
+    restart: unless-stopped
+
+  # ======================= AI assistant: local model (Phase 11, AI_ASSISTANT.md) =======================
+  # CPU only. The model file is kept in the "ollama-models" volume; ollama-init downloads ASSISTANT_CHAT_MODEL once.
+  ollama:
+    image: ollama/ollama:0.40.14
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      # How long the model stays in memory after the last request (loading it again takes 5-15 s on this CPU).
+      OLLAMA_KEEP_ALIVE: ${ASSISTANT_KEEP_ALIVE:-30m}
+      # Requests answered at the same time. Each slot needs its own context memory; extra requests wait in a queue.
+      OLLAMA_NUM_PARALLEL: ${ASSISTANT_NUM_PARALLEL:-1}
+      OLLAMA_MAX_LOADED_MODELS: 1
+      OLLAMA_MAX_QUEUE: 32
+      OLLAMA_CONTEXT_LENGTH: ${ASSISTANT_NUM_CTX:-8192}
+    volumes:
+      - ollama-models:/root/.ollama
+    # Published on localhost only (no authentication): for "ollama run" tests and the model evaluation script.
+    ports: ["127.0.0.1:${OLLAMA_HOST_PORT:-11434}:11434"]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    mem_limit: ${OLLAMA_MEM_LIMIT:-6g}
+    restart: unless-stopped
+
+  ollama-init:
+    image: ollama/ollama:0.40.14
+    entrypoint: ["/bin/sh", "-c", "ollama pull \"$$ASSISTANT_CHAT_MODEL\""]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      ASSISTANT_CHAT_MODEL: ${ASSISTANT_CHAT_MODEL:-granite4:tiny-h}
+    depends_on:
+      ollama:
+        condition: service_healthy
+    mem_limit: 128m
+    restart: "no"
+
+  # ======================= AI assistant: optional voice (profile "voice") =======================
+  #   docker compose --profile voice up -d
+  # OpenAI-compatible speech server: speech to text (faster-whisper) and text to speech (Kokoro), CPU only. Without
+  # it the web app uses the browser's own speech APIs. Models are kept in the "speaches-models" volume.
+  speaches:
+    image: ghcr.io/speaches-ai/speaches:0.8.3-cpu
+    profiles: ["voice"]
+    environment:
+      ENABLE_UI: "false"
+      WHISPER__INFERENCE_DEVICE: cpu
+      # 8-bit weights: about 40 % less memory on CPU, same accuracy for short questions.
+      WHISPER__COMPUTE_TYPE: int8
+      # Unload a model 10 minutes after its last use.
+      WHISPER__TTL: 600
+    volumes:
+      - speaches-models:/home/ubuntu/.cache/huggingface/hub
+    # No published port: only mcp-client-service calls it.
+    expose: ["8000"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    mem_limit: 2g
+    restart: unless-stopped
+
+  speaches-init:
+    image: ghcr.io/speaches-ai/speaches:0.8.3-cpu
+    profiles: ["voice"]
+    entrypoint: ["/bin/sh", "-c", "curl -fsS -X POST \"http://speaches:8000/v1/models/$$ASSISTANT_STT_MODEL\" && curl -fsS -X POST \"http://speaches:8000/v1/models/$$ASSISTANT_TTS_MODEL\""]
+    environment:
+      ASSISTANT_STT_MODEL: ${ASSISTANT_STT_MODEL:-Systran/faster-whisper-small}
+      ASSISTANT_TTS_MODEL: ${ASSISTANT_TTS_MODEL:-speaches-ai/Kokoro-82M-v1.0-ONNX}
+    depends_on:
+      speaches:
+        condition: service_healthy
+    mem_limit: 128m
+    restart: "no"
+
+  kafka-ui:
+    image: kafbat/kafka-ui:v1.5.0
+    profiles: ["tools"]
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: debezium
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
+    ports:
+      - "8090:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    mem_limit: 512m
+
+  # ======================= Backend services =======================
+  identity-service:
+    build:
+      <<: *backend-build
+      args: { SERVICE: identity-service }
+    image: flighthotel/identity-service:local
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8101
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD}
+      # Encrypts signing keys and other sensitive fields; the service refuses to start without it.
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:?Set DATA_ENCRYPTION_KEY in .env}
+      STORAGE_ROOT: /app/storage
+      # Local only: one account per role (admin@, customer@, manager@, support@flighthotel.local).
+      DEMO_USERS_ENABLED: ${DEMO_USERS_ENABLED:-false}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-}
+      DEV_SEED_ENABLED: ${DEV_SEED_ENABLED:-false}
+    volumes:
+      - identity-storage:/app/storage
+    ports: ["8101:8101"]
+    depends_on: *backend-depends
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:8101/actuator/health/readiness"]
+    mem_limit: 640m
+    restart: unless-stopped
+
+  hotel-service:
+    build:
+      <<: *backend-build
+      args: { SERVICE: hotel-service }
+    image: flighthotel/hotel-service:local
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8102
+      HOTEL_DB_PASSWORD: ${HOTEL_DB_PASSWORD}
+      ELASTICSEARCH_URIS: http://elasticsearch:9200
+      STORAGE_ROOT: /app/storage
+      # Labelled sample hotels (shown with a "Demo" badge). Set DEMO_DATA_ENABLED=false in .env to start empty.
+      DEMO_DATA_ENABLED: ${DEMO_DATA_ENABLED:-true}
+      DEV_SEED_ENABLED: ${DEV_SEED_ENABLED:-false}
+    volumes:
+      - hotel-storage:/app/storage
+    ports: ["8102:8102"]
+    depends_on:
+      <<: *backend-depends
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:8102/actuator/health/readiness"]
+    mem_limit: 640m
+    restart: unless-stopped
+
+  flight-service:
+    build:
+      <<: *backend-build
+      args: { SERVICE: flight-service }
+    image: flighthotel/flight-service:local
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8103
+      FLIGHT_DB_PASSWORD: ${FLIGHT_DB_PASSWORD}
+      DEV_SEED_ENABLED: ${DEV_SEED_ENABLED:-false}
+      ELASTICSEARCH_URIS: http://elasticsearch:9200
+    ports: ["8103:8103"]
+    depends_on:
+      <<: *backend-depends
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:8103/actuator/health/readiness"]
+    mem_limit: 640m
+    restart: unless-stopped
+
+  booking-service:
+    build:
+      <<: *backend-build
+      args: { SERVICE: booking-service }
+    image: flighthotel/booking-service:local
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8104
+      BOOKING_DB_PASSWORD: ${BOOKING_DB_PASSWORD}
+      DEV_SEED_ENABLED: ${DEV_SEED_ENABLED:-false}
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:?Set DATA_ENCRYPTION_KEY in .env}
+    ports: ["8104:8104"]
+    depends_on: *backend-depends
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:8104/actuator/health/readiness"]
+    mem_limit: 640m
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      <<: *backend-build
+      args: { SERVICE: payment-service }
+    image: flighthotel/payment-service:local
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8105
+      PAYMENT_DB_PASSWORD: ${PAYMENT_DB_PASSWORD}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-demo}
+      PAYMENT_DEMO_ENABLED: ${PAYMENT_DEMO_ENABLED:-true}
+      PAYMENT_DEMO_SECRET: ${PAYMENT_DEMO_SECRET:-demo-only-secret-never-used-in-production}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+      DEV_SEED_ENABLED: ${DEV_SEED_ENABLED:-false}
+    ports: ["8105:8105"]
+    depends_on: *backend-depends
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:8105/actuator/health/readiness"]
+    mem_limit: 640m
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      <<: *backend-build
+      args: { SERVICE: notification-service }
+    image: flighthotel/notification-service:local
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8106
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD}
+      SPRING_MAIL_HOST: mailpit
+      SPRING_MAIL_PORT: 1025
+      MAIL_FROM: ${MAIL_FROM:-no-reply@flighthotel.local}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
+      NEWSLETTER_SECRET: ${NEWSLETTER_SECRET:-}
+      DEV_SEED_ENABLED: ${DEV_SEED_ENABLED:-false}
+    # Generated PDFs (confirmations, e-tickets, invoices, receipts) survive container rebuilds.
+    volumes:
+      - notification-storage:/app/storage
+    ports: ["8106:8106"]
+    depends_on:
+      <<: *backend-depends
+      mailpit:
+        condition: service_healthy
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:8106/actuator/health/readiness"]
+    mem_limit: 640m
+    restart: unless-stopped
+
+  reporting-service:
+    build:
+      <<: *backend-build
+      args: { SERVICE: reporting-service }
+    image: flighthotel/reporting-service:local
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8107
+      REPORTING_DB_PASSWORD: ${REPORTING_DB_PASSWORD}
+      # Background exports of the audit log: finished files (kept 24 h). They are written in /tmp first.
+      STORAGE_ROOT: /app/storage
+    volumes:
+      - reporting-storage:/app/storage
+    ports: ["8107:8107"]
+    depends_on: *backend-depends
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:8107/actuator/health/readiness"]
+    mem_limit: 640m
+    restart: unless-stopped
+
+  # Global search (docs/GLOBAL_SEARCH_IMPLEMENTATION.md): an Elasticsearch read model kept up to date from the other
+  # services' Kafka events. No database. Uses the existing Elasticsearch (its own alias global-search, and hotel-service's
+  # hotels index read-only).
+  search-service:
+    build:
+      <<: *backend-build
+      args: { SERVICE: search-service }
+    image: flighthotel/search-service:local
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8110
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      REDIS_HOST: redis
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_ISSUER: ${JWT_ISSUER:-flight-hotel-identity}
+      ELASTICSEARCH_URIS: http://elasticsearch:9200
+      HOTEL_SERVICE_URL: http://hotel-service:8102
+      FLIGHT_SERVICE_URL: http://flight-service:8103
+    ports: ["8110:8110"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      schema-registry:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:8110/actuator/health/readiness"]
+    mem_limit: 512m
+    restart: unless-stopped
+
+  # ---- AI assistant (Phase 11, AI_ASSISTANT.md) ----
+  # Read-only MCP tools. No published port and no gateway route: only mcp-client-service calls it (with the internal
+  # key), and it calls the gateway with the user's own token.
+  mcp-server-service:
+    build:
+      <<: *backend-build
+      args: { SERVICE: mcp-server-service }
+    image: flighthotel/mcp-server-service:local
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8109
+      REDIS_HOST: redis
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_ISSUER: ${JWT_ISSUER:-flight-hotel-identity}
+      GATEWAY_URL: http://api-gateway:8080
+      MCP_SERVER_API_KEY: ${MCP_SERVER_API_KEY:?Set MCP_SERVER_API_KEY in .env}
+    expose: ["8109"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:8109/actuator/health/readiness"]
+    mem_limit: 448m
+    restart: unless-stopped
+
+  # The chat API behind the gateway (/api/assistant/**). Starts without Ollama too: then /api/assistant/config says
+  # enabled=false and the web app hides the chat.
+  mcp-client-service:
+    build:
+      <<: *backend-build
+      args: { SERVICE: mcp-client-service }
+    image: flighthotel/mcp-client-service:local
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8108
+      REDIS_HOST: redis
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_ISSUER: ${JWT_ISSUER:-flight-hotel-identity}
+      MCP_SERVER_URL: http://mcp-server-service:8109
+      MCP_SERVER_API_KEY: ${MCP_SERVER_API_KEY:?Set MCP_SERVER_API_KEY in .env}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      ASSISTANT_CHAT_MODEL: ${ASSISTANT_CHAT_MODEL:-granite4:tiny-h}
+      ASSISTANT_NUM_CTX: ${ASSISTANT_NUM_CTX:-8192}
+      ASSISTANT_TEMPERATURE: ${ASSISTANT_TEMPERATURE:-0.2}
+      ASSISTANT_KEEP_ALIVE: ${ASSISTANT_KEEP_ALIVE:-30m}
+      # Voice: the "speaches" container of the "voice" profile. When it is not running, config.voice is false and
+      # the browser's own speech APIs are used.
+      ASSISTANT_STT_URL: ${ASSISTANT_STT_URL:-http://speaches:8000}
+      ASSISTANT_STT_MODEL: ${ASSISTANT_STT_MODEL:-Systran/faster-whisper-small}
+      ASSISTANT_TTS_URL: ${ASSISTANT_TTS_URL:-http://speaches:8000}
+      ASSISTANT_TTS_MODEL: ${ASSISTANT_TTS_MODEL:-speaches-ai/Kokoro-82M-v1.0-ONNX}
+      ASSISTANT_TTS_VOICE: ${ASSISTANT_TTS_VOICE:-af_heart}
+    ports: ["8108:8108"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      mcp-server-service:
+        condition: service_started
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:8108/actuator/health/readiness"]
+    mem_limit: 512m
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      <<: *backend-build
+      args: { SERVICE: api-gateway }
+    image: flighthotel/api-gateway:local
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      REDIS_HOST: redis
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_ISSUER: ${JWT_ISSUER:-flight-hotel-identity}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      IDENTITY_SERVICE_URL: http://identity-service:8101
+      HOTEL_SERVICE_URL: http://hotel-service:8102
+      FLIGHT_SERVICE_URL: http://flight-service:8103
+      BOOKING_SERVICE_URL: http://booking-service:8104
+      PAYMENT_SERVICE_URL: http://payment-service:8105
+      NOTIFICATION_SERVICE_URL: http://notification-service:8106
+      REPORTING_SERVICE_URL: http://reporting-service:8107
+      MCP_CLIENT_SERVICE_URL: http://mcp-client-service:8108
+      SEARCH_SERVICE_URL: http://search-service:8110
+    ports: ["8080:8080"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health/readiness"]
+    mem_limit: 512m
+    restart: unless-stopped
+
+  # ======================= Frontend =======================
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Development only (docs/DEVELOPMENT_TEST_ACCOUNTS.md): shows the test accounts on the sign-in pages.
+        VITE_DEV_ACCOUNTS: ${VITE_DEV_ACCOUNTS:-false}
+    image: flighthotel/frontend:local
+    # nginx runs as a non-root user on 8080 inside the container.
+    ports: ["3000:8080"]
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    mem_limit: 64m
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  kafka-data:
+  es-data:
+  identity-storage:
+  hotel-storage:
+  notification-storage:
+  reporting-storage:
+  ollama-models:
+  speaches-models:

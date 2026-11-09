@@ -1,0 +1,62 @@
+# Traefik 3.7 (chart traefik/traefik 42.3.1) as the cluster's Gateway API implementation.
+# The edge of the application: http://localhost → HTTPRoutes → services. Ingress-NGINX is retired upstream (2026);
+# the Gateway API is the supported, portable way (the same routes work with other implementations on EKS).
+deployment:
+  replicas: 2                      # one per zone at least; the PDB below keeps one during node drains
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: traefik
+
+providers:
+  kubernetesGateway:
+    enabled: true                  # HTTPRoute, Gateway (standard channel v1.6)
+  kubernetesIngress:
+    enabled: false                 # Gateway API only
+  kubernetesCRD:
+    enabled: false                 # no Traefik-specific IngressRoute objects
+
+gatewayClass:
+  enabled: true
+  name: traefik
+gateway:
+  enabled: true
+  name: traefik-gateway            # referenced by every HTTPRoute (parentRefs)
+  listeners:
+    web:
+      port: 8000
+      protocol: HTTP
+      namespacePolicy:
+        from: All                  # routes from the app namespaces, argocd and argo-rollouts
+
+# kind: reachable through a NodePort that deploy/kind/cluster.yaml maps to localhost:80/443.
+# EKS: service.type LoadBalancer (AWS Load Balancer Controller, NLB); see deploy/environments/eks/README.md.
+service:
+  spec:
+    type: NodePort
+ports:
+  web:
+    nodePort: 30080
+  websecure:
+    nodePort: 30443
+
+ingressClass:
+  enabled: false                   # no Ingress objects: Gateway API only
+ingressRoute:
+  dashboard:
+    enabled: false
+accessLog:
+  enabled: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi

@@ -1,0 +1,25 @@
+# notification-service: E-mails, notifications, PDFs, support tickets, the realtime (SSE) hub.
+containerPort: 8106
+env:
+  SERVER_PORT: "8106"
+  SPRING_MAIL_HOST: "mailpit.flight-hotel-data.svc.cluster.local"
+  SPRING_MAIL_PORT: "1025"
+  MAIL_FROM: "no-reply@flighthotel.local"
+  APP_PUBLIC_URL: "http://localhost"
+  STORAGE_ROOT: "/app/storage"
+  DEV_SEED_ENABLED: "true"
+secretEnv:
+  NOTIFICATION_DB_PASSWORD: NOTIFICATION_DB_PASSWORD
+  NEWSLETTER_SECRET: NEWSLETTER_SECRET
+persistence:
+  enabled: true
+  size: 1Gi
+strategy:
+  type: canary
+  canary:
+    trafficRouting: false     # inside the cluster: the share of pods decides the share of requests
+    steps:
+      - setWeight: 50         # one new pod next to the stable one
+      - pause: { duration: 20s }
+      - smokeTest: true       # its readiness endpoint, three times; a failure rolls back
+      - pause: { duration: 20s }

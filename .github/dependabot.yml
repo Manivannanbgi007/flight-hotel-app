@@ -1,0 +1,90 @@
+# Dependabot version updates: one weekly batch per ecosystem, minor and patch updates grouped into few pull requests,
+# major updates one by one (they usually need code changes). Security updates are separate and not delayed.
+# Every pull request runs the full CI. docs/CI_CD.md, "Dependency updates".
+version: 2
+
+updates:
+  # Backend: the root pom.xml and all modules it lists.
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    # Wait a few days after a release before proposing it (lets the ecosystem catch broken or malicious releases).
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: build(deps)
+    groups:
+      # Spring Boot (parent and the spring-boot.version property must stay equal), Spring Cloud, Spring AI.
+      spring:
+        patterns:
+          - org.springframework*
+          - io.spring*
+        update-types: [minor, patch]
+      maven-minor-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+
+  # Frontend
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: build(deps)
+    groups:
+      # Packages that must move together, majors included.
+      react:
+        patterns: [react, react-dom, '@types/react', '@types/react-dom']
+      vitest:
+        patterns: [vitest, '@vitest/*']
+      eslint:
+        patterns: [eslint, '@eslint/*', typescript-eslint, 'eslint-plugin-*', globals]
+      npm-production:
+        dependency-type: production
+        update-types: [minor, patch]
+      npm-development:
+        dependency-type: development
+        update-types: [minor, patch]
+
+  # Base images of docker/backend.Dockerfile (Temurin JDK/JRE) and frontend/Dockerfile (Node, nginx).
+  - package-ecosystem: docker
+    directories:
+      - /docker
+      - /frontend
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 5
+    commit-message:
+      prefix: build(deps)
+    ignore:
+      # Java and Node majors are deliberate upgrades (pom.xml java.version, CI's NODE_VERSION, local tools), not bumps.
+      - dependency-name: eclipse-temurin
+        update-types: [version-update:semver-major]
+      - dependency-name: node
+        update-types: [version-update:semver-major]
+    groups:
+      base-images:
+        patterns: ['*']
+
+  # The actions used by .github/workflows (pinned to commit SHAs; Dependabot updates the SHA and the version comment).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 5
+    commit-message:
+      prefix: ci(deps)
+    groups:
+      github-actions:
+        patterns: ['*']

@@ -1,0 +1,23 @@
+# identity-service: Accounts, sign-in, JWT signing keys (JWKS), profiles.
+containerPort: 8101
+env:
+  SERVER_PORT: "8101"
+  STORAGE_ROOT: "/app/storage"
+  DEMO_USERS_ENABLED: "true"
+  DEV_SEED_ENABLED: "true"
+secretEnv:
+  IDENTITY_DB_PASSWORD: IDENTITY_DB_PASSWORD
+  DATA_ENCRYPTION_KEY: DATA_ENCRYPTION_KEY
+  DEMO_USER_PASSWORD: DEMO_USER_PASSWORD
+persistence:
+  enabled: true
+  size: 1Gi
+strategy:
+  type: canary
+  canary:
+    trafficRouting: false     # inside the cluster: the share of pods decides the share of requests
+    steps:
+      - setWeight: 50         # one new pod next to the stable one
+      - pause: { duration: 20s }
+      - smokeTest: true       # its readiness endpoint, three times; a failure rolls back
+      - pause: { duration: 20s }

@@ -1,0 +1,32 @@
+# MySQL, Redis, Kafka, Schema Registry, Kafka Connect (Debezium), Elasticsearch and Mailpit in flight-hotel-data.
+# The chart's Helm hooks (Kafka topics, Debezium connectors) run as Argo CD PostSync hooks.
+# No finalizer: deleting this Application never deletes the databases. The volumes (PVCs) are not in Git at all.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: data-platform
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: flight-hotel
+  source:
+    repoURL: https://github.com/YOUR-GITHUB-USER/flight-hotel-app.git
+    targetRevision: main
+    path: deploy/charts/data-platform
+    helm:
+      releaseName: data-platform
+      # Same order as deploy/scripts/deploy-apps.ps1 and CI (docs/CI_CD.md, section 4.1): environment, then chart.
+      valueFiles:
+        - ../../environments/kind/values.yaml
+        - ../../environments/kind/data-platform.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: flight-hotel-data
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff: { duration: 15s, factor: 2, maxDuration: 3m }

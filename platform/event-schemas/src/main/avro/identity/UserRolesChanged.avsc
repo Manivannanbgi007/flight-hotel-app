@@ -1,0 +1,10 @@
+{
+  "type": "record", "name": "UserRolesChanged", "namespace": "com.flighthotel.events.identity",
+  "doc": "An admin changed the roles of an account. Topic identity.events.",
+  "fields": [
+    { "name": "userId", "type": "string" },
+    { "name": "roles", "type": { "type": "array", "items": "string" } },
+    { "name": "changedBy", "type": "string" },
+    { "name": "changedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

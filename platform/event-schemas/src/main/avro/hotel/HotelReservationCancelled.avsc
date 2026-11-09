@@ -1,0 +1,14 @@
+{
+  "type": "record", "name": "HotelReservationCancelled", "namespace": "com.flighthotel.events.hotel",
+  "doc": "The booked rooms of a confirmed reservation are back on sale. Answer to BookingCancellationRequested (repeated with the same content if the request is repeated).",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "reservationId", "type": "string" },
+    { "name": "cancellationId", "type": "string" },
+    { "name": "cancellationReference", "type": "string", "doc": "the hotel's cancellation number, e.g. HXK7M3Q9P2" },
+    { "name": "cancelledAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "initiatedBy", "type": "string", "default": "CUSTOMER",
+      "doc": "CUSTOMER: the answer to BookingCancellationRequested. HOTEL (Phase 9): the hotel cancelled on its own (new cancellationId made by the hotel); the guest is refunded in full." },
+    { "name": "reason", "type": ["null", "string"], "default": null, "doc": "the hotel's reason (HOTEL only)" }
+  ]
+}

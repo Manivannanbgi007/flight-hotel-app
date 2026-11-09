@@ -1,0 +1,89 @@
+# Serves the built React app and forwards /api to the API gateway (same origin → no CORS needed).
+# ${API_GATEWAY_URL} is filled in from the environment when the container starts.
+
+# Access log WITHOUT query strings, also in the Referer: e-mail links carry one-time tokens
+# (/verify-email?token=..., /reset-password?token=...) that must never end up in logs.
+map $request_uri $fh_request_path {
+    "~^(?<fh_req_base>[^?]*)" $fh_req_base;
+}
+map $http_referer $fh_referer_path {
+    default $http_referer;
+    "~^(?<fh_ref_base>[^?]*)\?" $fh_ref_base;
+}
+log_format fh_no_query '$remote_addr - $remote_user [$time_local] "$request_method $fh_request_path $server_protocol" '
+                       '$status $body_bytes_sent "$fh_referer_path" "$http_user_agent"';
+
+server {
+    # 8080: nginx runs as a non-root user (see the Dockerfile), which cannot open port 80.
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+    server_tokens off;
+    access_log /var/log/nginx/access.log fh_no_query;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok";
+    }
+
+    # Live updates (Server-Sent Events): never buffer, keep the connection open.
+    location /api/realtime/ {
+        proxy_pass ${API_GATEWAY_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        # nginx is the edge: overwrite (never append to) what the client sent, so the IP cannot be forged.
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 1h;
+        proxy_send_timeout 1h;
+    }
+
+    # AI assistant (AI_ASSISTANT.md): answers stream as Server-Sent Events and a local model on a CPU may take
+    # minutes (the service ends an answer after 240 s). Never buffer, so each event reaches the browser at once.
+    # Also the voice upload (5 MB) and the read-aloud MP3.
+    location /api/assistant/ {
+        proxy_pass ${API_GATEWAY_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        # nginx is the edge: overwrite (never append to) what the client sent, so the IP cannot be forged.
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+        client_max_body_size 10m;
+    }
+
+    location /api/ {
+        proxy_pass ${API_GATEWAY_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        # nginx is the edge: overwrite (never append to) what the client sent, so the IP cannot be forged.
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+        client_max_body_size 10m;
+    }
+
+    # Built assets have content hashes in their names: cache them for a year.
+    location /assets/ {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files $uri =404;
+    }
+
+    # Single-page app: every other path serves index.html (never cached, so deploys show up immediately).
+    location / {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri $uri/ /index.html;
+    }
+}

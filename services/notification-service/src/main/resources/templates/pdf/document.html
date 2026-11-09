@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="${doc.title} + ' ' + ${doc.reference}">Document</title>
+    <style>
+        @page { size: A4; margin: 18mm 16mm 20mm 16mm;
+            @bottom-center { content: element(footer); } }
+        body { font-family: 'Inter', sans-serif; font-size: 10pt; color: #1f2937; }
+        .footer { position: running(footer); font-size: 8pt; color: #6b7280; text-align: center; }
+        .page { page-break-after: always; }
+        .page.last { page-break-after: auto; }
+        .header { border-bottom: 2px solid #1d4ed8; padding-bottom: 8pt; margin-bottom: 12pt; }
+        .brand { font-size: 16pt; font-weight: bold; color: #1d4ed8; }
+        .title { font-size: 15pt; font-weight: bold; margin: 6pt 0 2pt 0; color: #111827; }
+        .meta { font-size: 9pt; color: #4b5563; }
+        .reference { font-weight: bold; color: #111827; }
+        .demo { border: 1px solid #b45309; background: #fffbeb; color: #92400e; padding: 6pt 8pt; margin: 0 0 10pt 0;
+            font-weight: bold; font-size: 9pt; }
+        h2 { font-size: 11pt; margin: 12pt 0 4pt 0; color: #1d4ed8; }
+        h3 { font-size: 12pt; margin: 0 0 8pt 0; color: #111827; }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { padding: 4pt 6pt; vertical-align: top; text-align: left; }
+        table.rows td { border-bottom: 1px solid #e5e7eb; }
+        table.rows td.label { width: 38%; color: #6b7280; }
+        table.rows tr.strong td { font-weight: bold; color: #111827; border-top: 1px solid #9ca3af; }
+        table.grid th { background: #f3f4f6; font-size: 9pt; color: #374151; border-bottom: 1px solid #d1d5db; }
+        table.grid td { border-bottom: 1px solid #e5e7eb; font-size: 9pt; }
+        .notes { margin-top: 12pt; font-size: 8.5pt; color: #4b5563; }
+        .notes p { margin: 0 0 4pt 0; }
+    </style>
+</head>
+<body>
+<div class="footer"><span th:text="${siteName}">FlightHotel</span> · <span th:text="${supportEmail}">support</span> ·
+    <span th:text="${doc.title}">Document</span> <span th:text="${doc.reference}">REF</span></div>
+<div th:each="page, state : ${doc.pages}" th:class="${state.last} ? 'page last' : 'page'">
+    <div class="header">
+        <div class="brand" th:text="${siteName}">FlightHotel</div>
+        <div class="title" th:text="${doc.title}">Title</div>
+        <div class="meta"><span class="reference" th:text="${doc.reference}">REF</span> · <span th:text="${doc.issued}">Issued</span></div>
+    </div>
+    <div class="demo" th:if="${doc.demo}">DEMO: generated from demo inventory or a demo payment. This is not a real
+        reservation, ticket or tax document.</div>
+    <h3 th:if="${page.heading}" th:text="${page.heading}">Page heading</h3>
+    <div th:each="section : ${page.sections}">
+        <h2 th:if="${section.heading}" th:text="${section.heading}">Section</h2>
+        <table class="rows" th:if="${!section.rows.isEmpty()}">
+            <tr th:each="row : ${section.rows}" th:class="${row.strong} ? 'strong' : ''">
+                <td class="label" th:text="${row.label}">Label</td>
+                <td th:text="${row.value}">Value</td>
+            </tr>
+        </table>
+        <table class="grid" th:if="${section.table}">
+            <tr><th th:each="column : ${section.table.columns}" th:text="${column}">Column</th></tr>
+            <tr th:each="cells : ${section.table.rows}"><td th:each="cell : ${cells}" th:text="${cell}">Cell</td></tr>
+        </table>
+    </div>
+    <div class="notes" th:if="${!page.notes.isEmpty()}">
+        <p th:each="note : ${page.notes}" th:text="${note}">Note</p>
+    </div>
+</div>
+</body>
+</html>

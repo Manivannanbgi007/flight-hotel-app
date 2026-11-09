@@ -1,0 +1,40 @@
+# Settings every backend service gets as environment variables (ConfigMap flight-hotel-common).
+commonEnv:
+  SPRING_PROFILES_ACTIVE: docker              # JSON (ECS) logs, one object per line
+  DB_HOST: mysql.flight-hotel-data.svc.cluster.local
+  KAFKA_BOOTSTRAP_SERVERS: kafka.flight-hotel-data.svc.cluster.local:9092
+  SCHEMA_REGISTRY_URL: http://schema-registry.flight-hotel-data.svc.cluster.local:8081
+  REDIS_HOST: redis.flight-hotel-data.svc.cluster.local
+  ELASTICSEARCH_URIS: http://elasticsearch.flight-hotel-data.svc.cluster.local:9200
+  JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+  JWT_ISSUER: flight-hotel-identity
+
+# The namespace holding MySQL, Kafka, ... (allowed as an egress target).
+dataNamespace: flight-hotel-data
+# The namespace of the gateway controller (allowed to reach the edge pods: web app and API gateway).
+gatewayNamespace: traefik
+
+networkPolicies:
+  enabled: true
+  # Outbound HTTPS / SMTP to the internet (payment provider, S3, mail server). Empty list = no internet at all.
+  externalEgressPorts: [443, 587]
+
+resourceQuota:
+  enabled: true
+  hard:
+    requests.cpu: "8"
+    requests.memory: 12Gi
+    limits.memory: 16Gi
+    pods: "60"
+    persistentvolumeclaims: "10"
+
+# Defaults for containers that declare no resources (e.g. a debugging pod).
+limitRange:
+  enabled: true
+  default:
+    memory: 256Mi
+  defaultRequest:
+    cpu: 50m
+    memory: 64Mi
+  max:
+    memory: 2Gi

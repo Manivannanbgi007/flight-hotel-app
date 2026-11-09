@@ -1,0 +1,1325 @@
+# Full Project Development Requirements – Hotel & Flight Travel Reservation System
+
+## 1. Role and Development Approach
+
+Act as a Senior Software Engineer, Solution Architect, UI/UX Designer, and DevOps Engineer.
+
+I want to develop a complete **Hotel and Flight Travel Reservation System** with a modern, professional, responsive user interface and a production-ready backend architecture.
+
+The application should be understandable to junior developers. Write clean, maintainable, well-structured code. Avoid unnecessary complexity, overengineering, and redundant technologies.
+
+Follow these principles:
+
+- Analyze the existing project structure before making changes.
+- If the repository already contains code, understand the existing implementation before modifying anything.
+- Do not break existing functionality or business logic.
+- Do not replace working implementations without a clear technical reason.
+- Build reusable components and services.
+- Follow industry-standard coding practices, validation, exception handling, security, and logging.
+- Implement actual frontend and backend functionality. Do not create UI screens with hardcoded data and pretend the features are complete.
+- Complete the project incrementally and verify each module before moving to the next.
+- Maintain project documentation throughout development.
+
+## 2. Project Objective
+
+Develop a web-based Hotel and Flight Travel Reservation System where customers can:
+
+1. Search and book domestic and international flights.
+2. Search and reserve hotels.
+3. View flight and hotel details.
+4. Compare prices and available options.
+5. Manage flight and hotel reservations.
+6. Make online payments.
+7. Download booking confirmations and invoices.
+8. Cancel reservations based on applicable cancellation policies.
+9. View booking history.
+10. Manage their profile and travel preferences.
+11. Receive booking, payment, cancellation, and travel notifications.
+
+The system should also provide administrative portals to manage users, hotels, flights, reservations, payments, offers, reports, and system configurations.
+
+## 3. Technology Stack
+
+Use the following technologies unless the existing repository requires a compatible alternative.
+
+### Backend
+
+- Java 21
+- Latest stable compatible Spring Boot version
+- Spring Web
+- Spring Data JPA
+- Spring Security
+- JWT authentication with access and refresh tokens
+- MySQL
+- ElasticSearch for searching hotel and flight
+- Redis for caching and temporary reservation/session data where appropriate
+- Spring Validation
+- Spring AOP for centralized logging where useful
+- Spring Mail for email notifications
+- OpenAPI / Swagger
+- Maven
+- Use Kafka for Saga Choreography Design pattern (every microservice should follow Saga Choreography)
+- Use Event Driven Design patter wherever required.
+- Use CQRS Design Pattern
+- User Apache kafa Debizum connector
+- User Apache avro scheme globally so that all the appliction can follow centralized schema instead of duplicate dto class
+
+### Frontend
+
+- React.js
+- TypeScript
+- Tailwind CSS
+- React Router
+- Axios
+- React Hook Form
+- Zod or an equivalent validation library
+- Recharts for dashboards and reports
+- A modern date picker and calendar component
+- Responsive layouts for desktop, tablet, and mobile
+- All the application should be as microservices based application
+
+### Infrastructure and DevOps
+
+- Docker
+- Docker Compose
+- Jenkins-compatible CI/CD pipeline
+
+
+## 4. Application Architecture
+
+Start with a modular monolithic Spring Boot backend and a separate React frontend.
+
+Organize backend modules by business domain:
+
+1. Authentication and Authorization
+2. User Management
+3. Flight Search and Management
+4. Hotel Search and Management
+5. Flight Reservation
+6. Hotel Reservation
+7. Passenger Management
+8. Guest Management
+9. Payment Management
+10. Cancellation and Refund Management
+11. Offers and Coupons
+12. Reviews and Ratings
+13. Notifications
+14. Invoice and Document Management
+15. Admin Dashboard
+16. Reports and Analytics
+17. System Configuration
+18. Audit Logging
+
+Keep business logic inside the appropriate service layer. Controllers should handle HTTP requests and responses, not business rules.
+
+Suggested backend package structure:
+
+- config
+- security
+- controller
+- service
+- service.impl
+- repository
+- entity
+- dto
+- mapper
+- exception
+- validation
+- specification
+- scheduler
+- integration
+- audit
+- util
+
+Use DTOs for API communication. Do not expose JPA entities directly through APIs.
+
+## 5. User Roles and Permissions
+
+Implement role-based access control.
+
+### Customer
+
+- Register and log in.
+- Search flights and hotels.
+- Manage personal details.
+- Add and manage passengers and travel companions.
+- Book flights and hotels.
+- View and manage reservations.
+- Pay online.
+- Download tickets, confirmations, and invoices.
+- Request cancellations and refunds.
+- Submit reviews and ratings.
+- View notifications and booking history.
+
+### Administrator
+
+- View overall system dashboard.
+- Manage customers and administrators.
+- Manage hotel information.
+- Manage flight information when using an authorized inventory source.
+- Manage bookings and reservation records.
+- Manage payments and refunds.
+- Manage offers and coupons.
+- Manage reviews and reported content.
+- Manage support requests.
+- View revenue and booking analytics.
+- Configure system settings.
+- View audit logs.
+
+### Hotel Manager
+
+- Manage assigned hotel profiles.
+- Manage hotel branches and room types.
+- Manage room inventory and availability.
+- Manage room prices and seasonal pricing.
+- Manage hotel amenities, photos, and policies.
+- View hotel reservations.
+- Update check-in and check-out statuses.
+- Manage cancellations according to hotel policies.
+- View hotel-specific reports.
+
+### Travel Operations / Support Agent
+
+- Search customer bookings.
+- Assist customers with reservation issues.
+- View booking and payment statuses.
+- Process permitted booking changes and cancellation requests.
+- Communicate with customers.
+- Escalate refund and supplier-related issues.
+
+Enforce permissions on the backend. Hiding frontend menu items is not sufficient security.
+
+## 6. Authentication and User Management
+
+Implement:
+
+- Customer registration.
+- Email verification.
+- Login and logout.
+- Forgot password.
+- Password reset.
+- JWT access token.
+- Refresh token rotation and revocation.
+- Secure password hashing using BCrypt.
+- Role-based authorization.
+- User profile management.
+- Profile photo upload.
+- Account activation and deactivation.
+- Login history where appropriate.
+
+Validate all inputs on both frontend and backend.
+
+## 7. Customer Website – Main Navigation
+
+Create a modern travel booking website with the following navigation:
+
+- Home
+- Flights
+- Hotels
+- My Trips
+- Offers
+- Help and Support
+- Login / Register
+- Profile
+
+Include a responsive header, footer, search sections, promotional banners, and customer support information.
+
+## 8. Home Page
+
+Design an attractive travel booking homepage.
+
+Include:
+
+- Main hero section with travel imagery.
+- Flight booking search widget.
+- Hotel booking search widget.
+- Popular destinations.
+- Recommended hotels.
+- Popular flight routes.
+- Special offers.
+- Seasonal travel promotions.
+- Recently viewed searches where appropriate.
+- Customer reviews.
+- Frequently asked questions.
+- Newsletter subscription.
+
+Use real images from properly licensed sources or suitable placeholder images. Do not use random broken image URLs.
+
+## 9. Flight Search and Reservation Module
+
+### Flight Search
+
+Customers should be able to search for flights using:
+
+- From airport / city.
+- To airport / city.
+- Departure date.
+- Return date.
+- One-way or round-trip.
+- Passenger count.
+- Adult passengers.
+- Children.
+- Infants.
+- Travel class: Economy, Premium Economy, Business, First Class.
+
+Implement search filters:
+
+- Lowest price.
+- Departure time.
+- Arrival time.
+- Airline.
+- Number of stops.
+- Total journey duration.
+- Travel class.
+- Refundable or non-refundable fare.
+
+### Flight Search Results
+
+Display:
+
+- Airline name and logo.
+- Flight number.
+- Departure airport and time.
+- Arrival airport and time.
+- Journey duration.
+- Stop information.
+- Baggage allowance.
+- Fare type.
+- Cancellation policy.
+- Total fare.
+- Available seats or supplier-provided availability.
+- Flight details.
+- Book button.
+
+Allow customers to compare flight options.
+
+### Flight Details
+
+Display:
+
+- Flight itinerary.
+- Airline information.
+- Departure and arrival details.
+- Transit information.
+- Baggage allowance.
+- Fare rules.
+- Cancellation and rescheduling policies.
+- Additional charges.
+
+### Passenger Information
+
+Collect:
+
+- Passenger type.
+- First name.
+- Last name.
+- Date of birth where required.
+- Gender where required by supplier.
+- Nationality where required.
+- Passport details for international travel when required.
+- Contact email.
+- Contact mobile number.
+
+Do not collect passport or other sensitive information unless it is required for the selected booking and supplier workflow. Protect sensitive information at rest and in transit.
+
+### Flight Booking Workflow
+
+Implement the following workflow:
+
+1. Customer searches for flights.
+2. Backend retrieves available flight options.
+3. Customer selects a flight.
+4. Backend revalidates the selected fare and availability with the supplier.
+5. Customer enters passenger details.
+6. Display fare breakdown and applicable policies.
+7. Customer confirms the booking details.
+8. Create a temporary booking or reservation record.
+9. Initiate payment.
+10. Confirm the booking with the supplier at the correct stage of the supplier's booking workflow.
+11. Save the supplier confirmation reference.
+12. Update the booking status.
+13. Generate an e-ticket or booking confirmation when available.
+14. Send email and in-app notifications.
+
+Important:
+
+- Do not assume that selecting a flight means a seat is reserved.
+- Do not assume that successful payment means the airline has confirmed the booking.
+- Handle supplier timeouts, payment failures, duplicate requests, and uncertain booking outcomes.
+- Implement idempotency for booking and payment operations.
+- Reconcile payment and supplier booking status when the outcome is uncertain.
+- Never display a confirmed ticket until supplier confirmation is received.
+
+## 10. Hotel Search and Reservation Module
+
+### Hotel Search
+
+Allow customers to search hotels using:
+
+- Destination / city / location.
+- Check-in date.
+- Check-out date.
+- Number of rooms.
+- Number of adults.
+- Number of children.
+- Children's ages where required.
+
+### Hotel Search Results
+
+Display:
+
+- Hotel name.
+- Hotel images.
+- Location and address.
+- Star rating.
+- Guest rating.
+- Starting price.
+- Available room types.
+- Amenities.
+- Distance from important locations where data is available.
+- Cancellation policy.
+- Breakfast availability.
+- Book Now option.
+
+Implement filters:
+
+- Price range.
+- Star rating.
+- Guest rating.
+- Amenities.
+- Property type.
+- Free cancellation.
+- Breakfast included.
+- Distance from destination.
+- Availability.
+
+### Hotel Details
+
+Display:
+
+- Hotel description.
+- Photo gallery.
+- Location map.
+- Amenities.
+- Room types.
+- Room availability.
+- Room capacity.
+- Bed configuration.
+- Room price.
+- Taxes and additional charges.
+- Check-in and check-out times.
+- Cancellation policy.
+- Hotel rules.
+- Guest reviews.
+
+### Hotel Reservation Workflow
+
+1. Customer searches for hotels.
+2. Display available hotels.
+3. Customer selects a hotel.
+4. Customer selects a room type.
+5. Revalidate room availability and pricing.
+6. Collect guest information.
+7. Display complete price breakdown.
+8. Customer confirms reservation details.
+9. Create a temporary reservation.
+10. Initiate payment or follow the configured payment policy.
+11. Confirm the reservation with the hotel inventory provider or internal inventory system.
+12. Save the confirmation reference.
+13. Update reservation status.
+14. Generate booking confirmation.
+15. Send notifications.
+
+Handle overlapping bookings, room inventory, concurrent reservations, reservation expiry, and payment failures.
+
+For an internal hotel inventory implementation, use database transactions and appropriate locking or atomic inventory updates to prevent overbooking.
+
+## 11. Supplier / External API Integration
+
+Design integration interfaces for external providers.
+
+Potential integration categories:
+
+- Flight inventory and booking providers.
+- Hotel inventory and booking providers.
+- Payment gateway.
+- Email provider.
+- SMS provider.
+- Maps and geolocation provider.
+
+Examples of travel supplier platforms to evaluate include Amadeus, Travelport, Sabre, and hotel distribution providers.
+
+Do not assume that these providers offer unrestricted free production access. Check their current API availability, commercial terms, certification requirements, supported countries, and booking capabilities before selecting one.
+
+Create provider abstraction interfaces, such as:
+
+- FlightSearchProvider
+- FlightBookingProvider
+- HotelSearchProvider
+- HotelBookingProvider
+- PaymentProvider
+
+Keep provider-specific request and response models separate from the application's internal DTOs.
+
+Implement:
+
+- Authentication with providers.
+- API timeout handling.
+- Retry only for safe operations.
+- Rate-limit handling.
+- Response mapping.
+- Error normalization.
+- Provider health monitoring.
+- Request correlation IDs.
+- Safe logging without exposing sensitive passenger data.
+
+If provider credentials are unavailable, implement a clearly identified demo provider with sample inventory. Make the provider configurable so a real integration can be added later without rewriting booking business logic.
+
+Never mix demo inventory with real supplier inventory without clearly identifying the source.
+
+## 12. Booking Management – My Trips
+
+Create a My Trips page.
+
+Include tabs:
+
+- All Bookings
+- Upcoming
+- Completed
+- Cancelled
+- Pending
+
+Display booking cards with:
+
+- Booking reference.
+- Booking type: Flight or Hotel.
+- Destination.
+- Travel date or stay dates.
+- Booking status.
+- Payment status.
+- Total amount.
+- View Details.
+- Download Confirmation.
+- Cancel Booking, when permitted.
+
+### Booking Details
+
+Show complete booking information, passenger/guest details, supplier reference, payment breakdown, cancellation policy, and booking timeline.
+
+Allow booking cancellation or modification only when the supplier and applicable policies support it.
+
+## 13. Payment Management
+
+Design a payment integration layer that supports a configurable payment provider.
+
+For the initial India-based demo, evaluate Razorpay. Keep the integration abstract enough to support other payment gateways later.
+
+Implement:
+
+- Create payment order.
+- Initiate checkout.
+- Verify payment signature on the backend.
+- Process payment webhooks.
+- Maintain transaction history.
+- Payment success and failure handling.
+- Refund requests.
+- Partial refunds where supported.
+- Payment reconciliation.
+- Duplicate webhook protection.
+- Idempotency keys.
+
+Payment statuses:
+
+- INITIATED
+- PENDING
+- SUCCESS
+- FAILED
+- REFUND_PENDING
+- PARTIALLY_REFUNDED
+- REFUNDED
+
+Do not trust payment success information coming only from the frontend. Verify it using the provider's backend verification process and webhook.
+
+Do not store card numbers, CVV, or other prohibited payment credentials.
+
+## 14. Cancellation and Refund Management
+
+Implement cancellation policies separately for flights and hotels.
+
+Display cancellation rules before payment and booking confirmation.
+
+Support:
+
+- Customer cancellation requests.
+- Supplier cancellation requests.
+- Cancellation eligibility checks.
+- Cancellation fee calculation.
+- Refund amount calculation.
+- Refund processing.
+- Refund status tracking.
+- Cancellation confirmation.
+- Email and in-app notifications.
+
+A cancellation request must not be marked successful until the supplier confirms cancellation when a supplier is involved.
+
+Maintain an audit trail for all cancellation and refund operations.
+
+## 15. Offers and Coupon Management
+
+Implement:
+
+- Coupon creation.
+- Coupon activation and deactivation.
+- Coupon expiration.
+- Percentage discounts.
+- Fixed discounts.
+- Minimum booking amount.
+- Maximum discount.
+- Flight-specific offers.
+- Hotel-specific offers.
+- Destination-specific offers.
+- Usage limits.
+- Per-customer usage limits.
+
+Validate coupon eligibility on the backend. Never trust discount calculations submitted by the frontend.
+
+## 16. Reviews and Ratings
+
+Customers can submit reviews for completed hotel stays and eligible travel experiences.
+
+Implement:
+
+- Rating from 1 to 5.
+- Review title.
+- Review description.
+- Photo upload if enabled.
+- Review moderation.
+- Report review.
+- Admin approval or rejection.
+
+Prevent customers from reviewing bookings they have not completed.
+
+## 17. Notifications
+
+Implement in-app and email notifications for:
+
+- Registration and email verification.
+- Booking initiated.
+- Payment successful.
+- Payment failed.
+- Flight confirmed.
+- Hotel confirmed.
+- Booking cancelled.
+- Refund initiated.
+- Refund completed.
+- Travel reminders.
+- Important schedule changes where supplier data supports them.
+
+Create a notification center with read/unread status.
+
+## 18. Invoice and Document Management
+
+Generate downloadable PDF documents for:
+
+- Flight booking confirmation.
+- E-ticket when supplied.
+- Hotel reservation confirmation.
+- Payment receipt.
+- Invoice.
+- Cancellation confirmation.
+- Refund receipt.
+
+Generate documents using server-side data.
+
+Store generated files in configurable storage such as local storage for development and AWS S3 for production.
+
+Use access-controlled download APIs. Do not expose private document storage URLs publicly.
+
+## 19. Customer Profile and Travel Preferences
+
+Create profile sections:
+
+- Personal Information.
+- Contact Details.
+- Saved Passengers.
+- Saved Travel Preferences.
+- Booking History.
+- Payment History.
+- Notifications.
+- Security Settings.
+
+Allow customers to manage saved passenger information securely.
+
+## 20. Admin Dashboard
+
+Create a professional admin dashboard with:
+
+- Total customers.
+- Total flight bookings.
+- Total hotel bookings.
+- Upcoming reservations.
+- Completed reservations.
+- Cancelled reservations.
+- Pending payments.
+- Successful payments.
+- Total revenue.
+- Refund amount.
+- Most popular destinations.
+- Top-performing hotels.
+- Booking trends.
+- Revenue charts.
+- Recent bookings.
+- Recent activities.
+
+Include date filters:
+
+- Today.
+- Last 7 days.
+- Last 14 days.
+- Last 30 days.
+- This month.
+- Previous month.
+- Custom date range.
+
+All dashboard statistics and charts must be calculated using backend data and filtered by the selected date range.
+
+## 21. Hotel Manager Dashboard
+
+Provide:
+
+- Hotel profile management.
+- Room management.
+- Room inventory.
+- Room pricing.
+- Availability calendar.
+- Reservation management.
+- Guest details.
+- Check-in and check-out management.
+- Cancellation overview.
+- Revenue reports.
+- Occupancy reports.
+- Date-range filters.
+
+A hotel manager must only access hotels assigned to their account.
+
+## 22. Reports and Analytics
+
+Create reports for:
+
+- Flight bookings.
+- Hotel bookings.
+- Revenue.
+- Payments.
+- Refunds.
+- Cancellations.
+- Hotel occupancy.
+- Popular destinations.
+- Customer activity.
+
+Support:
+
+- Date-range filters.
+- Pagination.
+- Sorting.
+- Search.
+- CSV export.
+- PDF export where appropriate.
+
+Ensure report totals are consistent with the underlying booking and payment records.
+
+## 23. Database Design
+
+Database per service follow but in docker compose within docker container you can use all databse for using less memory
+
+Suggested tables:
+
+### User and Security
+
+- users
+- roles
+- permissions
+- user_roles
+- role_permissions
+- refresh_tokens
+- password_reset_tokens
+- email_verification_tokens
+
+### Travel Inventory
+
+- airports
+- airlines
+- flight_search_cache
+- hotels
+- hotel_branches
+- hotel_images
+- hotel_amenities
+- room_types
+- room_inventory
+- room_rates
+- hotel_policies
+
+### Passenger and Guest
+
+- passengers
+- customer_passengers
+- booking_guests
+
+### Reservations
+
+- bookings
+- flight_bookings
+- flight_segments
+- hotel_bookings
+- hotel_room_reservations
+- booking_status_history
+
+### Payments
+
+- payment_transactions
+- payment_webhook_events
+- refunds
+- invoices
+
+### Other
+
+- coupons
+- coupon_usage
+- reviews
+- notifications
+- notification_preferences
+- support_tickets
+- audit_logs
+- system_settings
+
+Adjust the final database design based on the selected supplier APIs and actual business requirements.
+
+Use UUID7 identifiers where appropriate.
+
+Include:
+
+- created_at
+- updated_at
+- created_by
+- updated_by
+- version for optimistic locking where needed
+
+Define proper foreign keys, unique constraints, indexes, and transaction boundaries.
+
+Do not store temporary supplier search results as permanent confirmed inventory.
+
+## 24. API Development
+
+Develop REST APIs with consistent request and response formats.
+
+Example API groups:
+
+### Authentication
+
+- POST /api/auth/register
+- POST /api/auth/login
+- POST /api/auth/refresh
+- POST /api/auth/logout
+- POST /api/auth/forgot-password
+- POST /api/auth/reset-password
+
+### Flights
+
+- GET /api/flights/search
+- GET /api/flights/{id}
+- POST /api/flights/revalidate
+- POST /api/flights/book
+- GET /api/flights/bookings/{bookingId}
+
+### Hotels
+
+- GET /api/hotels/search
+- GET /api/hotels/{id}
+- GET /api/hotels/{id}/rooms
+- POST /api/hotels/availability
+- POST /api/hotels/book
+- GET /api/hotels/bookings/{bookingId}
+
+### Bookings
+
+- GET /api/bookings
+- GET /api/bookings/{bookingId}
+- POST /api/bookings/{bookingId}/cancel
+- GET /api/bookings/{bookingId}/timeline
+
+### Payments
+
+- POST /api/payments/create-order
+- POST /api/payments/verify
+- POST /api/payments/webhook
+- GET /api/payments/{paymentId}
+- POST /api/payments/{paymentId}/refund
+
+### Customer
+
+- GET /api/customers/profile
+- PUT /api/customers/profile
+- GET /api/customers/passengers
+- POST /api/customers/passengers
+
+### Admin
+
+- GET /api/admin/dashboard
+- GET /api/admin/bookings
+- GET /api/admin/payments
+- GET /api/admin/reports
+- GET /api/admin/users
+
+These are initial API examples. Design the final endpoints based on actual domain requirements. Implement pagination, sorting, filtering, validation, authorization, and consistent error responses.
+
+## 25. Frontend Pages and UI Requirements
+
+Create the following pages:
+
+### Public Pages
+
+- Home
+- Flight Search
+- Flight Results
+- Flight Details
+- Passenger Details
+- Flight Booking Review
+- Hotel Search
+- Hotel Results
+- Hotel Details
+- Room Selection
+- Guest Details
+- Hotel Booking Review
+- Payment
+- Payment Result
+- Login
+- Registration
+- Forgot Password
+- Reset Password
+- Offers
+- About Us
+- Contact Us
+- Help and Support
+
+### Customer Pages
+
+- Customer Dashboard
+- My Trips
+- Flight Booking Details
+- Hotel Booking Details
+- Passenger Management
+- Profile
+- Payment History
+- Notifications
+- Reviews
+- Support Tickets
+
+### Admin Pages
+
+- Admin Dashboard
+- User Management
+- Hotel Management
+- Flight Provider Management
+- Booking Management
+- Payment Management
+- Refund Management
+- Coupon Management
+- Review Management
+- Support Management
+- Reports
+- Audit Logs
+- System Settings
+
+### Hotel Manager Pages
+
+- Hotel Dashboard
+- Hotel Profile
+- Room Management
+- Inventory Calendar
+- Room Pricing
+- Reservations
+- Guest Management
+- Check-in / Check-out
+- Reviews
+- Reports
+
+## 26. UI/UX Design Requirements
+
+Use a modern travel industry design.
+
+Design expectations:
+
+- Professional travel booking interface.
+- Clean layouts and visual hierarchy.
+- Attractive travel images.
+- Modern cards and search panels.
+- Smooth animations and transitions.
+- Clear buttons and calls to action.
+- Consistent typography.
+- Proper spacing.
+- Responsive design.
+- Accessible form labels and controls.
+- Skeleton loading states.
+- Empty states.
+- Error states.
+- Success messages.
+- Confirmation dialogs.
+- Toast notifications.
+
+Use a consistent design system for:
+
+- Colors.
+- Typography.
+- Buttons.
+- Inputs.
+- Dropdowns.
+- Cards.
+- Tables.
+- Modals.
+- Badges.
+- Date pickers.
+- Navigation.
+
+Do not overuse animations or visual effects. Prioritize usability, performance, and accessibility.
+
+## 27. Security Requirements
+
+Implement:
+
+- Spring Security.
+- JWT-based authentication.
+- Role-based authorization.
+- Password hashing.
+- Input validation.
+- SQL injection prevention.
+- XSS protection.
+- CSRF protection appropriate to the chosen authentication architecture.
+- CORS configuration.
+- Rate limiting for sensitive endpoints.
+- Secure file uploads.
+- Secure document downloads.
+- Secrets through environment variables or a secrets manager.
+- Sensitive data masking in logs.
+- Audit logging for critical actions.
+
+Do not commit API keys, passwords, JWT secrets, payment credentials, or supplier credentials to Git.
+
+Protect passport and personal information. Restrict access to authorized users and encrypt sensitive information where appropriate.
+
+## 28. Booking Reliability and Business Rules
+
+Treat booking as a stateful business process, not a simple database insert.
+
+Implement clear booking states, for example:
+
+- INITIATED
+- PENDING_PAYMENT
+- PAYMENT_SUCCESS
+- SUPPLIER_PENDING
+- CONFIRMED
+- FAILED
+- CANCELLATION_PENDING
+- CANCELLED
+- REFUND_PENDING
+- REFUNDED
+
+Adjust states to support the actual supplier and payment workflow.
+
+Important requirements:
+
+- Prevent duplicate bookings.
+- Prevent duplicate payment processing.
+- Handle concurrent room reservations.
+- Revalidate price and availability before final confirmation.
+- Apply reservation expiry rules.
+- Handle supplier API timeouts and uncertain outcomes.
+- Maintain booking status history.
+- Reconcile payment and supplier booking states.
+- Do not mark a booking as confirmed without confirmation from the relevant inventory source.
+- Never calculate the final payment amount using untrusted frontend values.
+
+## 29. Logging, Monitoring, and Exception Handling
+
+Implement centralized exception handling using `@RestControllerAdvice`.
+
+Use structured logs with:
+
+- Timestamp.
+- Log level.
+- Request correlation ID.
+- User ID where appropriate.
+- API endpoint.
+- Operation.
+- Execution duration.
+- Error details without sensitive information.
+
+Add health endpoints and application metrics.
+
+Do not log passwords, tokens, payment secrets, full passport numbers, or sensitive personal information.
+
+## 30. Testing Requirements
+
+Create meaningful tests for all important business operations.
+
+### Backend Tests
+
+- Unit tests for services.
+- Controller tests.
+- Repository tests.
+- Security tests.
+- Flight search tests.
+- Hotel search tests.
+- Booking workflow tests.
+- Room inventory concurrency tests.
+- Payment verification tests.
+- Webhook idempotency tests.
+- Cancellation and refund tests.
+- Supplier integration tests using mocks or sandbox environments.
+
+### Frontend Tests
+
+- Component tests.
+- Form validation tests.
+- Authentication tests.
+- Flight search tests.
+- Hotel search tests.
+- Booking workflow tests.
+- Payment result tests.
+- Role-based navigation tests.
+
+### End-to-End Tests
+
+Test complete customer journeys:
+
+1. Register and log in.
+2. Search for a flight.
+3. Select a flight.
+4. Enter passenger details.
+5. Complete a demo or sandbox payment.
+6. Confirm the booking using the configured provider.
+7. View the booking in My Trips.
+8. Download the booking confirmation.
+9. Submit a cancellation request.
+10. Verify the final cancellation and refund status.
+
+Repeat the equivalent flow for hotel reservations.
+
+## 31. Docker and Local Development
+
+Create Dockerfiles for the backend and frontend.
+
+Create a Docker Compose setup for local development with the required infrastructure:
+
+- Spring Boot backend.
+- React frontend.
+- MySQL.
+- Redis if required.
+- Confluent Apache kafka
+- Elasticsearch if required
+- Apache debizum connector
+- Apache avro schema
+
+Use persistent volumes for database data.
+
+Configure:
+
+- Development environment variables.
+- Database initialization.
+- Application health checks.
+- Container dependencies.
+- Network configuration.
+
+The application should also be runnable directly from Windows Command Prompt or PowerShell for developers who do not want to run every component inside Docker.
+
+Provide `.env.example` files. Never include real credentials.
+
+## 32. Deployment Readiness
+
+Keep development and production configurations separate.
+
+Do not assume local Docker hostnames will work in AWS ECS. Configure production service endpoints correctly.
+
+## 33. Documentation Requirements
+
+Create these Markdown documents:
+
+1. README.md – Project overview and setup.
+2. PROJECT_ARCHITECTURE.md – Architecture and module descriptions.
+3. DATABASE_DESIGN.md – Tables and relationships.
+4. API_DOCUMENTATION.md – API details and examples.
+5. BOOKING_WORKFLOW.md – Flight and hotel booking workflows.
+6. PAYMENT_INTEGRATION.md – Payment integration and webhook handling.
+7. SUPPLIER_INTEGRATION.md – Flight and hotel provider integration.
+8. SECURITY_GUIDE.md – Authentication, authorization, and sensitive data handling.
+9. LOCAL_SETUP_GUIDE.md – Windows setup and local execution.
+10. DOCKER_SETUP.md – Docker and Docker Compose instructions.
+12. TESTING_GUIDE.md – Test execution and validation.
+
+Write documentation in simple, step-by-step English that junior developers can understand.
+
+Include commands, configuration examples, expected results, and troubleshooting instructions.
+
+## 34. Development Execution Plan
+
+Do not attempt to implement everything in one unverified code-generation step.
+
+Follow these phases:
+
+### Phase 1 – Project Analysis and Architecture
+
+- Prepare architecture.
+- Define business requirements.
+- Identify external provider dependencies.
+- Prepare database design.
+- Prepare implementation plan.
+
+### Phase 2 – Project Foundation
+
+- Create Spring Boot project.
+- Create React project.
+- Configure MySQL.
+- Configure Redis, Elasticsearch, Avro schema, Confluent Kafka, Kafa debizum connector if needed.
+- Implement common API response and exception handling.
+- Configure Swagger.
+- Configure Docker Compose.
+
+### Phase 3 – Authentication and Authorization
+
+- Registration.
+- Login.
+- JWT.
+- Refresh tokens.
+- Role-based authorization.
+- Profile management.
+
+### Phase 4 – Hotel Management
+
+- Hotel management.
+- Room management.
+- Room inventory.
+- Pricing.
+- Availability search.
+- Hotel reservation workflow.
+
+### Phase 5 – Flight Management
+
+- Flight search integration.
+- Flight results.
+- Fare revalidation.
+- Passenger management.
+- Flight reservation workflow.
+
+### Phase 6 – Payments and Booking Reliability
+
+- Payment provider integration.
+- Webhooks.
+- Booking state management.
+- Cancellation.
+- Refunds.
+- Reconciliation.
+
+### Phase 7 – Customer Frontend
+
+- Home page.
+- Flight search and booking.
+- Hotel search and booking.
+- My Trips.
+- Customer profile.
+- Payment and document pages.
+
+### Phase 8 – Admin and Hotel Manager Portals
+
+- Dashboards.
+- User management.
+- Booking management.
+- Inventory management.
+- Reports.
+- System configuration.
+
+### Phase 9 – Notifications and Documents
+
+- Email.
+- In-app notifications.
+- PDF confirmations.
+- Invoices.
+- Secure document downloads.
+
+### Phase 10 – Testing and Quality
+
+- Unit tests.
+- Integration tests.
+- Frontend tests.
+- End-to-end tests.
+- Security checks.
+- Performance checks.
+- Bug fixing.
+
+### Phase 11 – Deployment and Documentation
+
+- Docker images.
+- CI/CD pipeline.
+- Final documentation.
+- Deployment verification.
+
+After each phase, run relevant tests and fix issues before proceeding.
+
+## 35. Important Development Rules
+
+1. Do not generate only frontend UI screens. Implement the complete backend functionality.
+2. Do not use hardcoded data as if it were live flight or hotel availability.
+3. Demo data must be clearly identified as demo data.
+4. Do not fake successful bookings or payments.
+5. Do not bypass supplier confirmation.
+6. Do not trust frontend prices or payment status.
+7. Do not expose database entities directly.
+8. Do not put business logic in controllers.
+9. Do not duplicate business logic across modules.
+10. Do not introduce unnecessary technologies.
+11. Do not break existing functionality.
+12. Use meaningful class, method, variable, and API names.
+13. Implement proper validation and exception handling.
+14. Add tests for important business rules.
+15. Use database transactions where required.
+16. Use idempotency and concurrency protection for booking and payment workflows.
+17. Keep secrets outside source code.
+18. Ensure the application is responsive on mobile, tablet, and desktop.
+19. Do not mark a feature as complete until it has been implemented and tested.
+20. Update documentation whenever architecture, APIs, or business workflows change.
+
+## 36. Final Expected Deliverables
+
+At the end of development, provide:
+
+- Complete Spring Boot backend source code.
+- Complete React frontend source code.
+- MySQL database schema and migrations.
+- Dockerfiles.
+- Docker Compose configuration.
+- Environment variable examples.
+- API documentation.
+- Swagger configuration.
+- Unit and integration tests.
+- Sample demo inventory, clearly labelled.
+- Sample customer and admin accounts for local development only.
+- Booking and payment workflow documentation.
+- Complete README.
+- Final project structure.
+- Instructions to run the entire application locally.
+
+## 37. First Task – Do Not Start Coding Immediately
+
+Before writing implementation code:
+
+1. Inspect the existing repository and its current structure.
+2. Identify whether the repository is empty or already contains an application.
+3. Analyze existing dependencies and conventions.
+4. Identify missing business requirements and technical dependencies.
+5. Present the proposed architecture.
+6. Present the database entity relationship design.
+7. Present the complete module and page list.
+8. Identify which flight and hotel supplier APIs can realistically be used.
+9. Identify payment provider requirements.
+10. Present a phased implementation plan.
+
+If a critical business decision is missing, ask me one clear question at a time rather than making an unsupported assumption.
+
+Once the architecture and implementation plan are established, proceed phase by phase. Do not stop after producing documentation or sample code. Implement, test, and verify the actual application.

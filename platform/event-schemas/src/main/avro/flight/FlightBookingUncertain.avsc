@@ -1,0 +1,10 @@
+{
+  "type": "record", "name": "FlightBookingUncertain", "namespace": "com.flighthotel.events.flight",
+  "doc": "The supplier did not answer (timeout) after payment. The order may or may not exist: flight-service reconciles and later sends FlightBookingConfirmed or FlightBookingFailed. The customer is told it is being confirmed; never retried blindly.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "holdId", "type": "string" },
+    { "name": "reason", "type": "string" },
+    { "name": "since", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

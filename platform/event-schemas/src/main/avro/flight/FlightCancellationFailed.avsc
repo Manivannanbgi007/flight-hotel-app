@@ -1,0 +1,11 @@
+{
+  "type": "record", "name": "FlightCancellationFailed", "namespace": "com.flighthotel.events.flight",
+  "doc": "The airline refused or did not confirm the cancellation; the tickets stay valid.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "cancellationId", "type": "string" },
+    { "name": "reason", "type": "string", "doc": "TOO_LATE, NOT_ALLOWED, NOT_CANCELLABLE, SUPPLIER_NO_ANSWER" },
+    { "name": "message", "type": "string" },
+    { "name": "failedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

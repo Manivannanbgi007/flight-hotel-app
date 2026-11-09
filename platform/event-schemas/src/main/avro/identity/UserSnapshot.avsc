@@ -1,0 +1,15 @@
+{
+  "type": "record", "name": "UserSnapshot", "namespace": "com.flighthotel.events.identity",
+  "doc": "An account as it is now. Published once for every account by the backfill (read models that start later); later changes come as UserRegistered, EmailVerified, UserStatusChanged and UserRolesChanged.",
+  "fields": [
+    { "name": "userId", "type": "string" },
+    { "name": "email", "type": "string" },
+    { "name": "firstName", "type": "string" },
+    { "name": "lastName", "type": "string" },
+    { "name": "roles", "type": { "type": "array", "items": "string" } },
+    { "name": "status", "type": "string" },
+    { "name": "emailVerified", "type": "boolean" },
+    { "name": "registeredAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "snapshotAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

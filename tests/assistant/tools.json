@@ -1,0 +1,947 @@
+{
+ "CUSTOMER": [
+  {
+   "name": "booking_details",
+   "title": "Booking details",
+   "description": "Details of one booking by its reference: status, dates, hotel or flight, price, PNR or hotel confirmation number, cancellation and refunds.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "reference": {
+      "type": "string",
+      "description": "Booking reference, e.g. HT-7K3M9Q2X or FL-4KD8M2PQ"
+     }
+    },
+    "required": [
+     "reference"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "cancellation_quote",
+   "title": "Cancellation quote",
+   "description": "What cancelling a booking would cost now: fee and refund amount, deadlines and policy. Read only: it never cancels.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "reference": {
+      "type": "string",
+      "description": "Booking reference, e.g. HT-7K3M9Q2X or FL-4KD8M2PQ"
+     }
+    },
+    "required": [
+     "reference"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "current_offers",
+   "title": "Current offers",
+   "description": "Active offers and their coupon codes.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "hotel_details",
+   "title": "Hotel details",
+   "description": "Description, amenities, check-in and check-out times, policies and room types of one hotel, by its slug from search_hotels.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "hotel": {
+      "type": "string",
+      "description": "Hotel slug from search_hotels, e.g. sea-breeze-resort-goa"
+     }
+    },
+    "required": [
+     "hotel"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "my_bookings",
+   "title": "Your trips",
+   "description": "List the signed-in customer's bookings (hotel stays and flights), newest first. tab UPCOMING = confirmed trips still ahead.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "tab": {
+      "type": "string",
+      "enum": [
+       "ALL",
+       "UPCOMING",
+       "PENDING",
+       "COMPLETED",
+       "CANCELLED"
+      ],
+      "description": "Which trips (default ALL)"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum rows (default 10)"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "my_notifications",
+   "title": "Your notifications",
+   "description": "The signed-in user's notifications (bell), newest first, and how many are unread.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "unreadOnly": {
+      "type": "boolean",
+      "description": "Only unread notifications"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum rows (default 10)"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "my_payments",
+   "title": "Your payments",
+   "description": "The signed-in customer's payment history, newest first: booking, amount, refunded amount, status, method, invoice number.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum rows (default 10)"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "my_support_tickets",
+   "title": "Your support tickets",
+   "description": "The signed-in customer's support tickets, latest activity first.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "OPEN",
+       "IN_PROGRESS",
+       "WAITING_CUSTOMER",
+       "ESCALATED",
+       "RESOLVED",
+       "CLOSED"
+      ],
+      "description": "Only tickets with this status"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum rows (default 10)"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "my_trip_summary",
+   "title": "Your travel summary",
+   "description": "Totals for the signed-in customer: hotel and flight bookings, upcoming, completed and cancelled trips, money paid and refunded in a period, and the next trip.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "range": {
+      "type": "string",
+      "enum": [
+       "THIS_MONTH",
+       "PREVIOUS_MONTH",
+       "THIS_YEAR",
+       "PREVIOUS_YEAR",
+       "LAST_30_DAYS",
+       "LAST_90_DAYS",
+       "LAST_12_MONTHS",
+       "ALL_TIME"
+      ],
+      "description": "Period of the totals (default LAST_12_MONTHS; ALL_TIME = since the first booking)"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "search_flights",
+   "title": "Flight search",
+   "description": "Find flights between two airports on a date (cheapest 5). origin and destination may be IATA codes (DEL, BOM) or city names.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "origin": {
+      "type": "string",
+      "maxLength": 40,
+      "description": "From: IATA code or city, e.g. DEL or Delhi"
+     },
+     "destination": {
+      "type": "string",
+      "maxLength": 40,
+      "description": "To: IATA code or city, e.g. GOI or Goa"
+     },
+     "departureDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Departure date YYYY-MM-DD"
+     },
+     "returnDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Return date YYYY-MM-DD for a round trip"
+     },
+     "adults": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9,
+      "description": "Adults (default 1)"
+     },
+     "cabin": {
+      "type": "string",
+      "enum": [
+       "ECONOMY",
+       "PREMIUM_ECONOMY",
+       "BUSINESS",
+       "FIRST"
+      ],
+      "description": "Cabin (default ECONOMY)"
+     },
+     "maxStops": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2,
+      "description": "0 = non-stop only"
+     }
+    },
+    "required": [
+     "origin",
+     "destination",
+     "departureDate"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "search_hotels",
+   "title": "Hotel search",
+   "description": "Find available hotels in a city for given dates, cheapest or best first (top 5).",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "destination": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "City or hotel name, e.g. Goa"
+     },
+     "checkIn": {
+      "type": "string",
+      "format": "date",
+      "description": "Check-in date YYYY-MM-DD"
+     },
+     "checkOut": {
+      "type": "string",
+      "format": "date",
+      "description": "Check-out date YYYY-MM-DD"
+     },
+     "adults": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16,
+      "description": "Adults (default 2)"
+     },
+     "rooms": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8,
+      "description": "Rooms (default 1)"
+     },
+     "maxPricePerNight": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000,
+      "description": "Highest price per night in rupees"
+     },
+     "sort": {
+      "type": "string",
+      "enum": [
+       "RECOMMENDED",
+       "PRICE_ASC",
+       "PRICE_DESC",
+       "RATING_DESC",
+       "STARS_DESC"
+      ],
+      "description": "Order (default RECOMMENDED)"
+     }
+    },
+    "required": [
+     "destination",
+     "checkIn",
+     "checkOut"
+    ],
+    "additionalProperties": false
+   }
+  }
+ ],
+ "ADMIN": [
+  {
+   "name": "admin_dashboard",
+   "title": "Admin dashboard",
+   "description": "Business figures for a period: paid bookings (hotel, flight), customers, payments, revenue, refunds, top destinations and hotels.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "range": {
+      "type": "string",
+      "enum": [
+       "TODAY",
+       "LAST_7_DAYS",
+       "LAST_14_DAYS",
+       "LAST_30_DAYS",
+       "LAST_90_DAYS",
+       "THIS_MONTH",
+       "PREVIOUS_MONTH",
+       "THIS_YEAR",
+       "PREVIOUS_YEAR",
+       "LAST_12_MONTHS",
+       "LAST_3_YEARS",
+       "LAST_5_YEARS",
+       "CUSTOM"
+      ],
+      "description": "Period (default LAST_30_DAYS). LAST_7_DAYS = today and the 6 days before. CUSTOM needs from and to."
+     },
+     "from": {
+      "type": "string",
+      "format": "date",
+      "description": "First day for CUSTOM, YYYY-MM-DD"
+     },
+     "to": {
+      "type": "string",
+      "format": "date",
+      "description": "Last day for CUSTOM, YYYY-MM-DD"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "booking_details",
+   "title": "Booking details",
+   "description": "Details of one booking by its reference: status, dates, hotel or flight, price, PNR or hotel confirmation number, cancellation and refunds.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "reference": {
+      "type": "string",
+      "description": "Booking reference, e.g. HT-7K3M9Q2X or FL-4KD8M2PQ"
+     }
+    },
+    "required": [
+     "reference"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "cancellation_quote",
+   "title": "Cancellation quote",
+   "description": "What cancelling a booking would cost now: fee and refund amount, deadlines and policy. Read only: it never cancels.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "reference": {
+      "type": "string",
+      "description": "Booking reference, e.g. HT-7K3M9Q2X or FL-4KD8M2PQ"
+     }
+    },
+    "required": [
+     "reference"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "run_report",
+   "title": "Report",
+   "description": "An admin report for a period with totals over all rows: bookings, revenue, payments, refunds, cancellations, destinations or customers.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "report": {
+      "type": "string",
+      "enum": [
+       "BOOKINGS",
+       "REVENUE",
+       "PAYMENTS",
+       "REFUNDS",
+       "CANCELLATIONS",
+       "DESTINATIONS",
+       "CUSTOMERS"
+      ],
+      "description": "Which report"
+     },
+     "range": {
+      "type": "string",
+      "enum": [
+       "TODAY",
+       "LAST_7_DAYS",
+       "LAST_14_DAYS",
+       "LAST_30_DAYS",
+       "LAST_90_DAYS",
+       "THIS_MONTH",
+       "PREVIOUS_MONTH",
+       "THIS_YEAR",
+       "PREVIOUS_YEAR",
+       "LAST_12_MONTHS",
+       "CUSTOM"
+      ],
+      "description": "Period (default LAST_30_DAYS). LAST_7_DAYS = today and the 6 days before. CUSTOM needs from and to."
+     },
+     "from": {
+      "type": "string",
+      "format": "date",
+      "description": "First day for CUSTOM, YYYY-MM-DD"
+     },
+     "to": {
+      "type": "string",
+      "format": "date",
+      "description": "Last day for CUSTOM, YYYY-MM-DD"
+     },
+     "status": {
+      "type": "string",
+      "maxLength": 30,
+      "description": "Status filter: bookings = booking status; payments = SUCCESS or FAILED; refunds = REQUESTED, COMPLETED or FAILED"
+     },
+     "type": {
+      "type": "string",
+      "enum": [
+       "HOTEL",
+       "FLIGHT"
+      ],
+      "description": "HOTEL or FLIGHT (bookings, cancellations)"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20,
+      "description": "Rows to show (default 5)"
+     }
+    },
+    "required": [
+     "report"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "search_bookings",
+   "title": "Booking search",
+   "description": "Search all bookings by reference, customer e-mail, PNR or hotel confirmation number, status, type and creation date. Returns the count and the newest rows.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "q": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Reference, e-mail, PNR or confirmation number (exact)"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "INITIATED",
+       "PENDING_PAYMENT",
+       "PAYMENT_SUCCESS",
+       "SUPPLIER_PENDING",
+       "CONFIRMED",
+       "COMPLETED",
+       "CANCELLATION_PENDING",
+       "CANCELLED",
+       "REFUND_PENDING",
+       "REFUNDED",
+       "FAILED",
+       "EXPIRED"
+      ],
+      "description": "Booking status"
+     },
+     "type": {
+      "type": "string",
+      "enum": [
+       "HOTEL",
+       "FLIGHT"
+      ],
+      "description": "HOTEL or FLIGHT"
+     },
+     "from": {
+      "type": "string",
+      "format": "date",
+      "description": "Created on or after, YYYY-MM-DD"
+     },
+     "to": {
+      "type": "string",
+      "format": "date",
+      "description": "Created on or before, YYYY-MM-DD"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum rows (default 10)"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "search_payments",
+   "title": "Payment search",
+   "description": "Search payment attempts by booking reference or payment id, status (SUCCESS, FAILED, ...) and date. Returns the count and the newest rows.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "q": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Booking reference or payment id"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "INITIATED",
+       "PENDING",
+       "SUCCESS",
+       "FAILED",
+       "REFUND_PENDING",
+       "PARTIALLY_REFUNDED",
+       "REFUNDED"
+      ],
+      "description": "Payment status"
+     },
+     "from": {
+      "type": "string",
+      "format": "date",
+      "description": "On or after, YYYY-MM-DD"
+     },
+     "to": {
+      "type": "string",
+      "format": "date",
+      "description": "On or before, YYYY-MM-DD"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum rows (default 10)"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "search_refunds",
+   "title": "Refund search",
+   "description": "Search refunds by booking reference, status (PENDING, PROCESSED, FAILED) and date.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "q": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Booking reference"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "PENDING",
+       "PROCESSED",
+       "FAILED"
+      ],
+      "description": "Refund status"
+     },
+     "from": {
+      "type": "string",
+      "format": "date",
+      "description": "Created on or after, YYYY-MM-DD"
+     },
+     "to": {
+      "type": "string",
+      "format": "date",
+      "description": "Created on or before, YYYY-MM-DD"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum rows (default 10)"
+     }
+    },
+    "additionalProperties": false
+   }
+  }
+ ],
+ "HOTEL_MANAGER": [
+  {
+   "name": "hotel_arrivals_departures",
+   "title": "Arrivals and departures",
+   "description": "Guests arriving (check-in) or leaving (check-out) on a day (default today) at your hotels. kind ARRIVALS for who is arriving, DEPARTURES for who is leaving.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "hotel": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Hotel name (or part of it); leave out for all your hotels"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "ARRIVALS",
+       "DEPARTURES",
+       "BOTH"
+      ],
+      "description": "ARRIVALS, DEPARTURES or BOTH (default BOTH)"
+     },
+     "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Day, YYYY-MM-DD (default today)"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "hotel_dashboard",
+   "title": "Hotel dashboard",
+   "description": "Today's arrivals, departures, in-house guests and occupancy, plus reservations, room nights, revenue, ADR and cancellations for a period.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "hotel": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Hotel name (or part of it); leave out for all your hotels"
+     },
+     "range": {
+      "type": "string",
+      "enum": [
+       "TODAY",
+       "LAST_7_DAYS",
+       "LAST_14_DAYS",
+       "LAST_30_DAYS",
+       "LAST_90_DAYS",
+       "THIS_MONTH",
+       "PREVIOUS_MONTH",
+       "THIS_YEAR",
+       "PREVIOUS_YEAR",
+       "LAST_12_MONTHS",
+       "LAST_3_YEARS",
+       "LAST_5_YEARS",
+       "CUSTOM"
+      ],
+      "description": "Period (default LAST_30_DAYS). LAST_7_DAYS = today and the 6 days before. CUSTOM needs from and to."
+     },
+     "from": {
+      "type": "string",
+      "format": "date",
+      "description": "First day for CUSTOM, YYYY-MM-DD"
+     },
+     "to": {
+      "type": "string",
+      "format": "date",
+      "description": "Last day for CUSTOM, YYYY-MM-DD"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "hotel_occupancy",
+   "title": "Occupancy and revenue",
+   "description": "Occupancy % (booked / available room nights), room revenue and ADR of your hotels for a period.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "hotel": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Hotel name (or part of it); leave out for all your hotels"
+     },
+     "range": {
+      "type": "string",
+      "enum": [
+       "TODAY",
+       "LAST_7_DAYS",
+       "LAST_14_DAYS",
+       "LAST_30_DAYS",
+       "LAST_90_DAYS",
+       "THIS_MONTH",
+       "PREVIOUS_MONTH",
+       "THIS_YEAR",
+       "PREVIOUS_YEAR",
+       "LAST_12_MONTHS",
+       "CUSTOM"
+      ],
+      "description": "Period (default LAST_30_DAYS). LAST_7_DAYS = today and the 6 days before. CUSTOM needs from and to."
+     },
+     "from": {
+      "type": "string",
+      "format": "date",
+      "description": "First day for CUSTOM, YYYY-MM-DD"
+     },
+     "to": {
+      "type": "string",
+      "format": "date",
+      "description": "Last day for CUSTOM, YYYY-MM-DD"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "hotel_reservations",
+   "title": "Hotel reservations",
+   "description": "Search reservations of your hotels by status, check-in dates or guest name / booking reference / confirmation number.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "hotel": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Hotel name (or part of it); leave out for all your hotels"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "CONFIRMED",
+       "CHECKED_IN",
+       "CHECKED_OUT",
+       "NO_SHOW",
+       "CANCELLED",
+       "HELD",
+       "EXPIRED",
+       "RELEASED"
+      ],
+      "description": "Reservation status"
+     },
+     "from": {
+      "type": "string",
+      "format": "date",
+      "description": "Check-in on or after, YYYY-MM-DD"
+     },
+     "to": {
+      "type": "string",
+      "format": "date",
+      "description": "Check-in on or before, YYYY-MM-DD"
+     },
+     "q": {
+      "type": "string",
+      "maxLength": 80,
+      "description": "Guest name, booking reference or confirmation number"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum rows (default 10)"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "my_hotels",
+   "title": "Your hotels",
+   "description": "Names of the hotels assigned to you. Not needed before the other hotel tools: without a hotel name they cover all your hotels.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+   }
+  }
+ ],
+ "SUPPORT_AGENT": [
+  {
+   "name": "booking_details",
+   "title": "Booking details",
+   "description": "Details of one booking by its reference: status, dates, hotel or flight, price, PNR or hotel confirmation number, cancellation and refunds.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "reference": {
+      "type": "string",
+      "description": "Booking reference, e.g. HT-7K3M9Q2X or FL-4KD8M2PQ"
+     }
+    },
+    "required": [
+     "reference"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "cancellation_quote",
+   "title": "Cancellation quote",
+   "description": "What cancelling a booking would cost now: fee and refund amount, deadlines and policy. Read only: it never cancels.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "reference": {
+      "type": "string",
+      "description": "Booking reference, e.g. HT-7K3M9Q2X or FL-4KD8M2PQ"
+     }
+    },
+    "required": [
+     "reference"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "find_bookings",
+   "title": "Booking lookup",
+   "description": "Look up bookings by reference, customer e-mail, PNR or hotel confirmation number (exact), or list bookings that need attention.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "q": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Reference, e-mail, PNR or confirmation number"
+     },
+     "needsAttention": {
+      "type": "boolean",
+      "description": "Only bookings flagged for support"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum rows (default 10)"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "ticket_metrics",
+   "title": "Support metrics",
+   "description": "Support figures for a period: tickets opened and resolved, open tickets by age, first response and resolution times.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "range": {
+      "type": "string",
+      "enum": [
+       "TODAY",
+       "LAST_7_DAYS",
+       "LAST_14_DAYS",
+       "LAST_30_DAYS",
+       "LAST_90_DAYS",
+       "THIS_MONTH",
+       "PREVIOUS_MONTH",
+       "THIS_YEAR",
+       "PREVIOUS_YEAR",
+       "LAST_12_MONTHS",
+       "LAST_3_YEARS",
+       "LAST_5_YEARS",
+       "CUSTOM"
+      ],
+      "description": "Period (default LAST_30_DAYS). LAST_7_DAYS = today and the 6 days before. CUSTOM needs from and to."
+     },
+     "from": {
+      "type": "string",
+      "format": "date",
+      "description": "First day for CUSTOM, YYYY-MM-DD"
+     },
+     "to": {
+      "type": "string",
+      "format": "date",
+      "description": "Last day for CUSTOM, YYYY-MM-DD"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "ticket_queue",
+   "title": "Ticket queue",
+   "description": "Support tickets by status, assignment and priority, oldest last message first.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "OPEN",
+       "IN_PROGRESS",
+       "WAITING_CUSTOMER",
+       "ESCALATED",
+       "RESOLVED",
+       "CLOSED"
+      ],
+      "description": "Ticket status"
+     },
+     "assigned": {
+      "type": "string",
+      "enum": [
+       "ME",
+       "UNASSIGNED",
+       "ANY"
+      ],
+      "description": "ME, UNASSIGNED or ANY (default ANY)"
+     },
+     "priority": {
+      "type": "string",
+      "enum": [
+       "NORMAL",
+       "HIGH"
+      ],
+      "description": "NORMAL or HIGH"
+     },
+     "q": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Ticket number, customer e-mail or words of the subject"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum rows (default 10)"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "ticket_summary",
+   "title": "Ticket summary",
+   "description": "How many tickets are open, in progress, waiting for the customer, escalated, unassigned and assigned to me.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+   }
+  }
+ ]
+}

@@ -1,0 +1,31 @@
+# Argo Rollouts 1.10 (chart argo/argo-rollouts 2.43.9): blue-green and canary deployments.
+controller:
+  replicas: 2                      # leader election: one active, one standby
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  # Traffic-weighted canaries through the Gateway API (the plugin changes the HTTPRoute backend weights).
+  # Pinned version and checksum; the controller downloads it at start-up.
+  trafficRouterPlugins:
+    - name: argoproj-labs/gatewayAPI
+      location: https://github.com/argoproj-labs/rollouts-plugin-trafficrouter-gatewayapi/releases/download/v0.17.0/gatewayapi-plugin-linux-amd64
+      sha256: 1904ca787d33107c140521899d61fff030ee75d99908bd175fca5a4647759061
+
+# RBAC for the providers the controller may change (HTTPRoutes for the Gateway API plugin).
+providerRBAC:
+  enabled: true
+  providers:
+    gatewayAPI: true
+
+# The Rollouts dashboard (read-only view of rollouts, promote/abort buttons): http://rollouts.localhost
+dashboard:
+  enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 128Mi

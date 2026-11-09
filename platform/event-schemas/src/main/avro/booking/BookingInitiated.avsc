@@ -1,0 +1,44 @@
+{
+  "type": "record", "name": "BookingInitiated", "namespace": "com.flighthotel.events.booking",
+  "doc": "A customer submitted a booking. The inventory owner (hotel-service for HOTEL) now tries to hold it and answers with HotelInventoryHeld or HotelInventoryHoldFailed. Topic booking.events, key booking id.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingReference", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "bookingType", "type": "string", "doc": "HOTEL or FLIGHT" },
+    { "name": "hotel", "default": null, "type": ["null", {
+      "type": "record", "name": "HotelBookingRequest",
+      "fields": [
+        { "name": "quoteId", "type": "string", "doc": "the price quote the customer accepted (hotel-service, Redis)" },
+        { "name": "guests", "type": { "type": "array", "items": {
+          "type": "record", "name": "HotelGuest",
+          "fields": [
+            { "name": "roomNo", "type": "int", "doc": "1-based" },
+            { "name": "firstName", "type": "string" },
+            { "name": "lastName", "type": "string" }
+          ] } } },
+        { "name": "contactEmail", "type": "string" },
+        { "name": "contactPhone", "type": "string" },
+        { "name": "specialRequests", "type": ["null", "string"], "default": null }
+      ] }] },
+    { "name": "flight", "default": null, "type": ["null", {
+      "type": "record", "name": "FlightBookingRequest",
+      "fields": [
+        { "name": "offerId", "type": "string", "doc": "the revalidated trip offer the customer accepted (flight-service, Redis)" },
+        { "name": "passengers", "type": { "type": "array", "items": {
+          "type": "record", "name": "FlightPassengerInfo",
+          "fields": [
+            { "name": "index", "type": "int", "doc": "1-based" },
+            { "name": "passengerType", "type": "string", "doc": "ADULT, CHILD, INFANT" },
+            { "name": "firstName", "type": "string" },
+            { "name": "lastName", "type": "string" },
+            { "name": "dateOfBirth", "type": ["null", { "type": "int", "logicalType": "date" }], "default": null },
+            { "name": "gender", "type": ["null", "string"], "default": null },
+            { "name": "nationality", "type": ["null", "string"], "default": null }
+          ] } } },
+        { "name": "contactEmail", "type": "string" },
+        { "name": "contactPhone", "type": "string" }
+      ] }] },
+    { "name": "initiatedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

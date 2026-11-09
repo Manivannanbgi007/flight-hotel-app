@@ -1,0 +1,30 @@
+{
+  "type": "record", "name": "BookingSnapshot", "namespace": "com.flighthotel.events.booking",
+  "doc": "The whole booking as it is now, published whenever it changes (and once for every booking by the backfill). Read models (reporting-service) simply keep the latest snapshot per booking: event-carried state transfer.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingReference", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "bookingType", "type": "string", "doc": "HOTEL or FLIGHT" },
+    { "name": "status", "type": "string", "doc": "BOOKING_WORKFLOW.md section 1" },
+    { "name": "paymentStatus", "type": "string" },
+    { "name": "title", "type": ["null", "string"], "default": null },
+    { "name": "destination", "type": ["null", "string"], "default": null, "doc": "city" },
+    { "name": "hotelId", "type": ["null", "string"], "default": null },
+    { "name": "routeOrigin", "type": ["null", "string"], "default": null, "doc": "flights: first departure airport" },
+    { "name": "routeDestination", "type": ["null", "string"], "default": null },
+    { "name": "originCity", "type": ["null", "string"], "default": null },
+    { "name": "startDate", "type": ["null", { "type": "int", "logicalType": "date" }], "default": null },
+    { "name": "endDate", "type": ["null", { "type": "int", "logicalType": "date" }], "default": null },
+    { "name": "totalAmount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "discountAmount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "refundedAmount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "contactEmail", "type": "string" },
+    { "name": "couponCode", "type": ["null", "string"], "default": null },
+    { "name": "createdAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "confirmedAt", "type": ["null", { "type": "long", "logicalType": "timestamp-millis" }], "default": null },
+    { "name": "cancelledAt", "type": ["null", { "type": "long", "logicalType": "timestamp-millis" }], "default": null },
+    { "name": "demo", "type": "boolean", "default": false },
+    { "name": "changedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

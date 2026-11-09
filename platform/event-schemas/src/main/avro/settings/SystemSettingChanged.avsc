@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "SystemSettingChanged",
+  "namespace": "com.flighthotel.events.settings",
+  "doc": "Published by reporting-service to the compacted topic settings.events (key = setting key). Every service keeps the latest value in memory.",
+  "fields": [
+    { "name": "key", "type": "string" },
+    { "name": "value", "type": ["null", "string"], "default": null, "doc": "null means the setting was removed" },
+    { "name": "valueType", "type": "string", "doc": "STRING, INTEGER, DECIMAL, BOOLEAN, DURATION" },
+    { "name": "version", "type": "long" },
+    { "name": "changedBy", "type": "string", "doc": "user id or SYSTEM" },
+    { "name": "changedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

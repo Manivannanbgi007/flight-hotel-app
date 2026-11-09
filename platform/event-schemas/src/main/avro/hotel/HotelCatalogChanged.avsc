@@ -1,0 +1,9 @@
+{
+  "type": "record", "name": "HotelCatalogChanged", "namespace": "com.flighthotel.events.hotel",
+  "doc": "Something a customer can see about the hotel changed (profile, images, rooms, rates, status). Consumers re-read what they need; hotel-service rebuilds the search document. Topic hotel.events, key hotel id.",
+  "fields": [
+    { "name": "hotelId", "type": "string" },
+    { "name": "status", "type": "string", "doc": "DRAFT, ACTIVE or INACTIVE after the change" },
+    { "name": "changedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

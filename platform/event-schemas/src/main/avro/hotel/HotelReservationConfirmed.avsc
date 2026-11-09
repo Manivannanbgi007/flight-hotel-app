@@ -1,0 +1,10 @@
+{
+  "type": "record", "name": "HotelReservationConfirmed", "namespace": "com.flighthotel.events.hotel",
+  "doc": "The held rooms are now booked; confirmationNumber is the hotel's reference for the guest.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "reservationId", "type": "string" },
+    { "name": "confirmationNumber", "type": "string" },
+    { "name": "confirmedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

@@ -1,0 +1,158 @@
+{{- if .Values.kafka.enabled }}
+{{- $ctx := dict "root" . "name" "kafka" }}
+{{- $ns := .Release.Namespace }}
+# Kafka 4 (Confluent Platform 8.4) in KRaft mode: one node that is both controller and broker. Clients use
+# kafka.<namespace>.svc:9092. Topics are created by the kafka-init job (files/kafka/create-topics.sh).
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  selector: {{- include "dp.selector" $ctx | nindent 4 }}
+  ports:
+    - { name: kafka, port: 9092, targetPort: kafka }
+---
+# Stable DNS name per pod (kafka-0.kafka-headless) for the controller quorum, resolvable before the pod is ready.
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-headless
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector: {{- include "dp.selector" $ctx | nindent 4 }}
+  ports:
+    - { name: kafka, port: 9092 }
+    - { name: controller, port: 29093 }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  serviceName: kafka-headless
+  replicas: 1
+  selector:
+    matchLabels: {{- include "dp.selector" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "dp.labels" $ctx | nindent 8 }}
+    spec:
+      # Required: Kubernetes would otherwise add KAFKA_PORT=tcp://..., which the image reads as a broker setting.
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: kafka
+          image: {{ include "dp.image" (dict "root" . "image" .Values.kafka.image) }}
+          ports:
+            - { name: kafka, containerPort: 9092 }
+            - { name: controller, containerPort: 29093 }
+          env:
+            - { name: CLUSTER_ID, value: {{ .Values.kafka.clusterId | quote }} }
+            - { name: KAFKA_NODE_ID, value: "1" }
+            - { name: KAFKA_PROCESS_ROLES, value: "broker,controller" }
+            - { name: KAFKA_CONTROLLER_QUORUM_VOTERS, value: "1@kafka-0.kafka-headless.{{ $ns }}.svc.cluster.local:29093" }
+            - { name: KAFKA_LISTENERS, value: "PLAINTEXT://:9092,CONTROLLER://:29093" }
+            - { name: KAFKA_ADVERTISED_LISTENERS, value: "PLAINTEXT://kafka.{{ $ns }}.svc.cluster.local:9092" }
+            - { name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP, value: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT" }
+            - { name: KAFKA_CONTROLLER_LISTENER_NAMES, value: "CONTROLLER" }
+            - { name: KAFKA_INTER_BROKER_LISTENER_NAME, value: "PLAINTEXT" }
+            - { name: KAFKA_AUTO_CREATE_TOPICS_ENABLE, value: "false" }
+            - { name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR, value: "1" }
+            - { name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR, value: "1" }
+            - { name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR, value: "1" }
+            - { name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS, value: "0" }
+            - { name: KAFKA_LOG_RETENTION_HOURS, value: "168" }
+            - { name: KAFKA_LOG_DIRS, value: "/var/lib/kafka/data/logs" }
+            - { name: KAFKA_HEAP_OPTS, value: {{ .Values.kafka.heapOpts | quote }} }
+          startupProbe:
+            tcpSocket: { port: kafka }
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            tcpSocket: { port: kafka }
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: kafka }
+            periodSeconds: 20
+            failureThreshold: 6
+          resources: {{- toYaml .Values.kafka.resources | nindent 12 }}
+          {{- include "dp.containerSecurity" . | nindent 10 }}
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/kafka/data }
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- include "dp.storageClass" . | nindent 8 }}
+        resources:
+          requests:
+            storage: {{ .Values.kafka.storage }}
+---
+# Topics (idempotent: --if-not-exists). Runs after every install / upgrade / Argo CD sync.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-scripts
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+data:
+  {{- (.Files.Glob "files/kafka/*").AsConfig | nindent 2 }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-init
+  labels: {{- include "dp.labels" (dict "root" . "name" "kafka-init") | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "1"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 900
+  template:
+    metadata:
+      labels: {{- include "dp.labels" (dict "root" . "name" "kafka-init") | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: create-topics
+          image: {{ include "dp.image" (dict "root" . "image" .Values.kafka.image) }}
+          command: ["bash", "-c"]
+          args:
+            - |
+              until kafka-topics --bootstrap-server "$BOOTSTRAP_SERVERS" --list > /dev/null 2>&1; do
+                echo "Waiting for Kafka at $BOOTSTRAP_SERVERS ..."; sleep 5
+              done
+              bash /scripts/create-topics.sh
+          env:
+            - { name: BOOTSTRAP_SERVERS, value: "kafka.{{ $ns }}.svc.cluster.local:9092" }
+            - { name: TOPIC_PARTITIONS, value: {{ .Values.kafka.partitions | quote }} }
+            - { name: KAFKA_HEAP_OPTS, value: "-Xmx256m" }
+          resources:
+            requests: { cpu: 50m, memory: 256Mi }
+            limits: { memory: 512Mi }
+          {{- include "dp.containerSecurity" . | nindent 10 }}
+          volumeMounts:
+            - { name: scripts, mountPath: /scripts, readOnly: true }
+      volumes:
+        - name: scripts
+          configMap: { name: kafka-scripts }
+{{- end }}

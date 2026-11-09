@@ -1,0 +1,16 @@
+{
+  "type": "record", "name": "AuditEventRecorded", "namespace": "com.flighthotel.events.audit",
+  "doc": "A security- or money-relevant action. Every service publishes these to audit.events; reporting-service stores them.",
+  "fields": [
+    { "name": "service", "type": "string" },
+    { "name": "action", "type": "string", "doc": "e.g. USER_DEACTIVATED, PASSWORD_RESET, ROLES_CHANGED" },
+    { "name": "entityType", "type": "string" },
+    { "name": "entityId", "type": "string" },
+    { "name": "actorId", "type": "string", "doc": "user id or SYSTEM" },
+    { "name": "actorRoles", "type": { "type": "array", "items": "string" }, "default": [] },
+    { "name": "details", "type": { "type": "map", "values": "string" }, "default": {}, "doc": "never personal data or secrets" },
+    { "name": "ipAddress", "type": ["null", "string"], "default": null },
+    { "name": "correlationId", "type": ["null", "string"], "default": null },
+    { "name": "occurredAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

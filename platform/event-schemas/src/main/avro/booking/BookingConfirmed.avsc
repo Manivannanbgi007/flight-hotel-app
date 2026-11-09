@@ -1,0 +1,64 @@
+{
+  "type": "record", "name": "BookingConfirmed", "namespace": "com.flighthotel.events.booking",
+  "doc": "The booking is confirmed by the hotel/supplier. Full snapshot for emails, documents and the invoice.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingReference", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "bookingType", "type": "string" },
+    { "name": "contactEmail", "type": "string" },
+    { "name": "customerName", "type": "string", "doc": "lead guest / passenger, for greetings and the invoice" },
+    { "name": "paymentId", "type": "string" },
+    { "name": "baseAmount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "taxAmount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "discountAmount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "totalAmount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "hotel", "default": null, "type": ["null", {
+      "type": "record", "name": "ConfirmedHotelStay",
+      "fields": [
+        { "name": "hotelName", "type": "string" },
+        { "name": "hotelCity", "type": "string" },
+        { "name": "hotelAddress", "type": "string" },
+        { "name": "roomTypeName", "type": "string" },
+        { "name": "ratePlanName", "type": "string" },
+        { "name": "checkIn", "type": { "type": "int", "logicalType": "date" } },
+        { "name": "checkOut", "type": { "type": "int", "logicalType": "date" } },
+        { "name": "checkInTime", "type": "string", "doc": "HH:mm, hotel local time" },
+        { "name": "checkOutTime", "type": "string" },
+        { "name": "nights", "type": "int" },
+        { "name": "rooms", "type": "int" },
+        { "name": "adults", "type": "int" },
+        { "name": "children", "type": "int" },
+        { "name": "confirmationNumber", "type": "string" },
+        { "name": "cancellationPolicy", "type": "string" },
+        { "name": "demo", "type": "boolean", "default": false }
+      ] }] },
+    { "name": "flight", "default": null, "type": ["null", {
+      "type": "record", "name": "ConfirmedFlightTrip",
+      "fields": [
+        { "name": "title", "type": "string" },
+        { "name": "tripType", "type": "string" },
+        { "name": "cabin", "type": "string" },
+        { "name": "fareName", "type": "string" },
+        { "name": "refundable", "type": "boolean" },
+        { "name": "checkedBaggageKg", "type": "int" },
+        { "name": "cabinBaggageKg", "type": "int" },
+        { "name": "cancellationPolicy", "type": "string" },
+        { "name": "slices", "type": { "type": "array", "items": "com.flighthotel.events.common.FlightSlice" } },
+        { "name": "pnr", "type": "string" },
+        { "name": "passengers", "type": { "type": "array", "items": {
+          "type": "record", "name": "ConfirmedFlightPassenger",
+          "fields": [
+            { "name": "index", "type": "int" },
+            { "name": "passengerType", "type": "string" },
+            { "name": "firstName", "type": "string" },
+            { "name": "lastName", "type": "string" },
+            { "name": "ticketNumber", "type": "string" }
+          ] } } },
+        { "name": "demo", "type": "boolean", "default": false }
+      ] }] },
+    { "name": "confirmedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "startsAt", "type": ["null", { "type": "long", "logicalType": "timestamp-millis" }], "default": null,
+      "doc": "the check-in moment (hotel time zone) or the first departure (airport time zone): travel reminders (Phase 8)" }
+  ]
+}

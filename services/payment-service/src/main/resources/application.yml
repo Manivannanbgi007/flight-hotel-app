@@ -1,0 +1,53 @@
+# Payment Service: only service-specific settings here.
+# Shared defaults (Kafka, Redis, JPA, actuator, logging, ...) come from common-lib's travel-defaults.yml.
+spring:
+  application:
+    name: payment-service
+  config:
+    # Local runs ("mvn spring-boot:run" in this folder) read secrets from the project's .env file.
+    import: optional:file:../../.env[.properties]
+
+server:
+  port: ${SERVER_PORT:8105}
+
+travel:
+  db:
+    name: payment_db
+    username: ${DB_USERNAME:payment_user}
+    password: ${PAYMENT_DB_PASSWORD:}
+  security:
+    public-paths:
+      - "POST /api/payments/webhook"
+
+payment:
+  # razorpay | demo. Demo needs no account; Razorpay needs the three RAZORPAY_* values (PAYMENT_INTEGRATION.md).
+  provider: ${PAYMENT_PROVIDER:demo}
+  demo:
+    # The labelled "Demo payment" page (Pay / Fail). Always off in prod.
+    enabled: ${PAYMENT_DEMO_ENABLED:true}
+    secret: ${PAYMENT_DEMO_SECRET:demo-only-secret-never-used-in-production}
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID:}
+    key-secret: ${RAZORPAY_KEY_SECRET:}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
+    api-url: ${RAZORPAY_API_URL:https://api.razorpay.com/v1}
+    timeout: 10s
+  reconciliation:
+    payment-after: 10m
+    refund-after: 30m
+    abandon-after: 1h
+  # Local development only: payments, refunds and invoices of the dev.* customers' bookings, DEMO provider, no provider
+  # calls (docs/DEVELOPMENT_TEST_ACCOUNTS.md). Off unless DEV_SEED_ENABLED=true, always off in prod.
+  dev-seed:
+    enabled: ${DEV_SEED_ENABLED:false}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+payment:
+  demo:
+    enabled: false
+  dev-seed:
+    enabled: false

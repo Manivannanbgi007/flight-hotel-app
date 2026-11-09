@@ -1,0 +1,12 @@
+{
+  "type": "record", "name": "FlightOfferHoldFailed", "namespace": "com.flighthotel.events.flight",
+  "doc": "The seats could not be held. Nothing is reserved.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "reason", "type": "string", "doc": "OFFER_EXPIRED, SOLD_OUT, PRICE_CHANGED, INVALID_PASSENGERS, SUPPLIER_UNAVAILABLE" },
+    { "name": "message", "type": "string", "doc": "safe to show to the customer" },
+    { "name": "newTotal", "type": ["null", "com.flighthotel.events.common.Money"], "default": null, "doc": "PRICE_CHANGED: today's price for the same trip" },
+    { "name": "title", "type": ["null", "string"], "default": null },
+    { "name": "failedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

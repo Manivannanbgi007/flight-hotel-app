@@ -1,0 +1,129 @@
+{{- if .Values.kafkaConnect.enabled }}
+{{- $ctx := dict "root" . "name" "kafka-connect" }}
+{{- $ns := .Release.Namespace }}
+# Kafka Connect with Debezium: reads each service's outbox table from the MySQL binlog and publishes the events.
+# The connectors (files/kafka-connect/connectors) are registered by the connect-init job.
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-connect
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  selector: {{- include "dp.selector" $ctx | nindent 4 }}
+  ports:
+    - { name: http, port: 8083, targetPort: http }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-connect
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {{- include "dp.selector" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "dp.labels" $ctx | nindent 8 }}
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001               # "kafka" in the Debezium image
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: kafka-connect
+          image: {{ include "dp.image" (dict "root" . "image" .Values.kafkaConnect.image) }}
+          ports:
+            - { name: http, containerPort: 8083 }
+          env:
+            - { name: BOOTSTRAP_SERVERS, value: "kafka.{{ $ns }}.svc.cluster.local:9092" }
+            - { name: GROUP_ID, value: "flighthotel-connect" }
+            - { name: CONFIG_STORAGE_TOPIC, value: "_connect_configs" }
+            - { name: OFFSET_STORAGE_TOPIC, value: "_connect_offsets" }
+            - { name: STATUS_STORAGE_TOPIC, value: "_connect_statuses" }
+            - { name: CONFIG_STORAGE_REPLICATION_FACTOR, value: "1" }
+            - { name: OFFSET_STORAGE_REPLICATION_FACTOR, value: "1" }
+            - { name: STATUS_STORAGE_REPLICATION_FACTOR, value: "1" }
+            - { name: HEAP_OPTS, value: {{ .Values.kafkaConnect.heapOpts | quote }} }
+            # Connector configs read secrets from environment variables: ${env:NAME}
+            - { name: CONNECT_CONFIG_PROVIDERS, value: "env" }
+            - { name: CONNECT_CONFIG_PROVIDERS_ENV_CLASS, value: "org.apache.kafka.common.config.provider.EnvVarConfigProvider" }
+            - { name: DEBEZIUM_DB_HOST, value: "mysql.{{ $ns }}.svc.cluster.local" }
+            {{- include "dp.secretEnv" (dict "root" . "env" "DEBEZIUM_DB_PASSWORD") | nindent 12 }}
+          startupProbe:
+            httpGet: { path: /connectors, port: http }
+            periodSeconds: 5
+            failureThreshold: 72
+          readinessProbe:
+            httpGet: { path: /connectors, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /connectors, port: http }
+            periodSeconds: 20
+            failureThreshold: 6
+          resources: {{- toYaml .Values.kafkaConnect.resources | nindent 12 }}
+          {{- include "dp.containerSecurity" . | nindent 10 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: connect-scripts
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+data:
+  {{- (.Files.Glob "files/kafka-connect/register-connectors.sh").AsConfig | nindent 2 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: debezium-connectors
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+data:
+  {{- (.Files.Glob "files/kafka-connect/connectors/*.json").AsConfig | nindent 2 }}
+---
+# Creates or updates every connector (PUT is idempotent). Runs after every install / upgrade / Argo CD sync.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: connect-init
+  labels: {{- include "dp.labels" (dict "root" . "name" "connect-init") | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "2"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 1200
+  template:
+    metadata:
+      labels: {{- include "dp.labels" (dict "root" . "name" "connect-init") | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: register-connectors
+          image: {{ include "dp.image" (dict "root" . "image" .Values.curl.image) }}
+          command: ["sh", "/scripts/register-connectors.sh"]
+          env:
+            - { name: CONNECT_URL, value: "http://kafka-connect.{{ $ns }}.svc.cluster.local:8083" }
+            - { name: CONNECTORS_DIR, value: "/connectors" }
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { memory: 64Mi }
+          {{- include "dp.containerSecurity" . | nindent 10 }}
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - { name: scripts, mountPath: /scripts, readOnly: true }
+            - { name: connectors, mountPath: /connectors, readOnly: true }
+      volumes:
+        - name: scripts
+          configMap: { name: connect-scripts }
+        - name: connectors
+          configMap: { name: debezium-connectors }
+{{- end }}

@@ -1,0 +1,24 @@
+# Cluster settings the applications rely on: the smoke-test ClusterAnalysisTemplate used by every canary / blue-green
+# rollout, and the route of the Argo Rollouts dashboard (http://rollouts.localhost). Plain manifests in deploy/platform/.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+spec:
+  project: flight-hotel
+  source:
+    repoURL: https://github.com/YOUR-GITHUB-USER/flight-hotel-app.git
+    targetRevision: main
+    path: deploy/platform
+    directory:
+      include: "{analysis-templates.yaml,routes.yaml}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-rollouts
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

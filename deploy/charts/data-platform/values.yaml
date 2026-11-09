@@ -1,0 +1,90 @@
+# Defaults; deploy/environments/<env>/data-platform.yaml overrides them.
+global:
+  # When set, every image is pulled from this registry instead (kind: the local mirror localhost:5001).
+  imageRegistry: ""
+  secretName: flight-hotel-secrets
+  storageClassName: ""
+  # The application namespace (allowed to reach the data services) and the gateway namespace (Mailpit UI).
+  appNamespace: flight-hotel
+  gatewayNamespace: traefik
+  gateway:
+    name: traefik-gateway
+    namespace: traefik
+
+networkPolicies:
+  enabled: true
+
+mysql:
+  enabled: true
+  image: { registry: docker.io, repository: mysql, tag: 8.4.13 }
+  storage: 5Gi
+  resources:
+    requests: { cpu: 100m, memory: 512Mi }
+    limits: { memory: 1Gi }
+
+redis:
+  enabled: true
+  image: { registry: docker.io, repository: redis, tag: 8.4.8 }
+  maxMemory: 100mb
+  resources:
+    requests: { cpu: 20m, memory: 64Mi }
+    limits: { memory: 160Mi }
+
+kafka:
+  enabled: true
+  image: { registry: docker.io, repository: confluentinc/cp-kafka, tag: 8.4.0 }
+  clusterId: q1Sh-9_ISia_zwGINzRvyQ
+  heapOpts: "-Xms384m -Xmx640m"
+  storage: 5Gi
+  partitions: 3
+  resources:
+    requests: { cpu: 100m, memory: 768Mi }
+    limits: { memory: 1Gi }
+
+schemaRegistry:
+  enabled: true
+  image: { registry: docker.io, repository: confluentinc/cp-schema-registry, tag: 8.4.0 }
+  resources:
+    requests: { cpu: 50m, memory: 256Mi }
+    limits: { memory: 384Mi }
+
+kafkaConnect:
+  enabled: true
+  image: { registry: quay.io, repository: debezium/connect, tag: 3.7.0.Final }
+  heapOpts: "-Xms256m -Xmx640m"
+  resources:
+    requests: { cpu: 100m, memory: 512Mi }
+    limits: { memory: 1Gi }
+
+elasticsearch:
+  enabled: true
+  image: { registry: docker.elastic.co, repository: elasticsearch/elasticsearch, tag: 9.4.8 }
+  javaOpts: "-Xms512m -Xmx512m"
+  storage: 5Gi
+  resources:
+    requests: { cpu: 100m, memory: 1Gi }
+    limits: { memory: 1536Mi }
+
+mailpit:
+  enabled: true
+  image: { registry: docker.io, repository: axllent/mailpit, tag: v1.33.0 }
+  # The mailbox UI through the gateway (http://mail.localhost); empty = not exposed.
+  hostnames: [mail.localhost]
+  resources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { memory: 96Mi }
+
+# The AI assistant's local model (about 4-6 GB of memory). Off by default on kind: the assistant then reports itself as
+# unavailable and the web app hides it.
+ollama:
+  enabled: false
+  image: { registry: docker.io, repository: ollama/ollama, tag: 0.40.14 }
+  model: granite4:tiny-h
+  storage: 10Gi
+  resources:
+    requests: { cpu: 500m, memory: 3Gi }
+    limits: { memory: 6Gi }
+
+# Image for the one-off jobs that register the Debezium connectors (curl + sh).
+curl:
+  image: { registry: docker.io, repository: curlimages/curl, tag: 8.17.0 }

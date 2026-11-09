@@ -1,0 +1,26 @@
+# Root Application ("app of apps") for the kind cluster: Argo CD syncs every Application in deploy/argocd/kind/apps/
+# and those deploy everything else. Applied once by deploy/scripts/argocd-bootstrap.ps1.
+#
+# Sync waves (annotation argocd.argoproj.io/sync-wave on each child): -3 platform-config, -2 data-platform,
+# -1 shared, 0 the services. The root waits until a wave is Healthy before the next one (Application health check in
+# deploy/platform/values/argo-cd.yaml).
+#
+# Deleting this Application leaves everything running (no finalizer): see KUBERNETES_DEPLOYMENT.md, section 9.6.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: flight-hotel-kind
+  namespace: argocd
+spec:
+  project: flight-hotel-gitops
+  source:
+    repoURL: https://github.com/YOUR-GITHUB-USER/flight-hotel-app.git
+    targetRevision: main
+    path: deploy/argocd/kind/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

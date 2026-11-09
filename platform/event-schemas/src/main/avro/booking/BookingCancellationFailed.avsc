@@ -1,0 +1,17 @@
+{
+  "type": "record", "name": "BookingCancellationFailed", "namespace": "com.flighthotel.events.booking",
+  "doc": "The hotel or airline refused (or did not confirm) the cancellation: the booking stays confirmed. For the customer's notification.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingReference", "type": "string" },
+    { "name": "bookingType", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "cancellationId", "type": "string" },
+    { "name": "title", "type": "string" },
+    { "name": "contactEmail", "type": "string" },
+    { "name": "customerName", "type": "string" },
+    { "name": "reason", "type": "string", "doc": "TOO_LATE, NOT_ALLOWED, NOT_CANCELLABLE, SUPPLIER_NO_ANSWER" },
+    { "name": "message", "type": "string" },
+    { "name": "failedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

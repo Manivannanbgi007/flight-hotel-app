@@ -1,0 +1,384 @@
+# Continuous integration for every pull request and every push to main.
+# What each job does, which checks branch protection should require, and how to run the same checks locally:
+# docs/CI_CD.md. A successful run on main triggers the CD workflow (.github/workflows/cd.yml).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    # Docs-only and GitOps-only commits (including the CD bot's tag bumps) need no new images: deploy/ was already
+    # validated on its pull request and Argo CD syncs it straight from git. Pull requests always run every job, so the
+    # required checks always report.
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'deploy/**'
+  workflow_dispatch:
+
+# Least privilege: nothing by default, every job asks for what it needs.
+permissions: {}
+
+# A new push to a pull request cancels its older run. Runs on main are never cancelled (each one can trigger CD).
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '24'
+  TRIVY_VERSION: v0.76.1
+
+jobs:
+  # ---------------------------------------------------------------------------------------------------------------
+  # Backend: one job per service (plus one for the shared platform modules), each with the modules it depends on.
+  # ---------------------------------------------------------------------------------------------------------------
+  backend:
+    name: backend (${{ matrix.name }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: platform, modules: 'platform/event-schemas,platform/common-lib,platform/test-support' }
+          - { name: api-gateway, modules: services/api-gateway }
+          - { name: identity-service, modules: services/identity-service }
+          - { name: hotel-service, modules: services/hotel-service }
+          - { name: flight-service, modules: services/flight-service }
+          - { name: booking-service, modules: services/booking-service }
+          - { name: payment-service, modules: services/payment-service }
+          - { name: notification-service, modules: services/notification-service }
+          - { name: reporting-service, modules: services/reporting-service }
+          - { name: mcp-server-service, modules: services/mcp-server-service }
+          - { name: mcp-client-service, modules: services/mcp-client-service }
+          - { name: search-service, modules: services/search-service }
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }} (Temurin) and restore the Maven cache
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          # Twelve parallel jobs would race to save twelve partial caches; the dependency-scan job (which resolves
+          # every module) saves it.
+          cache-read-only: true
+
+      # Optional: Testcontainers pulls MySQL, Kafka, ... from Docker Hub, which limits anonymous pulls. Set the
+      # variable DOCKERHUB_USERNAME and the secret DOCKERHUB_TOKEN (read-only token) to pull as a user instead.
+      - name: Log in to Docker Hub (when configured)
+        if: vars.DOCKERHUB_USERNAME != ''
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Unit and integration tests. Integration tests start MySQL, Kafka, Redis, Elasticsearch, ... with
+      # Testcontainers on the runner's Docker. CI has no .env file, and the tests must not need one.
+      - name: Build and test ${{ matrix.modules }} (and the modules it needs)
+        env:
+          MODULES: ${{ matrix.modules }}
+        run: |
+          chmod +x mvnw
+          ./mvnw -B -ntp -pl "${MODULES}" -am verify
+
+      - name: Upload the test reports
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-reports-${{ matrix.name }}
+          path: |
+            **/target/surefire-reports/
+            **/target/failsafe-reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # One stable check name for branch protection: green only when every backend matrix job is green.
+  backend-ok:
+    name: backend-ok
+    if: ${{ !cancelled() }}
+    needs: backend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: All backend jobs passed
+        env:
+          RESULT: ${{ needs.backend.result }}
+        run: |
+          echo "backend matrix result: ${RESULT}"
+          if [[ "${RESULT}" != "success" ]]; then
+            echo "::error title=backend-ok::at least one backend job did not succeed (${RESULT})"
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------------------------------------------
+  # Frontend: lint, type check, unit tests, production build.
+  # ---------------------------------------------------------------------------------------------------------------
+  frontend:
+    name: frontend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }} and the npm cache
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install (npm ci)
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit and component tests (Vitest)
+        run: npm test
+
+      - name: Production build
+        env:
+          # Real images never contain the development test-accounts panel (docs/DEVELOPMENT_TEST_ACCOUNTS.md).
+          VITE_DEV_ACCOUNTS: 'false'
+        run: npm run build
+
+  # ---------------------------------------------------------------------------------------------------------------
+  # Kubernetes manifests: helm lint + helm template for every chart and environment, kubeconform, infra drift.
+  # ---------------------------------------------------------------------------------------------------------------
+  k8s-manifests:
+    name: k8s-manifests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      HELM_VERSION: v4.3.1
+      KUBECONFORM_VERSION: v0.8.0
+      # sha256 of kubeconform-linux-amd64.tar.gz (CHECKSUMS file of the release). Update together with the version.
+      KUBECONFORM_SHA256: 9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883
+      K8S_VERSION: 1.36.0
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Helm ${{ env.HELM_VERSION }}
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Install kubeconform ${{ env.KUBECONFORM_VERSION }} (checksum verified)
+        run: |
+          mkdir -p "${RUNNER_TEMP}/bin"
+          curl -fsSL --retry 3 -o "${RUNNER_TEMP}/kubeconform.tar.gz" \
+            "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          echo "${KUBECONFORM_SHA256}  ${RUNNER_TEMP}/kubeconform.tar.gz" | sha256sum --check --strict
+          tar -xzf "${RUNNER_TEMP}/kubeconform.tar.gz" -C "${RUNNER_TEMP}/bin" kubeconform
+          echo "${RUNNER_TEMP}/bin" >> "${GITHUB_PATH}"
+
+      - name: Lint, render and validate the Helm charts (every environment)
+        env:
+          RENDER_DIR: ${{ runner.temp }}/rendered
+        run: bash scripts/ci/validate-k8s.sh
+
+      - name: Upload the rendered manifests
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: rendered-manifests
+          path: ${{ runner.temp }}/rendered/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # Runs even when the chart validation failed, so both problems show in one run.
+      - name: data-platform chart files match infra/ (drift check)
+        if: ${{ !cancelled() }}
+        run: bash scripts/ci/check-infra-drift.sh
+
+  # ---------------------------------------------------------------------------------------------------------------
+  # Security
+  # ---------------------------------------------------------------------------------------------------------------
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      # sha256 of gitleaks_<version>_linux_x64.tar.gz (checksums file of the release). Update together with the version.
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - name: Check out (full history)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install gitleaks ${{ env.GITLEAKS_VERSION }} (checksum verified)
+        run: |
+          mkdir -p "${RUNNER_TEMP}/bin"
+          curl -fsSL --retry 3 -o "${RUNNER_TEMP}/gitleaks.tar.gz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  ${RUNNER_TEMP}/gitleaks.tar.gz" | sha256sum --check --strict
+          tar -xzf "${RUNNER_TEMP}/gitleaks.tar.gz" -C "${RUNNER_TEMP}/bin" gitleaks
+          echo "${RUNNER_TEMP}/bin" >> "${GITHUB_PATH}"
+
+      # Every commit of the history, not only the working tree: a secret removed in a later commit is still leaked.
+      # Findings are redacted in the log. Rules and the narrow test-file exception: .gitleaks.toml.
+      - name: Scan the git history for secrets
+        run: gitleaks git --config .gitleaks.toml --redact --no-banner --verbose .
+
+  dependency-scan:
+    name: dependency-scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }} (Temurin) and the Maven cache
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          # This job resolves the dependencies of every module, so it is the one that saves the shared Maven cache.
+          cache: maven
+
+      # Trivy reads what actually ships: the Spring Boot jars (with every library nested inside). Scanning pom.xml
+      # instead makes Trivy download parent/BOM POMs from Maven Central, which rate-limits shared CI IPs (HTTP 429).
+      - name: Build the service jars (tests run in the backend jobs)
+        run: |
+          chmod +x mvnw
+          ./mvnw -B -ntp -DskipTests package
+
+      - name: Java libraries in the service jars (fail on CRITICAL with a fix)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          scan-type: rootfs
+          scan-ref: services
+          scanners: vuln
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+      # Runs even when the Java scan failed, so both results show in one run.
+      - name: npm packages of the frontend (fail on CRITICAL with a fix)
+        if: ${{ !cancelled() }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          scan-type: fs
+          scan-ref: frontend
+          scanners: vuln
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+  # Dockerfiles and the rendered Kubernetes manifests (from k8s-manifests). Everything from MEDIUM up is reported in
+  # the job summary; what fails the job is set below (docs/CI_CD.md, "What fails the build").
+  iac-scan:
+    name: iac-scan
+    needs: k8s-manifests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      # Our own Dockerfiles and workloads (microservice + shared charts): HIGH and CRITICAL fail.
+      APP_FAIL_SEVERITY: HIGH,CRITICAL
+      # Third-party local/dev infrastructure (data-platform chart: MySQL, Kafka, ...): only CRITICAL fails.
+      DATA_FAIL_SEVERITY: CRITICAL
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download the rendered manifests
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: rendered-manifests
+          path: ${{ runner.temp }}/rendered
+
+      - name: Set up Trivy ${{ env.TRIVY_VERSION }}
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          cache: true
+
+      # Trivy's Kubernetes checks know Deployments but not Argo Rollouts. A Rollout's pod template has the same shape,
+      # so each Rollout is scanned as a Deployment (only for the scan; nothing is changed in git).
+      - name: Prepare the manifests for scanning
+        env:
+          SRC: ${{ runner.temp }}/rendered
+          DST: ${{ runner.temp }}/iac
+        run: |
+          rm -rf "${DST}"
+          while IFS= read -r -d '' file; do
+            rel="${file#"${SRC}"/}"
+            mkdir -p "${DST}/$(dirname "${rel}")"
+            yq 'with(select(.kind == "Rollout"); .apiVersion = "apps/v1" | .kind = "Deployment" | del(.spec.strategy))' \
+              "${file}" > "${DST}/${rel}"
+          done < <(find "${SRC}" -type f -name '*.yaml' -print0)
+          find "${DST}" -type f | sort
+
+      - name: Misconfiguration report (MEDIUM and above, not blocking)
+        env:
+          IAC: ${{ runner.temp }}/iac
+        run: |
+          {
+            echo "## Trivy misconfiguration report"
+            echo "Fails the job: ${APP_FAIL_SEVERITY} for Dockerfiles and our workloads, ${DATA_FAIL_SEVERITY} for data-platform."
+            echo '```text'
+            for target in docker/backend.Dockerfile frontend/Dockerfile "${IAC}"; do
+              if [[ -e "${target}" ]]; then
+                trivy config --quiet --severity MEDIUM,HIGH,CRITICAL "${target}"
+              fi
+            done
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Fail on blocking misconfigurations
+        env:
+          IAC: ${{ runner.temp }}/iac
+        run: |
+          status=0
+          gate() {
+            local severity="$1" target
+            shift
+            for target in "$@"; do
+              [[ -e "${target}" ]] || continue
+              echo "== ${target} (fails on ${severity})"
+              trivy config --quiet --severity "${severity}" --exit-code 1 "${target}" || status=1
+            done
+          }
+          gate "${APP_FAIL_SEVERITY}" docker/backend.Dockerfile frontend/Dockerfile "${IAC}/microservice" "${IAC}/shared"
+          gate "${DATA_FAIL_SEVERITY}" "${IAC}/data-platform"
+          exit "${status}"

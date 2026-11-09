@@ -1,0 +1,43 @@
+{
+  "type": "record", "name": "HotelInventoryHeld", "namespace": "com.flighthotel.events.hotel",
+  "doc": "Rooms are held for the booking until holdExpiresAt at the price below (authoritative; booking-service never takes prices from the browser). Topic hotel.events, key booking id.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "reservationId", "type": "string" },
+    { "name": "hotelId", "type": "string" },
+    { "name": "hotelSlug", "type": "string" },
+    { "name": "hotelName", "type": "string" },
+    { "name": "hotelCity", "type": "string" },
+    { "name": "hotelAddress", "type": "string" },
+    { "name": "countryCode", "type": "string" },
+    { "name": "roomTypeId", "type": "string" },
+    { "name": "roomTypeName", "type": "string" },
+    { "name": "ratePlanName", "type": "string" },
+    { "name": "breakfastIncluded", "type": "boolean" },
+    { "name": "checkIn", "type": { "type": "int", "logicalType": "date" } },
+    { "name": "checkOut", "type": { "type": "int", "logicalType": "date" } },
+    { "name": "checkInTime", "type": "string", "doc": "HH:mm, hotel local time" },
+    { "name": "checkOutTime", "type": "string" },
+    { "name": "nights", "type": "int" },
+    { "name": "rooms", "type": "int" },
+    { "name": "adults", "type": "int" },
+    { "name": "children", "type": "int" },
+    { "name": "subtotal", "type": "com.flighthotel.events.common.Money", "doc": "all nights x rooms, before taxes" },
+    { "name": "taxes", "type": "com.flighthotel.events.common.Money" },
+    { "name": "taxLines", "type": { "type": "array", "items": {
+      "type": "record", "name": "HeldTaxLine",
+      "fields": [
+        { "name": "label", "type": "string" },
+        { "name": "amount", "type": "com.flighthotel.events.common.Money" }
+      ] } } },
+    { "name": "total", "type": "com.flighthotel.events.common.Money" },
+    { "name": "refundable", "type": "boolean" },
+    { "name": "freeCancellationUntil", "type": ["null", { "type": "long", "logicalType": "timestamp-millis" }], "default": null },
+    { "name": "cancellationFeePercent", "type": { "type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 2 } },
+    { "name": "cancellationPolicy", "type": "string" },
+    { "name": "demo", "type": "boolean" },
+    { "name": "holdExpiresAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "heldAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "checkInAt", "type": ["null", { "type": "long", "logicalType": "timestamp-millis" }], "default": null, "doc": "the check-in moment in hotel local time (Phase 7: last moment to cancel)" }
+  ]
+}

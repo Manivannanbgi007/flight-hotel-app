@@ -1,0 +1,9 @@
+{
+  "type": "record", "name": "BookingExpired", "namespace": "com.flighthotel.events.booking",
+  "doc": "The customer did not pay in time; payment-service stops accepting new payment orders for it.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingType", "type": "string" },
+    { "name": "expiredAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

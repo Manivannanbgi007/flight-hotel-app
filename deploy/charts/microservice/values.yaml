@@ -1,0 +1,134 @@
+# Defaults for one service. Environment-wide settings come from deploy/environments/<env>/values.yaml (the `global`
+# block), per-service settings from deploy/environments/<env>/services/<service>.yaml. The release name is the service
+# name (identity-service, ..., frontend).
+
+global:
+  image:
+    # Image = <registry>/<service>:<tag>. kind: localhost:5001/flighthotel; GHCR: ghcr.io/<owner>/flighthotel;
+    # ECR: <account>.dkr.ecr.<region>.amazonaws.com/flighthotel (docs/CI_CD.md, section 4.1).
+    registry: ghcr.io/example/flighthotel
+    tag: latest                   # the version every service deploys (CI/CD writes it)
+    pullPolicy: IfNotPresent
+  imagePullSecrets: []
+  partOf: flight-hotel
+  # Environment variables every backend service gets (deploy/charts/shared: ConfigMap flight-hotel-common).
+  sharedConfigMap: flight-hotel-common
+  # Passwords and keys (created from .env by deploy/scripts/create-secrets.ps1, or by External Secrets on EKS).
+  secretName: flight-hotel-secrets
+  gateway:
+    name: traefik-gateway
+    namespace: traefik
+  storageClassName: ""            # "" = the cluster default (kind: standard, EKS: gp3)
+
+nameOverride: ""
+component: backend                # backend | gateway | frontend (label app.kubernetes.io/component)
+
+image:
+  repository: ""                  # default: <service> (the release name)
+  tag: ""                         # default: global.image.tag
+
+replicas: 1                       # ignored when autoscaling is enabled (the HPA owns the count)
+containerPort: 8080
+useSharedConfig: true             # the frontend sets false
+
+# Plain settings → ConfigMap <service>-config (environment variables).
+env: {}
+# Secret settings → environment variables from global.secretName: { ENV_NAME: secret-key }.
+secretEnv: {}
+
+probes:
+  startupPath: /actuator/health/liveness
+  readinessPath: /actuator/health/readiness
+  livenessPath: /actuator/health/liveness
+  startup:                        # a JVM on a busy laptop may need a few minutes
+    periodSeconds: 5
+    failureThreshold: 60
+    timeoutSeconds: 3
+  readiness:
+    periodSeconds: 10
+    failureThreshold: 3
+    timeoutSeconds: 3
+  liveness:
+    periodSeconds: 20
+    failureThreshold: 3
+    timeoutSeconds: 3
+
+# The address the rollout's smoke test calls on the NEW version (canary or preview service).
+smokeTestPath: /actuator/health/readiness
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 384Mi
+  limits:
+    memory: 640Mi                 # no CPU limit: throttling hurts JVM start-up; requests drive scheduling and the HPA
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: true                   # only rendered when at least 2 replicas are guaranteed
+  minAvailable: 1
+
+# Local files (profile photos, hotel images, PDFs) when travel.storage.type is local. On EKS the services use S3.
+persistence:
+  enabled: false
+  size: 1Gi
+  mountPath: /app/storage
+
+# Extra writable folders (the root file system is read-only). /tmp is always there.
+writableDirs: []
+# Size of /tmp (an emptyDir on the node's disk). reporting-service writes large exports there before storing them.
+tmpSizeLimit: 256Mi
+
+terminationGracePeriodSeconds: 45
+preStopSleepSeconds: 10           # let the gateway and kube-proxy stop sending traffic before shutdown
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 999                  # "spring" in docker/backend.Dockerfile
+  runAsGroup: 999
+  fsGroup: 999
+  seccompProfile:
+    type: RuntimeDefault
+
+# Deployment strategy (KUBERNETES_DEPLOYMENT.md §7):
+#   canary         Argo Rollout: a few pods of the new version first, then more; optional traffic weights via the
+#                  Gateway API (only for services behind an HTTPRoute) and a smoke test before going further
+#   blueGreen      Argo Rollout: the new version runs next to the old one behind a preview service; it gets all
+#                  traffic only when promoted (manually or automatically) after its smoke test passed
+#   rollingUpdate  a plain Deployment
+strategy:
+  type: canary
+  canary:
+    trafficRouting: false         # true: route traffic by weight through this service's HTTPRoute
+    # Steps: setWeight / pause as in Argo Rollouts; `smokeTest: true` runs the http-smoke-test analysis on the canary.
+    steps:
+      - setWeight: 25
+      - pause: { duration: 30s }
+      - smokeTest: true
+      - setWeight: 50
+      - pause: { duration: 30s }
+  blueGreen:
+    autoPromotionEnabled: false   # wait for `kubectl argo rollouts promote <service>`
+    autoPromotionSeconds: 0       # >0: promote automatically after that many seconds (if not paused manually)
+    scaleDownDelaySeconds: 60     # keep the old version that long after the switch (instant rollback)
+
+service:
+  port: 0                         # 0 = containerPort
+
+# Gateway API route to this service (only for services reached from outside the cluster).
+route:
+  enabled: false
+  hostnames: []
+  pathPrefix: /
+  previewHostnames: []            # blue-green: a second route to the preview service
+
+serviceAccountAnnotations: {}     # EKS: eks.amazonaws.com/role-arn for S3 access (IRSA)
+podLabels: {}
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []

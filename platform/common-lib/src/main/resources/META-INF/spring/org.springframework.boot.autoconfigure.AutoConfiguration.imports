@@ -1,0 +1,5 @@
+com.flighthotel.common.config.CommonWebAutoConfiguration
+com.flighthotel.common.config.CommonSecurityAutoConfiguration
+com.flighthotel.common.config.CommonPersistenceAutoConfiguration
+com.flighthotel.common.config.CommonKafkaAutoConfiguration
+com.flighthotel.common.config.CommonRealtimeAutoConfiguration

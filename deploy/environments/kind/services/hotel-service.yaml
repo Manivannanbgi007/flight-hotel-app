@@ -1,0 +1,21 @@
+# hotel-service: Hotels, rooms, inventory, reservations, reviews, hotel search (Elasticsearch).
+containerPort: 8102
+env:
+  SERVER_PORT: "8102"
+  STORAGE_ROOT: "/app/storage"
+  DEMO_DATA_ENABLED: "true"
+  DEV_SEED_ENABLED: "true"
+secretEnv:
+  HOTEL_DB_PASSWORD: HOTEL_DB_PASSWORD
+persistence:
+  enabled: true
+  size: 1Gi
+strategy:
+  type: canary
+  canary:
+    trafficRouting: false     # inside the cluster: the share of pods decides the share of requests
+    steps:
+      - setWeight: 50         # one new pod next to the stable one
+      - pause: { duration: 20s }
+      - smokeTest: true       # its readiness endpoint, three times; a failure rolls back
+      - pause: { duration: 20s }

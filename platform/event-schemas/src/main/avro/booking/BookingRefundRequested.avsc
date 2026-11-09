@@ -1,0 +1,16 @@
+{
+  "type": "record", "name": "BookingRefundRequested", "namespace": "com.flighthotel.events.booking",
+  "doc": "Money must go back to the customer. refundRequestId is the idempotency key: payment-service refunds each request at most once.",
+  "fields": [
+    { "name": "refundRequestId", "type": "string" },
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingReference", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "paymentId", "type": "string" },
+    { "name": "amount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "reason", "type": "string", "doc": "BOOKING_FAILED, LATE_PAYMENT, DUPLICATE_PAYMENT, CANCELLATION" },
+    { "name": "contactEmail", "type": "string" },
+    { "name": "customerName", "type": "string" },
+    { "name": "requestedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

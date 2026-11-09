@@ -1,0 +1,14 @@
+{
+  "type": "record", "name": "FlightBookingCancelled", "namespace": "com.flighthotel.events.flight",
+  "doc": "The airline cancelled the issued booking. airlineFee is the airline's own cancellation charge (final for the refund); airlineRefund what it gives back of its price.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "holdId", "type": "string" },
+    { "name": "cancellationId", "type": "string" },
+    { "name": "supplierOrderId", "type": "string" },
+    { "name": "cancellationReference", "type": "string" },
+    { "name": "airlineFee", "type": "com.flighthotel.events.common.Money" },
+    { "name": "airlineRefund", "type": "com.flighthotel.events.common.Money" },
+    { "name": "cancelledAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

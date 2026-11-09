@@ -1,0 +1,11 @@
+{
+  "type": "record", "name": "FlightBookingFailed", "namespace": "com.flighthotel.events.flight",
+  "doc": "The booking was paid but the supplier did not issue it (rejected, or the seats were gone). booking-service refunds the customer.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "holdId", "type": "string" },
+    { "name": "reason", "type": "string", "doc": "SUPPLIER_REJECTED, HOLD_LOST, NOT_FOUND_AT_SUPPLIER" },
+    { "name": "message", "type": "string" },
+    { "name": "failedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "type": "record", "name": "SupportTicketSnapshot", "namespace": "com.flighthotel.events.support",
+  "doc": "A support ticket as it is now, published by notification-service whenever the ticket changes (and once for every existing ticket by the backfill). Read models (search-service) keep the snapshot with the newest changedAt: event-carried state transfer, like BookingSnapshot.",
+  "fields": [
+    { "name": "ticketId", "type": "string" },
+    { "name": "ticketNumber", "type": "string" },
+    { "name": "userId", "type": ["null", "string"], "default": null, "doc": "the customer who opened it" },
+    { "name": "customerEmail", "type": ["null", "string"], "default": null },
+    { "name": "bookingId", "type": ["null", "string"], "default": null },
+    { "name": "bookingReference", "type": ["null", "string"], "default": null },
+    { "name": "subject", "type": "string" },
+    { "name": "category", "type": "string", "doc": "BOOKING, PAYMENT, REFUND, CANCELLATION, ACCOUNT or OTHER" },
+    { "name": "status", "type": "string", "doc": "OPEN, IN_PROGRESS, WAITING_CUSTOMER, ESCALATED, RESOLVED or CLOSED" },
+    { "name": "priority", "type": ["null", "string"], "default": null },
+    { "name": "assignedAgentId", "type": ["null", "string"], "default": null },
+    { "name": "createdAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "lastMessageAt", "type": ["null", { "type": "long", "logicalType": "timestamp-millis" }], "default": null },
+    { "name": "resolvedAt", "type": ["null", { "type": "long", "logicalType": "timestamp-millis" }], "default": null },
+    { "name": "closedAt", "type": ["null", { "type": "long", "logicalType": "timestamp-millis" }], "default": null },
+    { "name": "changedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

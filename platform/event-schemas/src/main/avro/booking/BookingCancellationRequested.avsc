@@ -1,0 +1,12 @@
+{
+  "type": "record", "name": "BookingCancellationRequested", "namespace": "com.flighthotel.events.booking",
+  "doc": "Cancel the confirmed booking at the hotel or airline (BOOKING_WORKFLOW.md section 4). cancellationId is the idempotency key: the inventory owner answers the same cancellation once, and repeats its answer if asked again (reconciliation).",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingReference", "type": "string" },
+    { "name": "bookingType", "type": "string", "doc": "HOTEL or FLIGHT" },
+    { "name": "cancellationId", "type": "string" },
+    { "name": "initiatedBy", "type": "string", "doc": "CUSTOMER, SUPPORT_AGENT or ADMIN" },
+    { "name": "requestedAt", "type": { "type": "long", "logicalType": "timestamp-millis" }, "doc": "the policy is applied at this moment, not when the message arrives" }
+  ]
+}

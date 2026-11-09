@@ -1,0 +1,44 @@
+# Search Service: the global search (docs/GLOBAL_SEARCH_IMPLEMENTATION.md).
+# Shared defaults (Kafka consumer with Avro, retries and dead-letter topics, Redis, JWT validation, actuator) come from
+# common-lib's travel-defaults.yml.
+spring:
+  application:
+    name: search-service
+  config:
+    # Local runs ("mvn spring-boot:run" in this folder) read settings from the project's .env file.
+    import: optional:file:../../.env[.properties]
+  autoconfigure:
+    # No database: the search index is a read model in Elasticsearch, rebuilt from Kafka events.
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+      - org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+    connection-timeout: 2s
+    socket-timeout: 5s
+
+server:
+  port: ${SERVER_PORT:8110}
+
+travel:
+  security:
+    # Signed-out visitors may search too (pages, hotels, destinations only). With a token, the user's own data is added.
+    public-paths:
+      - "GET /api/search/**"
+  realtime:
+    enabled: false
+
+search:
+  # The alias every read and write uses; it points to the versioned index (global-search-v1, ...).
+  index-alias: global-search
+  # hotel-service's own index of active hotels: searched read-only, never written here.
+  hotels-index: hotels
+  # Elasticsearch gives up on a search after this long (the API then answers 503 SEARCH_UNAVAILABLE).
+  query-timeout: 2s
+  # Which hotels a hotel manager runs is asked from hotel-service (with the manager's own token), then cached.
+  hotel-service-url: ${HOTEL_SERVICE_URL:http://localhost:8102}
+  managed-hotels-cache-ttl: 60s
+  # Airports for the destinations come from flight-service's public airport list.
+  flight-service-url: ${FLIGHT_SERVICE_URL:http://localhost:8103}
+  destinations-refresh: 10m

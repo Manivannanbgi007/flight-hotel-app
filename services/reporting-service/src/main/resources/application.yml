@@ -1,0 +1,42 @@
+# Reporting Service: only service-specific settings here.
+# Shared defaults (Kafka, Redis, JPA, actuator, logging, ...) come from common-lib's travel-defaults.yml.
+spring:
+  application:
+    name: reporting-service
+  config:
+    # Local runs ("mvn spring-boot:run" in this folder) read secrets from the project's .env file.
+    import: optional:file:../../.env[.properties]
+
+server:
+  port: ${SERVER_PORT:8107}
+
+travel:
+  db:
+    name: reporting_db
+    username: ${DB_USERNAME:reporting_user}
+    password: ${REPORTING_DB_PASSWORD:}
+  security:
+    public-paths:
+      # Home page figures and settings, and export downloads through one-time links (the token is the permission).
+      - "GET /api/public/**"
+  storage:
+    # Export files: local disk in development and Docker, a private S3 bucket in production (travel.storage.type=s3).
+    local-root: ${STORAGE_ROOT:./storage}
+
+reporting:
+  # dashboard.updated is sent to admins at most this often while facts change.
+  dashboard-update-interval: 10s
+  public-days: 90
+  # Background exports of the audit log (every matching entry as Excel or CSV); all settings in ExportProperties.
+  # Files are written to work-dir (empty = the system temp folder) and stored with travel.storage (S3 in production).
+  exports:
+    rows-per-part: 1000000
+    concurrency: 2
+    max-active-per-admin: 2
+    retention: 24h
+    work-dir: ${EXPORT_WORK_DIR:}
+
+logging:
+  level:
+    # PDFBox warns about the PDF standard fonts, which the exports never use (they embed Inter).
+    org.apache.pdfbox.pdmodel.font: ERROR

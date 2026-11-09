@@ -1,0 +1,100 @@
+# MCP Client Service: the AI assistant's chat API (AI_ASSISTANT.md).
+# Shared defaults (Redis, actuator, logging, JWT validation, Problem Details) come from common-lib's travel-defaults.yml.
+spring:
+  application:
+    name: mcp-client-service
+  config:
+    # Local runs ("mvn spring-boot:run" in this folder) read secrets from the project's .env file.
+    import: optional:file:../../.env[.properties]
+  autoconfigure:
+    # No database and no Kafka: memory lives in Redis.
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+      - org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration
+      - org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration
+      - com.flighthotel.common.config.CommonKafkaAutoConfiguration
+  mvc:
+    async:
+      # A streamed answer may take up to assistant.chat.total-timeout (+ the final save).
+      request-timeout: 300s
+  servlet:
+    multipart:
+      max-file-size: 6MB
+      max-request-size: 7MB
+  ai:
+    model:
+      # Only the chat model; no embedding model bean.
+      embedding: none
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      init:
+        # The model is pulled by the ollama-init container (docker-compose.yml), never by this service.
+        pull-model-strategy: never
+      chat:
+        options:
+          model: ${ASSISTANT_CHAT_MODEL:granite4:tiny-h}
+    mcp:
+      client:
+        name: flight-hotel-assistant
+        version: 1.0.0
+        type: SYNC
+        # Connect lazily on the first question, so this service starts even when the MCP server is not up yet.
+        initialized: false
+        request-timeout: 25s
+        toolcallback:
+          # Tools are attached per request, per role (ChatService), never globally.
+          enabled: false
+        annotation-scanner:
+          # No @McpSampling/@McpElicitation handlers: the server never asks the client for anything.
+          enabled: false
+        streamable-http:
+          connections:
+            travel:
+              url: ${MCP_SERVER_URL:http://localhost:8109}
+              endpoint: /mcp
+
+server:
+  port: ${SERVER_PORT:8108}
+
+assistant:
+  model:
+    base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+    name: ${ASSISTANT_CHAT_MODEL:granite4:tiny-h}
+    num-ctx: ${ASSISTANT_NUM_CTX:8192}
+    temperature: ${ASSISTANT_TEMPERATURE:0.2}
+    keep-alive: ${ASSISTANT_KEEP_ALIVE:30m}
+    max-answer-tokens: ${ASSISTANT_MAX_ANSWER_TOKENS:600}
+    warm-up: ${ASSISTANT_WARM_UP:true}
+  chat:
+    max-message-length: 2000
+    first-token-timeout: ${ASSISTANT_FIRST_TOKEN_TIMEOUT:150s}
+    idle-timeout: 90s
+    total-timeout: ${ASSISTANT_TOTAL_TIMEOUT:240s}
+    max-tool-calls: 4
+  memory:
+    ttl: 24h
+    max-messages: 20
+  mcp:
+    api-key: ${MCP_SERVER_API_KEY:}
+    connect-timeout: 2s
+  voice:
+    stt-url: ${ASSISTANT_STT_URL:}
+    stt-model: ${ASSISTANT_STT_MODEL:Systran/faster-whisper-small}
+    tts-url: ${ASSISTANT_TTS_URL:}
+    tts-model: ${ASSISTANT_TTS_MODEL:speaches-ai/Kokoro-82M-v1.0-ONNX}
+    tts-voice: ${ASSISTANT_TTS_VOICE:af_heart}
+    max-audio-size: 5MB
+    max-audio-duration: 60s
+    max-speech-chars: 1000
+    timeout: 60s
+
+travel:
+  realtime:
+    enabled: false
+
+logging:
+  level:
+    # Spring AI and the MCP SDK log request and response bodies at DEBUG: keep them at INFO or above.
+    org.springframework.ai: INFO
+    io.modelcontextprotocol: WARN

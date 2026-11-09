@@ -1,0 +1,16 @@
+{
+  "type": "record", "name": "BookingAwaitingPayment", "namespace": "com.flighthotel.events.booking",
+  "doc": "The inventory is held and the price is final: payment-service may now take payment for exactly this amount until the deadline.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingReference", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "bookingType", "type": "string" },
+    { "name": "amount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "description", "type": "string", "doc": "shown on the payment page and to the payment provider" },
+    { "name": "contactEmail", "type": "string" },
+    { "name": "contactPhone", "type": ["null", "string"], "default": null },
+    { "name": "paymentDeadline", "type": { "type": "long", "logicalType": "timestamp-millis" }, "doc": "no new payment orders after this moment" },
+    { "name": "occurredAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "type": "record", "name": "GuestCheckedOut", "namespace": "com.flighthotel.events.hotel",
+  "doc": "The hotel checked out the guests of a reservation (hotel manager portal).",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "reservationId", "type": "string" },
+    { "name": "hotelId", "type": "string" },
+    { "name": "at", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

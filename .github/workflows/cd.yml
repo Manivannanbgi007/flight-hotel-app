@@ -1,0 +1,514 @@
+# Continuous delivery (GitOps): build, scan, sign and push the 12 images, then write the new tag into
+# deploy/environments/<env>/values.yaml. Argo CD syncs that file and Argo Rollouts rolls the services out.
+#
+# Starts by itself after a successful CI run on main (the tests are not run again), or by hand from the Actions tab
+# (it then delivers main's newest commit that has a green CI run). Jobs, settings and troubleshooting: docs/CI_CD.md.
+name: CD
+run-name: "CD: ${{ github.event.workflow_run.display_title || 'manual run' }}"
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege: nothing by default, every job asks for what it needs.
+permissions: {}
+
+env:
+  TRIVY_VERSION: v0.76.1
+  COSIGN_VERSION: v3.1.4
+
+jobs:
+  # ---------------------------------------------------------------------------------------------------------------
+  # Which commit is delivered, and may it be delivered at all?
+  # ---------------------------------------------------------------------------------------------------------------
+  gate:
+    name: gate
+    # Only a green CI run of a push (or a manual CI run) on main of this repository. Never a pull request, also not one
+    # from a fork whose branch happens to be called "main".
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: read # read CI runs (manual start)
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+      short-sha: ${{ steps.resolve.outputs.short-sha }}
+      image-prefix: ${{ steps.resolve.outputs.image-prefix }}
+    steps:
+      - name: Resolve the commit to deliver
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPOSITORY: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
+            if [[ "${REF}" != "refs/heads/main" ]]; then
+              echo "::error title=gate::Start CD from main (it delivers main's newest commit with a green CI run)"
+              exit 1
+            fi
+            sha="$(gh api "repos/${REPOSITORY}/actions/workflows/ci.yml/runs?branch=main&status=success&per_page=50" \
+              --jq '[.workflow_runs[] | select(.event == "push" or .event == "workflow_dispatch")][0].head_sha // empty')"
+            if [[ -z "${sha}" ]]; then
+              echo "::error title=gate::No successful CI run on main yet: run CI on main first"
+              exit 1
+            fi
+          else
+            sha="${RUN_SHA}"
+          fi
+          # GHCR image names must be lowercase; the owner (user or organization) may not be.
+          {
+            echo "sha=${sha}"
+            echo "short-sha=${sha:0:7}"
+            echo "image-prefix=ghcr.io/${OWNER,,}/flighthotel"
+          } >> "${GITHUB_OUTPUT}"
+          echo "Delivering commit \`${sha}\`" >> "${GITHUB_STEP_SUMMARY}"
+
+  # ---------------------------------------------------------------------------------------------------------------
+  # The Maven "build" stage of docker/backend.Dockerfile is the same for all 11 services (SERVICE is only used in the
+  # runtime stage). Build it once and put it in the GitHub Actions cache; every backend image job reuses it.
+  # ---------------------------------------------------------------------------------------------------------------
+  backend-build-stage:
+    name: backend build stage
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the delivered commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # Optional: base images come from Docker Hub, which limits anonymous pulls (docs/CI_CD.md, "Variables and secrets").
+      - name: Log in to Docker Hub (when configured)
+        if: vars.DOCKERHUB_USERNAME != ''
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build the shared Maven stage into the cache
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/backend.Dockerfile
+          target: build
+          platforms: linux/amd64
+          pull: true
+          outputs: type=cacheonly
+          provenance: false
+          sbom: false
+          cache-from: type=gha,scope=backend-build-stage
+          cache-to: type=gha,scope=backend-build-stage,mode=max
+
+  # ---------------------------------------------------------------------------------------------------------------
+  # Build -> scan -> push (with SBOM and provenance) -> sign, one job per image.
+  # ---------------------------------------------------------------------------------------------------------------
+  images:
+    name: image (${{ matrix.image }})
+    needs: [gate, backend-build-stage]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io
+      id-token: write # cosign keyless signing: a short-lived Sigstore certificate for this workflow's OIDC identity
+    strategy:
+      # Let every image finish, so one run shows all images with a problem. deploy-dev still needs all 12.
+      fail-fast: false
+      matrix:
+        image:
+          - api-gateway
+          - identity-service
+          - hotel-service
+          - flight-service
+          - booking-service
+          - payment-service
+          - notification-service
+          - reporting-service
+          - mcp-server-service
+          - mcp-client-service
+          - search-service
+          - frontend
+    env:
+      IMAGE: ${{ needs.gate.outputs.image-prefix }}/${{ matrix.image }}
+      SHA: ${{ needs.gate.outputs.sha }}
+      SCAN_TAG: scan.local/flighthotel/${{ matrix.image }}:${{ needs.gate.outputs.sha }}
+    steps:
+      - name: Check out the delivered commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+          persist-credentials: false
+
+      # Backend: one Dockerfile for all services (build arg SERVICE), reusing the cached Maven stage.
+      # Frontend: its own Dockerfile and context. Runtime stages are never cached, so the "apt-get upgrade" /
+      # "apk upgrade" layers always contain today's OS security fixes.
+      - name: Select the build settings
+        id: settings
+        env:
+          NAME: ${{ matrix.image }}
+        run: |
+          if [[ "${NAME}" == "frontend" ]]; then
+            {
+              echo "context=frontend"
+              echo "file=frontend/Dockerfile"
+              echo "target="
+              echo "build-args=VITE_DEV_ACCOUNTS=false"
+              echo "cache-from="
+              echo "description=Flight Hotel web frontend (React, served by nginx)"
+            } >> "${GITHUB_OUTPUT}"
+          else
+            {
+              echo "context=."
+              echo "file=docker/backend.Dockerfile"
+              echo "target=runtime"
+              echo "build-args=SERVICE=${NAME}"
+              echo "cache-from=type=gha,scope=backend-build-stage"
+              echo "description=Flight Hotel ${NAME} (Spring Boot)"
+            } >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Optional: base images come from Docker Hub, which limits anonymous pulls (docs/CI_CD.md, "Variables and secrets").
+      - name: Log in to Docker Hub (when configured)
+        if: vars.DOCKERHUB_USERNAME != ''
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # --- Amazon ECR (only when EKS exists and you decide to use ECR; GHCR is the default) ----------------------
+      # Needs an IAM role that trusts GitHub's OIDC provider (token.actions.githubusercontent.com) for
+      # repo:<owner>/<repo>:ref:refs/heads/main and may push to the ECR repositories flighthotel/<image>; its ARN in the
+      # repository variable AWS_ECR_PUSH_ROLE_ARN and the region in AWS_REGION. No long-lived AWS keys.
+      # - name: Configure AWS credentials (OIDC)
+      #   uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+      #   with:
+      #     role-to-assume: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
+      #     aws-region: ${{ vars.AWS_REGION }}
+      # - name: Log in to Amazon ECR
+      #   id: ecr
+      #   uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+      # Then add a second line to "images:" of the next step:
+      #   ${{ steps.ecr.outputs.registry }}/flighthotel/${{ matrix.image }}
+      # and set global.image.registry in deploy/environments/eks/values.yaml to
+      # <account>.dkr.ecr.<region>.amazonaws.com/flighthotel (the chart appends /<service>:<tag>).
+      # ------------------------------------------------------------------------------------------------------------
+
+      - name: Image metadata (tags, OCI labels and annotations)
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        env:
+          # Annotations on the image index too: with attestations the pushed tag is an index, and GHCR reads the
+          # description and the source repository from there.
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=${{ env.SHA }}
+            type=raw,value=sha-${{ needs.gate.outputs.short-sha }}
+            type=raw,value=latest,enable={{is_default_branch}}
+          # A workflow_run runs on main's newest commit, which can be newer than the commit CI tested and this job
+          # built, so the revision is set explicitly.
+          labels: |
+            org.opencontainers.image.title=flighthotel-${{ matrix.image }}
+            org.opencontainers.image.description=${{ steps.settings.outputs.description }}
+            org.opencontainers.image.revision=${{ env.SHA }}
+          annotations: |
+            org.opencontainers.image.title=flighthotel-${{ matrix.image }}
+            org.opencontainers.image.description=${{ steps.settings.outputs.description }}
+            org.opencontainers.image.revision=${{ env.SHA }}
+
+      # 1. Build into the runner's Docker only (not pushed), so Trivy can check it before anything is published.
+      - name: Build for the scan
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ${{ steps.settings.outputs.context }}
+          file: ${{ steps.settings.outputs.file }}
+          target: ${{ steps.settings.outputs.target }}
+          build-args: ${{ steps.settings.outputs.build-args }}
+          platforms: linux/amd64
+          pull: true
+          load: true
+          provenance: false
+          sbom: false
+          tags: ${{ env.SCAN_TAG }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: ${{ steps.settings.outputs.cache-from }}
+
+      # 2. Scan: HIGH and CRITICAL are listed, CRITICAL with a fix available fails the job (nothing is pushed then).
+      - name: Vulnerability report (HIGH and CRITICAL, not blocking)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          scan-type: image
+          image-ref: ${{ env.SCAN_TAG }}
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Fail on CRITICAL vulnerabilities with a fix
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          skip-setup-trivy: true
+          scan-type: image
+          image-ref: ${{ env.SCAN_TAG }}
+          scanners: vuln
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+      # 3. Same inputs as step 1, so every layer comes from the builder's cache: the pushed image is the scanned one.
+      #    Adds an SBOM and a SLSA provenance attestation (stored next to the image in the registry).
+      - name: Build and push (SBOM + provenance attestations)
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ${{ steps.settings.outputs.context }}
+          file: ${{ steps.settings.outputs.file }}
+          target: ${{ steps.settings.outputs.target }}
+          build-args: ${{ steps.settings.outputs.build-args }}
+          platforms: linux/amd64
+          pull: true
+          push: true
+          provenance: mode=max
+          sbom: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          cache-from: ${{ steps.settings.outputs.cache-from }}
+
+      # 4. Keyless signature of the pushed digest (Sigstore: Fulcio certificate + Rekor transparency log entry).
+      - name: Install cosign
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+        with:
+          cosign-release: ${{ env.COSIGN_VERSION }}
+
+      - name: Sign the image
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: cosign sign --yes "${IMAGE}@${DIGEST}"
+
+      - name: Verify the signature
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+          # The certificate names the workflow file and ref that signed: https://github.com/<owner>/<repo>/.github/workflows/cd.yml@refs/heads/main
+          IDENTITY: ${{ github.server_url }}/${{ github.workflow_ref }}
+        run: |
+          cosign verify "${IMAGE}@${DIGEST}" \
+            --certificate-identity "${IDENTITY}" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
+          {
+            echo "### ${IMAGE##*/}"
+            echo "- image: \`${IMAGE}:${SHA}\`"
+            echo "- digest: \`${DIGEST}\` (signed, SBOM + provenance attached)"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  # ---------------------------------------------------------------------------------------------------------------
+  # GitOps hand-off for the local KIND cluster: commit the new tag, Argo CD does the rest.
+  # ---------------------------------------------------------------------------------------------------------------
+  deploy-dev:
+    name: deploy-dev (kind)
+    needs: [gate, images]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write # push the tag bump to main
+    # One tag bump at a time; a running bump is never cancelled. (GitHub keeps one waiting job per group: if a third run
+    # arrives, the older waiting one is dropped, and the newer one bumps to an even newer commit.)
+    concurrency:
+      group: gitops-kind
+      cancel-in-progress: false
+    env:
+      SHA: ${{ needs.gate.outputs.sha }}
+      VALUES_FILE: deploy/environments/kind/values.yaml
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      # Only needed when branch protection blocks direct pushes to main (docs/CI_CD.md, "Branch protection and the CD bot").
+      - name: Create a GitHub App token (when configured)
+        id: app-token
+        if: vars.CD_BOT_CLIENT_ID != ''
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.CD_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.CD_BOT_PRIVATE_KEY }}
+          permission-contents: write
+
+      # Push credentials, first one that is set: deploy key (secret CD_DEPLOY_KEY), GitHub App token, GITHUB_TOKEN.
+      - name: Check out main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          ssh-key: ${{ secrets.CD_DEPLOY_KEY }}
+          token: ${{ steps.app-token.outputs.token || github.token }}
+
+      - name: Write the new tag to ${{ env.VALUES_FILE }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          for attempt in 1 2 3 4 5; do
+            git fetch --quiet origin main
+            git reset --quiet --hard origin/main
+
+            if ! current="$(yq -e '.global.image.tag' "${VALUES_FILE}")"; then
+              echo "::error title=deploy-dev::${VALUES_FILE} must contain global.image.tag"
+              exit 1
+            fi
+            if [[ "${current}" == "${SHA}" ]]; then
+              echo "kind already uses ${SHA}" >> "${GITHUB_STEP_SUMMARY}"
+              exit 0
+            fi
+            # Never go backwards: a re-run of an old CD run (or a slow one) must not replace a newer tag.
+            if [[ "${current}" =~ ^[0-9a-f]{40}$ ]] && git cat-file -e "${current}^{commit}" 2>/dev/null \
+                && git merge-base --is-ancestor "${SHA}" "${current}"; then
+              echo "::notice title=deploy-dev::kind already uses ${current}, which is newer than ${SHA}. Nothing to do."
+              exit 0
+            fi
+
+            yq -i '.global.image.tag = strenv(SHA) | .global.image.tag style="double"' "${VALUES_FILE}"
+            git add "${VALUES_FILE}"
+            git commit --quiet \
+              -m "deploy(kind): images ${SHA:0:7} [skip ci]" \
+              -m "Set global.image.tag in ${VALUES_FILE} to ${SHA}. Argo CD syncs this file; Argo Rollouts rolls the services out." \
+              -m "CD run: ${RUN_URL}"
+            base="$(git rev-parse HEAD~1)"
+
+            if git push --quiet origin HEAD:main; then
+              echo "kind now uses \`${SHA}\` (commit $(git rev-parse --short HEAD) on main)" >> "${GITHUB_STEP_SUMMARY}"
+              exit 0
+            fi
+
+            git fetch --quiet origin main
+            if [[ "$(git rev-parse origin/main)" == "${base}" ]]; then
+              echo "::error title=deploy-dev::main rejected the push although it did not move. The credentials cannot bypass branch protection: see docs/CI_CD.md, 'Branch protection and the CD bot'."
+              exit 1
+            fi
+            echo "main moved on during the push, retrying (${attempt}/5)"
+            sleep $((attempt * 3))
+          done
+          echo "::error title=deploy-dev::could not push the tag bump after 5 attempts"
+          exit 1
+
+  # ---------------------------------------------------------------------------------------------------------------
+  # Promotion to EKS (prepared, off until EKS exists): a pull request that bumps the EKS tag, after an approval.
+  # ---------------------------------------------------------------------------------------------------------------
+  promote-eks:
+    name: promote-eks (pull request)
+    # Enable when EKS exists: create the "production" environment with required reviewers first, then set the
+    # repository variable ENABLE_EKS_PROMOTION to "true" (docs/CI_CD.md, "Promotion to EKS").
+    if: vars.ENABLE_EKS_PROMOTION == 'true'
+    needs: [gate, deploy-dev]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: production
+    permissions:
+      contents: write # push the promotion branch
+      pull-requests: write # open / update the pull request
+    # Only the newest candidate waits for approval; an older waiting promotion is cancelled.
+    concurrency:
+      group: gitops-promote-eks
+      cancel-in-progress: true
+    env:
+      SHA: ${{ needs.gate.outputs.sha }}
+      VALUES_FILE: deploy/environments/eks/values.yaml
+      BRANCH: automation/promote-eks
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      REPOSITORY_URL: ${{ github.server_url }}/${{ github.repository }}
+    steps:
+      # A pull request opened with GITHUB_TOKEN does not start CI, so its required checks would never report.
+      # Use the GitHub App (docs/CI_CD.md, "Branch protection and the CD bot").
+      - name: Create a GitHub App token (when configured)
+        id: app-token
+        if: vars.CD_BOT_CLIENT_ID != ''
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.CD_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.CD_BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Check out main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token || github.token }}
+
+      - name: Open or update the promotion pull request
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if ! current="$(yq -e '.global.image.tag' "${VALUES_FILE}")"; then
+            echo "::error title=promote-eks::${VALUES_FILE} must contain global.image.tag"
+            exit 1
+          fi
+          if [[ "${current}" == "${SHA}" ]]; then
+            echo "EKS already uses ${SHA}" >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+          if [[ "${current}" =~ ^[0-9a-f]{40}$ ]] && git cat-file -e "${current}^{commit}" 2>/dev/null \
+              && git merge-base --is-ancestor "${SHA}" "${current}"; then
+            echo "::notice title=promote-eks::EKS already uses ${current}, which is newer than ${SHA}. Nothing to do."
+            exit 0
+          fi
+
+          git switch --quiet -C "${BRANCH}"
+          yq -i '.global.image.tag = strenv(SHA) | .global.image.tag style="double"' "${VALUES_FILE}"
+          git add "${VALUES_FILE}"
+          git commit --quiet \
+            -m "deploy(eks): promote images ${SHA:0:7}" \
+            -m "Set global.image.tag in ${VALUES_FILE} to ${SHA}." \
+            -m "CD run: ${RUN_URL}"
+          git push --quiet --force origin "HEAD:refs/heads/${BRANCH}"
+
+          title="deploy(eks): promote images ${SHA:0:7}"
+          body="$(printf '%s\n' \
+            "Promotes the images of commit [\`${SHA:0:7}\`](${REPOSITORY_URL}/commit/${SHA}) to EKS: \`global.image.tag\` in \`${VALUES_FILE}\` goes from \`${current}\` to \`${SHA}\`." \
+            "" \
+            "- Built, scanned and signed by ${RUN_URL}" \
+            "- Already running on the kind environment (deploy-dev)." \
+            "" \
+            "Merging starts the rollout: Argo CD syncs the new tag and Argo Rollouts runs the canary / blue-green steps." \
+            "This branch is rewritten by every newer promotion, so this pull request always holds the newest candidate.")"
+
+          if [[ -n "$(gh pr list --head "${BRANCH}" --base main --state open --json number --jq '.[0].number // empty')" ]]; then
+            gh pr edit "${BRANCH}" --title "${title}" --body "${body}"
+            echo "Updated the promotion pull request to ${SHA}" >> "${GITHUB_STEP_SUMMARY}"
+          else
+            gh pr create --base main --head "${BRANCH}" --title "${title}" --body "${body}"
+            echo "Opened a promotion pull request for ${SHA}" >> "${GITHUB_STEP_SUMMARY}"
+          fi

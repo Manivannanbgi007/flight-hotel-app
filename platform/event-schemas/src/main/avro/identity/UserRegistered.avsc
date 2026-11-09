@@ -1,0 +1,13 @@
+{
+  "type": "record", "name": "UserRegistered", "namespace": "com.flighthotel.events.identity",
+  "doc": "A new account was created (self-registration, staff invitation or demo seed). Topic identity.events.",
+  "fields": [
+    { "name": "userId", "type": "string" },
+    { "name": "email", "type": "string" },
+    { "name": "firstName", "type": "string" },
+    { "name": "lastName", "type": "string" },
+    { "name": "roles", "type": { "type": "array", "items": "string" } },
+    { "name": "status", "type": "string" },
+    { "name": "registeredAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

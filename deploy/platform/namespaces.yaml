@@ -1,0 +1,24 @@
+# Namespaces of the application, with Pod Security Admission levels (enforced by the API server).
+#   flight-hotel       the services and the web app: "restricted" (non-root, no privilege escalation, all
+#                      capabilities dropped, seccomp RuntimeDefault). The charts satisfy it.
+#   flight-hotel-data  local data services (MySQL, Kafka, Elasticsearch, ...): "baseline", because the official
+#                      MySQL image starts as root and drops to the mysql user. On EKS these are managed AWS services.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flight-hotel
+  labels:
+    app.kubernetes.io/part-of: flight-hotel
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flight-hotel-data
+  labels:
+    app.kubernetes.io/part-of: flight-hotel
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted

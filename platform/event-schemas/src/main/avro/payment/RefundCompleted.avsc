@@ -1,0 +1,13 @@
+{
+  "type": "record", "name": "RefundCompleted", "namespace": "com.flighthotel.events.payment",
+  "doc": "The provider processed the refund.",
+  "fields": [
+    { "name": "refundId", "type": "string" },
+    { "name": "refundRequestId", "type": "string" },
+    { "name": "paymentId", "type": "string" },
+    { "name": "bookingId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "amount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "completedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

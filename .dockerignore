@@ -1,0 +1,16 @@
+.git
+.idea
+.vscode
+**/target
+# Tests never go into images (and a half-written test cannot break an image build).
+**/src/test
+**/node_modules
+**/dist
+**/coverage
+frontend
+e2e
+infra
+docs
+*.md
+.env
+.env.*

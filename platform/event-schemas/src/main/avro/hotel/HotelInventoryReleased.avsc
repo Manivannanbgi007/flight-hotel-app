@@ -1,0 +1,10 @@
+{
+  "type": "record", "name": "HotelInventoryReleased", "namespace": "com.flighthotel.events.hotel",
+  "doc": "Held rooms went back on sale: EXPIRED (not paid in time) or BOOKING_FAILED / BOOKING_EXPIRED (on booking-service's request).",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "reservationId", "type": "string" },
+    { "name": "reason", "type": "string" },
+    { "name": "releasedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

@@ -1,0 +1,4248 @@
+{
+ "date": "2026-11-06T09:45:57.549Z",
+ "numCtx": 8192,
+ "temperature": 0.2,
+ "cases": 12,
+ "runs": [
+  {
+   "model": "qwen3:4b-instruct",
+   "size": "3.6 GiB",
+   "memory": "6.487GiB",
+   "loadMs": 4798.1927000000005,
+   "think": true,
+   "results": [
+    {
+     "id": "c1",
+     "role": "CUSTOMER",
+     "tool": "my_bookings",
+     "args": {
+      "tab": "UPCOMING"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Your upcoming trips:\n\n1. **Sea Breeze Resort · 2 nights · 1 room**  \n   - Destination: Goa  \n   - Dates: 2026-12-01 to 2026-12-03  \n   - Total: ₹6,300  \n   - Reference: HT-7K3M9Q2X  \n\n2. **Delhi to Mumbai**  \n   - Destination: Mumbai  \n   - Date: 2026-12-15  \n   - Total: ₹8,450  \n   - Reference: FL-4KD8M2PQ  \n\nAll trips are confirmed and paid.",
+     "firstTokenMs": 53326.63140000001,
+     "totalMs": 75672.79370000001,
+     "rounds": [
+      {
+       "promptTokens": 1766,
+       "promptMs": 44114.736,
+       "evalTokens": 23,
+       "evalMs": 4452.738,
+       "loadMs": 3.500924,
+       "totalMs": 48598.472100000006,
+       "tools": [
+        "my_bookings"
+       ],
+       "calls": [
+        {
+         "name": "my_bookings",
+         "arguments": {
+          "tab": "UPCOMING"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1978,
+       "promptMs": 4694.173,
+       "evalTokens": 145,
+       "evalMs": 22350.377,
+       "loadMs": 1.16472,
+       "totalMs": 27073.783299999996,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "c3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "If you cancel booking HT-7K3M9Q2X, you will get a refund of ₹3,150.  \n\n- **Policy**: Free cancellation until 3 November 2026. After that, 50% of the total stay price is charged.  \n- **Fee**: ₹3,150 (50% of ₹6,300).  \n- **How to cancel**: Only on the booking page (My Trips), which shows this quote and asks for confirmation. The assistant cannot cancel.",
+     "firstTokenMs": 9036.70670000001,
+     "totalMs": 27339.58559999999,
+     "rounds": [
+      {
+       "promptTokens": 1780,
+       "promptMs": 888.631,
+       "evalTokens": 30,
+       "evalMs": 4215.381,
+       "loadMs": 0.997004,
+       "totalMs": 5126.098100000003,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1997,
+       "promptMs": 3885.563,
+       "evalTokens": 115,
+       "evalMs": 18305.363,
+       "loadMs": 1.06611,
+       "totalMs": 22213.433300000004,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c4",
+     "role": "CUSTOMER",
+     "tool": null,
+     "args": null,
+     "toolOk": false,
+     "argsOk": false,
+     "answerOk": false,
+     "grounded": true,
+     "violation": null,
+     "answer": "I cannot retrieve the PNR of your flight FL-4KD8M2PQ directly. However, I can provide details about your booking if you'd like. Please check the \"My Bookings\" tab in the app for full details, including the PNR. If you need help with anything else, let me know!",
+     "firstTokenMs": 1018.7813000000024,
+     "totalMs": 13320.148700000005,
+     "rounds": [
+      {
+       "promptTokens": 1778,
+       "promptMs": 993.408,
+       "evalTokens": 68,
+       "evalMs": 12303.29,
+       "loadMs": 0.932649,
+       "totalMs": 13320.107499999998,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c8",
+     "role": "CUSTOMER",
+     "tool": "search_flights",
+     "args": {
+      "origin": "Delhi",
+      "destination": "Mumbai",
+      "departureDate": "2026-12-15"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Here are the flights from Delhi (DEL) to Mumbai (BOM) on 2026-12-15:\n\n1. **Air India (AI 504)**  \n   - Departure: 06:45 (2026-12-15)  \n   - Arrival: 08:55  \n   - Duration: 130 minutes  \n   - Seats available: 9  \n   - Fare: ₹4,520 (Saver)  \n   - Refundable: No  \n\n2. **IndiGo (6E 2134)**  \n   - Departure: 09:10 (2026-12-15)  \n   - Arrival: 11:20  \n   - Duration: 130 minutes  \n   - Seats available: 5  \n   - Fare: ₹5,180 (Flexi)  \n   - Refundable: Yes  \n\nNote: All flights are non-stop. Prices are in INR.",
+     "firstTokenMs": 14842.191599999991,
+     "totalMs": 62877.5484,
+     "rounds": [
+      {
+       "promptTokens": 1779,
+       "promptMs": 980.09,
+       "evalTokens": 45,
+       "evalMs": 7094.839,
+       "loadMs": 0.995517,
+       "totalMs": 8094.433899999989,
+       "tools": [
+        "search_flights"
+       ],
+       "calls": [
+        {
+         "name": "search_flights",
+         "arguments": {
+          "origin": "Delhi",
+          "destination": "Mumbai",
+          "departureDate": "2026-12-15"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 2080,
+       "promptMs": 6721.902,
+       "evalTokens": 224,
+       "evalMs": 48027.111,
+       "loadMs": 1.045435,
+       "totalMs": 54783.03749999999,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x2",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "HT-ZZ9ZZ9ZZ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "No booking with reference HT-ZZ9ZZ9ZZ was found for you. Please double-check the reference and ensure you're viewing the correct page. For help, visit the My Trips page in the app.",
+     "firstTokenMs": 14484.491499999975,
+     "totalMs": 25745.82619999998,
+     "rounds": [
+      {
+       "promptTokens": 1773,
+       "promptMs": 1220.357,
+       "evalTokens": 26,
+       "evalMs": 8597.615,
+       "loadMs": 1.310452,
+       "totalMs": 9857.968499999988,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "HT-ZZ9ZZ9ZZ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1853,
+       "promptMs": 4579.889,
+       "evalTokens": 44,
+       "evalMs": 11266.412,
+       "loadMs": 1.54339,
+       "totalMs": 15887.751400000008,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x3",
+     "role": "CUSTOMER",
+     "tool": null,
+     "args": null,
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "I cannot cancel bookings or make changes directly. Please go to the Flight Hotel app page for your booking HT-7K3M9Q2X and follow the cancellation process there. If you need help, you can also check your cancellation policy using the cancellation quote tool.",
+     "firstTokenMs": 1838.456200000015,
+     "totalMs": 18727.580099999992,
+     "rounds": [
+      {
+       "promptTokens": 1776,
+       "promptMs": 1794.046,
+       "evalTokens": 56,
+       "evalMs": 16889.9,
+       "loadMs": 6.869073,
+       "totalMs": 18727.40769999998,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "a1",
+     "role": "ADMIN",
+     "tool": "admin_dashboard",
+     "args": {
+      "range": "THIS_MONTH"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "This month, you had a total of 620 paid bookings (322 hotel and 298 flight bookings).",
+     "firstTokenMs": 50878.39950000006,
+     "totalMs": 56202.90110000002,
+     "rounds": [
+      {
+       "promptTokens": 1792,
+       "promptMs": 40765.494,
+       "evalTokens": 21,
+       "evalMs": 3029.513,
+       "loadMs": 1.128818,
+       "totalMs": 44365.4651,
+       "tools": [
+        "admin_dashboard"
+       ],
+       "calls": [
+        {
+         "name": "admin_dashboard",
+         "arguments": {
+          "range": "THIS_MONTH"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 2064,
+       "promptMs": 6466.245,
+       "evalTokens": 28,
+       "evalMs": 5312.432,
+       "loadMs": 1.11326,
+       "totalMs": 11837.357399999979,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "a2",
+     "role": "ADMIN",
+     "tool": "search_payments",
+     "args": {
+      "status": "FAILED",
+      "from": "2026-10-30",
+      "to": "2026-11-05",
+      "limit": 10
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There were 2 failed payments from last week:\n\n1. Booking Reference: HT-QWKH9J7S  \n   - Details: Sea Breeze Resort · 2 nights · 1 room  \n   - Amount: ₹18,025.68  \n   - Failure: The demo payment was declined (Fail button)  \n   - Date: 2026-11-05  \n\n2. Booking Reference: HT-SGUZXM27  \n   - Amount: ₹13,419  \n   - Failure: The demo payment was declined (Fail button)  \n   - Date: 2026-11-04  \n\nAll failures were due to the demo payment being declined.",
+     "firstTokenMs": 16911.996999999974,
+     "totalMs": 50610.37030000001,
+     "rounds": [
+      {
+       "promptTokens": 1791,
+       "promptMs": 977.13,
+       "evalTokens": 57,
+       "evalMs": 10672.655,
+       "loadMs": 2.099867,
+       "totalMs": 11684.740700000024,
+       "tools": [
+        "search_payments"
+       ],
+       "calls": [
+        {
+         "name": "search_payments",
+         "arguments": {
+          "status": "FAILED",
+          "from": "2026-10-30",
+          "to": "2026-11-05",
+          "limit": 10
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 2021,
+       "promptMs": 5170.714,
+       "evalTokens": 153,
+       "evalMs": 33695.982,
+       "loadMs": 1.566568,
+       "totalMs": 38925.56109999999,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "m1",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_arrivals_departures",
+     "args": {
+      "hotel": "",
+      "date": "2026-11-06"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Today, two guests are arriving at Sea Breeze Resort:\n\n1. **Kavya Menon**  \n   - Booking Reference: HT-HH2WXXYK  \n   - Room: Standard Queen  \n   - Check-in: 2026-11-06, Check-out: 2026-11-08 (2 nights)  \n   - Total: ₹6,405  \n\n2. **Rohan Das**  \n   - Booking Reference: HT-3MZQ8RTA  \n   - Room: Deluxe Sea View  \n   - Check-in: 2026-11-06, Check-out: 2026-11-07 (1 night)  \n   - Total: ₹4,200  \n\nNo guests are departing today.",
+     "firstTokenMs": 32815.291600000055,
+     "totalMs": 60170.681500000006,
+     "rounds": [
+      {
+       "promptTokens": 1222,
+       "promptMs": 22688.43,
+       "evalTokens": 36,
+       "evalMs": 4974.571,
+       "loadMs": 1.049208,
+       "totalMs": 27938.328100000042,
+       "tools": [
+        "hotel_arrivals_departures"
+       ],
+       "calls": [
+        {
+         "name": "hotel_arrivals_departures",
+         "arguments": {
+          "hotel": "",
+          "date": "2026-11-06"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1489,
+       "promptMs": 4821.538,
+       "evalTokens": 174,
+       "evalMs": 27346.732,
+       "loadMs": 1.161825,
+       "totalMs": 32232.287300000025,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "m3",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_occupancy",
+     "args": {
+      "range": "LAST_7_DAYS"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Over the last 7 days (October 31 to November 6), Sea Breeze Resort had:\n\n- **Occupancy**: 61.9%\n- **Booked room nights**: 52\n- **Room revenue**: ₹2,18,400\n- **Average Daily Rate (ADR)**: ₹4,200",
+     "firstTokenMs": 6225.272799999977,
+     "totalMs": 16584.90340000001,
+     "rounds": [
+      {
+       "promptTokens": 1228,
+       "promptMs": 548.211,
+       "evalTokens": 25,
+       "evalMs": 3089.986,
+       "loadMs": 1.029889,
+       "totalMs": 3655.8445000000065,
+       "tools": [
+        "hotel_occupancy"
+       ],
+       "calls": [
+        {
+         "name": "hotel_occupancy",
+         "arguments": {
+          "range": "LAST_7_DAYS"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1363,
+       "promptMs": 2541.254,
+       "evalTokens": 75,
+       "evalMs": 10353.079,
+       "loadMs": 1.08114,
+       "totalMs": 12928.986700000009,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "s1",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_summary",
+     "args": {},
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are 4 open tickets.",
+     "firstTokenMs": 20609.542999999947,
+     "totalMs": 21442.09149999998,
+     "rounds": [
+      {
+       "promptTokens": 1006,
+       "promptMs": 16764.308,
+       "evalTokens": 16,
+       "evalMs": 2193.458,
+       "loadMs": 1.041624,
+       "totalMs": 19235.866299999994,
+       "tools": [
+        "ticket_summary"
+       ],
+       "calls": [
+        {
+         "name": "ticket_summary",
+         "arguments": {}
+        }
+       ]
+      },
+      {
+       "promptTokens": 1065,
+       "promptMs": 1321.411,
+       "evalTokens": 8,
+       "evalMs": 831.655,
+       "loadMs": 1.227409,
+       "totalMs": 2206.18200000003,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "s2",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_summary",
+     "args": {},
+     "toolOk": false,
+     "argsOk": false,
+     "answerOk": false,
+     "grounded": true,
+     "violation": null,
+     "answer": "No open tickets were found. If you need help with something specific, let me know.",
+     "firstTokenMs": 3355.291099999973,
+     "totalMs": 5595.863399999973,
+     "rounds": [
+      {
+       "promptTokens": 1004,
+       "promptMs": 452.164,
+       "evalTokens": 16,
+       "evalMs": 1880.55,
+       "loadMs": 0.801847,
+       "totalMs": 2347.7150000000256,
+       "tools": [
+        "ticket_summary"
+       ],
+       "calls": [
+        {
+         "name": "ticket_summary",
+         "arguments": {}
+        }
+       ]
+      },
+      {
+       "promptTokens": 1054,
+       "promptMs": 987.581,
+       "evalTokens": 19,
+       "evalMs": 2246.382,
+       "loadMs": 0.716797,
+       "totalMs": 3248.10480000003,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    }
+   ],
+   "toolChoice": "83%",
+   "args": "83%",
+   "answers": "83%",
+   "grounded": "100%",
+   "errors": 0,
+   "medianFirstTokenWarm": 6225.272799999977,
+   "medianTotalWarm": 18727.580099999992,
+   "medianTotalColdRole": 56202.90110000002,
+   "promptTokensPerSecond": 206,
+   "generatedTokensPerSecond": 5.4,
+   "maxPromptTokens": 2080
+  },
+  {
+   "model": "granite4.1:3b",
+   "size": "2.7 GiB",
+   "memory": "5.08GiB",
+   "loadMs": 3919.7631999999867,
+   "think": false,
+   "results": [
+    {
+     "id": "c1",
+     "role": "CUSTOMER",
+     "tool": "my_bookings",
+     "args": {
+      "tab": "UPCOMING",
+      "limit": 10
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "You have two upcoming trips:\n\n1. **Sea Breeze Resort – Goa**  \n   • Dates: December 1 – December 3, 2026  \n   • Status: Confirmed & paid  \n   • Total: ₹6,300  \n\n2. **Flight – Delhi to Mumbai**  \n   • Date: December 15, 2026 (one‑way)  \n   • Status: Confirmed & paid  \n   • Total: ₹8,450  \n\nBoth bookings are listed under “UPCOMING” in your account.",
+     "firstTokenMs": 51931.545599999954,
+     "totalMs": 107776.74369999999,
+     "rounds": [
+      {
+       "promptTokens": 1520,
+       "promptMs": 38459.182,
+       "evalTokens": 29,
+       "evalMs": 7455.985,
+       "loadMs": 1.114381,
+       "totalMs": 45928.74330000003,
+       "tools": [
+        "my_bookings"
+       ],
+       "calls": [
+        {
+         "name": "my_bookings",
+         "arguments": {
+          "tab": "UPCOMING",
+          "limit": 10
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1718,
+       "promptMs": 5967.186,
+       "evalTokens": 132,
+       "evalMs": 55854.721,
+       "loadMs": 1.791945,
+       "totalMs": 61847.94159999996,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "c3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "The cancellation quote for reference **HT‑7K3M9Q2X** shows a refund of **₹3,150** (which is 50 % of the ₹6,300 stay price). The fee is non‑refundable, and free cancellation is only available until 3 Nov 2026. You can view and confirm the cancellation on the booking page in the app.",
+     "firstTokenMs": 14473.478899999987,
+     "totalMs": 36384.089400000055,
+     "rounds": [
+      {
+       "promptTokens": 1534,
+       "promptMs": 1299.342,
+       "evalTokens": 30,
+       "evalMs": 7155.859,
+       "loadMs": 3.395694,
+       "totalMs": 8494.30999999994,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1729,
+       "promptMs": 5945.949,
+       "evalTokens": 87,
+       "evalMs": 21913.559,
+       "loadMs": 2.292989,
+       "totalMs": 27889.72450000001,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c4",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "FL-4KD8M2PQ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "The PNR for your flight booking is **K7QX2M**.",
+     "firstTokenMs": 11065.806000000099,
+     "totalMs": 13977.10030000005,
+     "rounds": [
+      {
+       "promptTokens": 1532,
+       "promptMs": 897.957,
+       "evalTokens": 28,
+       "evalMs": 4275.163999,
+       "loadMs": 1.826893,
+       "totalMs": 5190.78059999994,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "FL-4KD8M2PQ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1764,
+       "promptMs": 5858.399,
+       "evalTokens": 18,
+       "evalMs": 2911.264,
+       "loadMs": 1.213323,
+       "totalMs": 8786.271400000085,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c8",
+     "role": "CUSTOMER",
+     "tool": "search_flights",
+     "args": {
+      "origin": "DEL",
+      "destination": "BOM",
+      "departureDate": "2026-12-15"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Here are the available one‑way flights from Delhi (DEL) to Mumbai (BOM) on 2026‑12‑15:\n\n| Airline | Flight # | Departure (local) | Arrival (local) | Duration | Seats left | Fare | Refundable |\n|---------|----------|-------------------|-----------------|----------|------------|------|------------|\n| Air India | AI 504 | 06:45 AM | 08:55 AM | 2 h 10 min (non‑stop) | 9 | Saver (₹4,520) | No |\n| IndiGo | 6E 2134 | 09:10 AM | 11:20 AM | 2 h 10 min (non‑stop) | 5 | Flexi (₹5,180) | Yes |\n\nBoth options are non‑stop and currently have seats available. Let me know if you’d like to book one of these or need more details (e.g., seat class, baggage policy, etc.).",
+     "firstTokenMs": 14689.373299999977,
+     "totalMs": 40116.8064,
+     "rounds": [
+      {
+       "promptTokens": 1529,
+       "promptMs": 1037.622,
+       "evalTokens": 40,
+       "evalMs": 7139.337,
+       "loadMs": 1.160655,
+       "totalMs": 8195.895600000047,
+       "tools": [
+        "search_flights"
+       ],
+       "calls": [
+        {
+         "name": "search_flights",
+         "arguments": {
+          "origin": "DEL",
+          "destination": "BOM",
+          "departureDate": "2026-12-15"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1782,
+       "promptMs": 6472.975,
+       "evalTokens": 236,
+       "evalMs": 25431.049,
+       "loadMs": 1.299999,
+       "totalMs": 31920.849600000074,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x2",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "HT-ZZ9ZZ9ZZ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": false,
+     "grounded": true,
+     "violation": null,
+     "answer": "I couldn’t find a booking with the reference **HT‑ZZ9ZZ9ZZ** in your account. Please double‑check the reference on the **My Trips** page (or in the booking history) and make sure you’re looking at the correct booking. If you think the reference might be different, let me know the exact booking ID you have, and I can look it up for you.",
+     "firstTokenMs": 4343.000699999859,
+     "totalMs": 12482.512299999944,
+     "rounds": [
+      {
+       "promptTokens": 1527,
+       "promptMs": 474.164,
+       "evalTokens": 26,
+       "evalMs": 2536.814,
+       "loadMs": 1.060323,
+       "totalMs": 3025.6173000000417,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "HT-ZZ9ZZ9ZZ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1607,
+       "promptMs": 1304.277,
+       "evalTokens": 83,
+       "evalMs": 8140.578,
+       "loadMs": 1.216511,
+       "totalMs": 9456.844299999997,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Your booking **HT‑7K3M9Q2X** is currently cancellable.  \n\n- **Amount paid:** ₹6,300  \n- **Cancellation fee:** ₹3,150  \n- **Refund amount:** ₹3,150  \n\nTo proceed with the cancellation, please go to the **My Trips** section in the app, locate the booking, and confirm the cancellation there. The assistant can’t cancel bookings directly—only the booking page can finalize the request. Let me know if you need any further assistance!",
+     "firstTokenMs": 5295.2510000000475,
+     "totalMs": 16989.305799999973,
+     "rounds": [
+      {
+       "promptTokens": 1530,
+       "promptMs": 619.234,
+       "evalTokens": 30,
+       "evalMs": 2902.511,
+       "loadMs": 2.084649,
+       "totalMs": 3539.507899999968,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1646,
+       "promptMs": 1742.336,
+       "evalTokens": 109,
+       "evalMs": 11695.318,
+       "loadMs": 1.402002,
+       "totalMs": 13449.73589999997,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "a1",
+     "role": "ADMIN",
+     "tool": "run_report",
+     "args": {
+      "report": "BOOKINGS",
+      "range": "THIS_MONTH",
+      "type": "FLIGHT"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There were **666 flight bookings** this month.",
+     "firstTokenMs": 27417.209499999997,
+     "totalMs": 28418.92240000004,
+     "rounds": [
+      {
+       "promptTokens": 1538,
+       "promptMs": 22174.804,
+       "evalTokens": 35,
+       "evalMs": 3500.96,
+       "loadMs": 1.111809,
+       "totalMs": 25769.652100000065,
+       "tools": [
+        "run_report"
+       ],
+       "calls": [
+        {
+         "name": "run_report",
+         "arguments": {
+          "report": "BOOKINGS",
+          "range": "THIS_MONTH",
+          "type": "FLIGHT"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1645,
+       "promptMs": 1633.903,
+       "evalTokens": 11,
+       "evalMs": 1001.612,
+       "loadMs": 1.017379,
+       "totalMs": 2649.2373999999836,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "a2",
+     "role": "ADMIN",
+     "tool": "search_payments",
+     "args": {
+      "status": "FAILED",
+      "from": "2026-11-29",
+      "to": "2026-11-06"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There were **2 failed payments** in the last week (November 4‑9 2026):\n\n| Booking Reference | Amount | Failure Reason |\n|-------------------|--------|----------------|\n| HT‑QWKH9J7S | ₹18,025.68 | The demo payment was declined (Fail button). |\n| HT‑SGUZXM27 | ₹13,419 | The demo payment was declined (Fail button). |\n\nThese results come from the `search_payments` query run for the period 2026‑11‑29 to 2026‑11‑06 with the **FAILED** status.",
+     "firstTokenMs": 7473.9839999999385,
+     "totalMs": 21109.077300000004,
+     "rounds": [
+      {
+       "promptTokens": 1537,
+       "promptMs": 373.815,
+       "evalTokens": 42,
+       "evalMs": 4179.929,
+       "loadMs": 1.67794,
+       "totalMs": 4567.503700000001,
+       "tools": [
+        "search_payments"
+       ],
+       "calls": [
+        {
+         "name": "search_payments",
+         "arguments": {
+          "status": "FAILED",
+          "from": "2026-11-29",
+          "to": "2026-11-06"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1728,
+       "promptMs": 2891.887,
+       "evalTokens": 133,
+       "evalMs": 13636.979,
+       "loadMs": 1.091768,
+       "totalMs": 16541.531200000085,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "m1",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_arrivals_departures",
+     "args": {
+      "date": "2026-11-06"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Today, **2 guests** are arriving at **Sea Breeze Resort**:\n\n| Booking Reference | Lead Guest | Room Type | Check‑In | Check‑Out | Nights | Rooms | Adults | Confirmation # | Total |\n|-------------------|------------|-----------|----------|-----------|--------|-------|--------|----------------|-------|\n| HT‑HH2WXXYK | Kavya Menon | Standard Queen | 2026‑11‑06 | 2026‑11‑08 | 2 | 1 | 2 | HXB6WXYGE7 | ₹6,405 |\n| HT‑3MZQ8RTA | Rohan Das | Deluxe Sea View | 2026‑11‑06 | 2026‑11‑07 | 1 | 1 | 1 | *(no confirmation shown)* | ₹4,200 |\n\nNo departures are recorded for today.",
+     "firstTokenMs": 21200.827800000086,
+     "totalMs": 42042.303799999994,
+     "rounds": [
+      {
+       "promptTokens": 1086,
+       "promptMs": 13701.121,
+       "evalTokens": 28,
+       "evalMs": 2529.643,
+       "loadMs": 1.080237,
+       "totalMs": 16341.891200000071,
+       "tools": [
+        "hotel_arrivals_departures"
+       ],
+       "calls": [
+        {
+         "name": "hotel_arrivals_departures",
+         "arguments": {
+          "date": "2026-11-06"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1323,
+       "promptMs": 4840.985,
+       "evalTokens": 187,
+       "evalMs": 20844.312,
+       "loadMs": 1.605428,
+       "totalMs": 25700.35699999996,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "m3",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_occupancy",
+     "args": {
+      "range": "LAST_7_DAYS"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Over the last 7 days (October 31 – November 6, 2026), Sea Breeze Resort had an occupancy rate of **61.9 %** (52 booked room‑nights out of 84 total room‑nights). The corresponding room revenue was ₹2,18,400 with an average daily rate of ₹4,200.",
+     "firstTokenMs": 4354.11790000007,
+     "totalMs": 12826.491900000023,
+     "rounds": [
+      {
+       "promptTokens": 1092,
+       "promptMs": 349.973,
+       "evalTokens": 25,
+       "evalMs": 2319.018,
+       "loadMs": 1.041965,
+       "totalMs": 2679.8691999999573,
+       "tools": [
+        "hotel_occupancy"
+       ],
+       "calls": [
+        {
+         "name": "hotel_occupancy",
+         "arguments": {
+          "range": "LAST_7_DAYS"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1213,
+       "promptMs": 1663.686,
+       "evalTokens": 88,
+       "evalMs": 8472.927,
+       "loadMs": 1.084142,
+       "totalMs": 10146.574699999997,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "s1",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_summary",
+     "args": {},
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are **4 open tickets** at the moment.",
+     "firstTokenMs": 14532.512800000026,
+     "totalMs": 15548.067199999932,
+     "rounds": [
+      {
+       "promptTokens": 912,
+       "promptMs": 12073.01,
+       "evalTokens": 16,
+       "evalMs": 1336.554,
+       "loadMs": 1.284524,
+       "totalMs": 13487.266900000046,
+       "tools": [
+        "ticket_summary"
+       ],
+       "calls": [
+        {
+         "name": "ticket_summary",
+         "arguments": {}
+        }
+       ]
+      },
+      {
+       "promptTokens": 972,
+       "promptMs": 1033.018,
+       "evalTokens": 12,
+       "evalMs": 1015.79,
+       "loadMs": 1.156725,
+       "totalMs": 2060.7627999999095,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "s2",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_queue",
+     "args": {
+      "status": "OPEN"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": false,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are **2 open tickets**:\n\n1. **Ticket TK‑NVTUPEC9** – *Cancellation not possible: FL‑88526JVM*  \n   - Category: Cancellation  \n   - Priority: HIGH  \n   - Booking reference: **FL‑88526JVM**  \n\n2. **Ticket TK‑2ZA6UBBK** – *Refund not received*  \n   - Category: Refund  \n   - Priority: NORMAL  \n\nBoth tickets are currently open and not assigned to you.",
+     "firstTokenMs": 4369.387900000089,
+     "totalMs": 14784.8554,
+     "rounds": [
+      {
+       "promptTokens": 910,
+       "promptMs": 301.131,
+       "evalTokens": 20,
+       "evalMs": 1723.217,
+       "loadMs": 1.070475,
+       "totalMs": 2033.656100000022,
+       "tools": [
+        "ticket_queue"
+       ],
+       "calls": [
+        {
+         "name": "ticket_queue",
+         "arguments": {
+          "status": "OPEN"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1064,
+       "promptMs": 2325.467,
+       "evalTokens": 110,
+       "evalMs": 10417.034,
+       "loadMs": 1.421043,
+       "totalMs": 12751.154899999965,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    }
+   ],
+   "toolChoice": "100%",
+   "args": "100%",
+   "answers": "83%",
+   "grounded": "100%",
+   "errors": 0,
+   "medianFirstTokenWarm": 5295.2510000000475,
+   "medianTotalWarm": 14784.8554,
+   "medianTotalColdRole": 28418.92240000004,
+   "promptTokensPerSecond": 258,
+   "generatedTokensPerSecond": 6.8,
+   "maxPromptTokens": 1782
+  },
+  {
+   "model": "granite4:tiny-h",
+   "size": "4.2 GiB",
+   "memory": "6.28GiB",
+   "loadMs": 7164.299499999965,
+   "think": false,
+   "results": [
+    {
+     "id": "c1",
+     "role": "CUSTOMER",
+     "tool": "my_bookings",
+     "args": {
+      "limit": 10,
+      "tab": "UPCOMING"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "You have two upcoming trips:\n1. **Hotel**: Sea Breeze Resort in Goa (Dec 1‑3, 2 nights) – ₹6,300 total.  \n2. **Flight**: Delhi to Mumbai (Dec 15, 1 day) – ₹8,450 total.  \n\nBoth are confirmed and paid.",
+     "firstTokenMs": 18723.584999999963,
+     "totalMs": 21895.11560000002,
+     "rounds": [
+      {
+       "promptTokens": 1520,
+       "promptMs": 13623.484,
+       "evalTokens": 38,
+       "evalMs": 2709.247,
+       "loadMs": 1.030166,
+       "totalMs": 16402.299099999946,
+       "tools": [
+        "my_bookings"
+       ],
+       "calls": [
+        {
+         "name": "my_bookings",
+         "arguments": {
+          "limit": 10,
+          "tab": "UPCOMING"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1718,
+       "promptMs": 1910.486,
+       "evalTokens": 70,
+       "evalMs": 3167.324,
+       "loadMs": 2.795862,
+       "totalMs": 5492.72900000005,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "c3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "If you cancel HT-7K3M9Q2X, you'd receive a refund of **₹3,150**. The cancellation fee is **₹3,150** (50% of the stay price). Free cancellation ends on **3 Nov 2026**; after that, only 50% is refunded. You can cancel on your booking page (My Trips) where this quote appears.",
+     "firstTokenMs": 12916.1054,
+     "totalMs": 17032.619399999967,
+     "rounds": [
+      {
+       "promptTokens": 1534,
+       "promptMs": 9222.217,
+       "evalTokens": 37,
+       "evalMs": 1778.372,
+       "loadMs": 2.497779,
+       "totalMs": 11021.438900000066,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1729,
+       "promptMs": 1850.659,
+       "evalTokens": 90,
+       "evalMs": 4110.684,
+       "loadMs": 3.386227,
+       "totalMs": 6011.141499999911,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c4",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "FL-4KD8M2PQ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Your flight FL-4KD8M2PQ (Delhi to Mumbai, 15 Dec 2026) has the PNR **K7QX2M**.",
+     "firstTokenMs": 12590.187000000034,
+     "totalMs": 14309.378200000036,
+     "rounds": [
+      {
+       "promptTokens": 1532,
+       "promptMs": 8755.428,
+       "evalTokens": 35,
+       "evalMs": 1529.187,
+       "loadMs": 1.324648,
+       "totalMs": 10307.293199999956,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "FL-4KD8M2PQ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1764,
+       "promptMs": 2253.501,
+       "evalTokens": 38,
+       "evalMs": 1707.204,
+       "loadMs": 1.067771,
+       "totalMs": 4002.0435999999754,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c8",
+     "role": "CUSTOMER",
+     "tool": "search_flights",
+     "args": {
+      "origin": "DEL",
+      "destination": "BOM",
+      "departureDate": "2026-12-15"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Here are the cheapest one‑way flights from Delhi (DEL) to Mumbai (BOM) on **15 December 2026**:\n\n| Airline | Flight | Dep‑time | Arr‑time | Duration | Seats left | Price |\n|---------|--------|----------|----------|----------|------------|-------|\n| Air India | AI 504 | 06:45 IST | 08:55 IST | 2 h 10 m | 9 | ₹4,520 (non‑refundable) |\n| IndiGo | 6E 2134 | 09:10 IST | 11:20 IST | 2 h 10 m | 5 | ₹5,180 (refundable) |\n\nYou can book the one that best fits your schedule and budget. Let me know if you’d like to see more options or need help with anything else!",
+     "firstTokenMs": 13253.881599999964,
+     "totalMs": 22843.116500000004,
+     "rounds": [
+      {
+       "promptTokens": 1529,
+       "promptMs": 8640.661,
+       "evalTokens": 51,
+       "evalMs": 2331.407,
+       "loadMs": 1.052557,
+       "totalMs": 10983.933500000043,
+       "tools": [
+        "search_flights"
+       ],
+       "calls": [
+        {
+         "name": "search_flights",
+         "arguments": {
+          "origin": "DEL",
+          "destination": "BOM",
+          "departureDate": "2026-12-15"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1782,
+       "promptMs": 2251.176,
+       "evalTokens": 203,
+       "evalMs": 9587.494,
+       "loadMs": 1.0899,
+       "totalMs": 11859.132100000046,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x2",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "HT-ZZ9ZZ9ZZ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "I'm sorry, but I couldn't find the booking reference HT-ZZ9ZZ9ZZ. Please double-check the reference on your My Trips page or contact support for assistance.",
+     "firstTokenMs": 10350.05290000001,
+     "totalMs": 11953.302800000063,
+     "rounds": [
+      {
+       "promptTokens": 1527,
+       "promptMs": 7962.595,
+       "evalTokens": 33,
+       "evalMs": 1458.168,
+       "loadMs": 3.851146,
+       "totalMs": 9453.404900000081,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "HT-ZZ9ZZ9ZZ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1607,
+       "promptMs": 876.458,
+       "evalTokens": 38,
+       "evalMs": 1600.917,
+       "loadMs": 1.268064,
+       "totalMs": 2499.8638999999966,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Your booking HT-7K3M9Q2X is cancellable. The cancellation fee is ₹3,150 and the refund amount is ₹3,150. You can cancel it on the app by going to **My Trips**, finding the booking, and confirming the cancellation. The refund will be processed after the cancellation deadline.",
+     "firstTokenMs": 10831.518299999996,
+     "totalMs": 13907.468700000085,
+     "rounds": [
+      {
+       "promptTokens": 1530,
+       "promptMs": 7995.576,
+       "evalTokens": 37,
+       "evalMs": 1726.333,
+       "loadMs": 1.858689,
+       "totalMs": 9734.630000000005,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1646,
+       "promptMs": 1080.153,
+       "evalTokens": 69,
+       "evalMs": 3076.023,
+       "loadMs": 1.875948,
+       "totalMs": 4172.790700000012,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "a1",
+     "role": "ADMIN",
+     "tool": "admin_dashboard",
+     "args": {
+      "from": "2026-11-01",
+      "range": "THIS_MONTH"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "This month (November 2026) you have **322 hotel bookings** and **298 flight bookings**, for a total of **620 paid bookings**.",
+     "firstTokenMs": 16457.533399999957,
+     "totalMs": 17908.223600000027,
+     "rounds": [
+      {
+       "promptTokens": 1538,
+       "promptMs": 12355.05,
+       "evalTokens": 41,
+       "evalMs": 1770.213,
+       "loadMs": 1.09718,
+       "totalMs": 14367.317500000005,
+       "tools": [
+        "admin_dashboard"
+       ],
+       "calls": [
+        {
+         "name": "admin_dashboard",
+         "arguments": {
+          "from": "2026-11-01",
+          "range": "THIS_MONTH"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1781,
+       "promptMs": 2069.447,
+       "evalTokens": 33,
+       "evalMs": 1439.689,
+       "loadMs": 1.104106,
+       "totalMs": 3540.859400000074,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "a2",
+     "role": "ADMIN",
+     "tool": "search_payments",
+     "args": {
+      "to": "2026-11-05",
+      "status": "FAILED",
+      "from": "2026-10-30"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Here are the failed payments from last week:\n\n1. **Booking HT-QWKH9J7S**  \n   - Amount: ₹18,025.68  \n   - Reason: The demo payment was declined (Fail button).  \n\n2. **Booking HT-SGUZXM27**  \n   - Amount: ₹13,419  \n   - Reason: The demo payment was declined (Fail button).  \n\nBoth payments failed on November 4‑5, 2026.",
+     "firstTokenMs": 12284.616500000004,
+     "totalMs": 16740.135299999965,
+     "rounds": [
+      {
+       "promptTokens": 1537,
+       "promptMs": 8215.199,
+       "evalTokens": 53,
+       "evalMs": 2292.098,
+       "loadMs": 1.895914,
+       "totalMs": 10523.098899999983,
+       "tools": [
+        "search_payments"
+       ],
+       "calls": [
+        {
+         "name": "search_payments",
+         "arguments": {
+          "to": "2026-11-05",
+          "status": "FAILED",
+          "from": "2026-10-30"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1728,
+       "promptMs": 1735.707,
+       "evalTokens": 99,
+       "evalMs": 4452.066,
+       "loadMs": 2.989702,
+       "totalMs": 6216.993800000055,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "m1",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_arrivals_departures",
+     "args": {
+      "date": "2026-11-06"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Today's arrivals at Sea Breeze Resort include two confirmed guests:  \n- **Kavya Menon** (Standard Queen) arriving Nov 6, staying 2 nights, ₹6,405 total.  \n- **Rohan Das** (Deluxe Sea View) arriving Nov 6, staying 1 night, ₹4,200 total.  \n\nNo departures today.",
+     "firstTokenMs": 12587.17810000002,
+     "totalMs": 16082.968200000003,
+     "rounds": [
+      {
+       "promptTokens": 1086,
+       "promptMs": 8708.264,
+       "evalTokens": 35,
+       "evalMs": 1654.528,
+       "loadMs": 0.909807,
+       "totalMs": 10543.674699999974,
+       "tools": [
+        "hotel_arrivals_departures"
+       ],
+       "calls": [
+        {
+         "name": "hotel_arrivals_departures",
+         "arguments": {
+          "date": "2026-11-06"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1323,
+       "promptMs": 2022.651,
+       "evalTokens": 80,
+       "evalMs": 3492.37,
+       "loadMs": 1.565731,
+       "totalMs": 5539.254399999976,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "m3",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_occupancy",
+     "args": {
+      "from": "2026-10-31",
+      "to": "2026-11-06",
+      "range": "LAST_7_DAYS"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Over the last 7 days (Oct 31 – Nov 6), Sea Breeze Resort had **61.9 % occupancy**.  \n- **Room nights available:** 84  \n- **Room nights booked:** 52  \n- **Revenue:** ₹2,18,400 (average daily rate ₹4,200).",
+     "firstTokenMs": 12154.69570000004,
+     "totalMs": 15954.685500000021,
+     "rounds": [
+      {
+       "promptTokens": 1092,
+       "promptMs": 8271.999,
+       "evalTokens": 58,
+       "evalMs": 2515.732,
+       "loadMs": 1.714934,
+       "totalMs": 10798.232300000032,
+       "tools": [
+        "hotel_occupancy"
+       ],
+       "calls": [
+        {
+         "name": "hotel_occupancy",
+         "arguments": {
+          "from": "2026-10-31",
+          "to": "2026-11-06",
+          "range": "LAST_7_DAYS"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1231,
+       "promptMs": 1340.257,
+       "evalTokens": 75,
+       "evalMs": 3800.294,
+       "loadMs": 1.099701,
+       "totalMs": 5156.410400000052,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "s1",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_summary",
+     "args": {},
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are **4 open tickets**.",
+     "firstTokenMs": 8701.383700000006,
+     "totalMs": 9073.111400000053,
+     "rounds": [
+      {
+       "promptTokens": 912,
+       "promptMs": 7151.849,
+       "evalTokens": 16,
+       "evalMs": 667.835,
+       "loadMs": 0.977987,
+       "totalMs": 8038.209099999978,
+       "tools": [
+        "ticket_summary"
+       ],
+       "calls": [
+        {
+         "name": "ticket_summary",
+         "arguments": {}
+        }
+       ]
+      },
+      {
+       "promptTokens": 972,
+       "promptMs": 649.495,
+       "evalTokens": 9,
+       "evalMs": 370.613,
+       "loadMs": 0.919434,
+       "totalMs": 1034.8715000000084,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "s2",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_queue",
+     "args": {
+      "status": "OPEN"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Here are the open tickets:\n\n1. **Ticket TK-NVTUPEC9**  \n   - **Subject:** Cancellation not possible: FL-88526JVM  \n   - **Category:** CANCELLATION  \n   - **Priority:** HIGH  \n   - **Status:** OPEN  \n\n2. **Ticket TK-2ZA6UBBK**  \n   - **Subject:** Refund not received  \n   - **Category:** REFUND  \n   - **Priority:** NORMAL  \n   - **Status:** OPEN  \n\nBoth tickets are currently assigned to you and are open.",
+     "firstTokenMs": 10133.802299999981,
+     "totalMs": 15517.767300000065,
+     "rounds": [
+      {
+       "promptTokens": 910,
+       "promptMs": 7540.168,
+       "evalTokens": 27,
+       "evalMs": 1156.562,
+       "loadMs": 1.050619,
+       "totalMs": 8705.153699999908,
+       "tools": [
+        "ticket_queue"
+       ],
+       "calls": [
+        {
+         "name": "ticket_queue",
+         "arguments": {
+          "status": "OPEN"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1064,
+       "promptMs": 1409.094,
+       "evalTokens": 116,
+       "evalMs": 5379.731,
+       "loadMs": 0.972318,
+       "totalMs": 6812.5764999999665,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    }
+   ],
+   "toolChoice": "100%",
+   "args": "100%",
+   "answers": "100%",
+   "grounded": "100%",
+   "errors": 0,
+   "medianFirstTokenWarm": 12154.69570000004,
+   "medianTotalWarm": 15517.767300000065,
+   "medianTotalColdRole": 16082.968200000003,
+   "promptTokensPerSecond": 270,
+   "generatedTokensPerSecond": 21.7,
+   "maxPromptTokens": 1782
+  },
+  {
+   "model": "qwen3.5:4b",
+   "size": "3.1 GiB",
+   "memory": "6.318GiB",
+   "loadMs": 5319.148099999991,
+   "think": true,
+   "results": [
+    {
+     "id": "c1",
+     "role": "CUSTOMER",
+     "tool": "my_bookings",
+     "args": {
+      "tab": "UPCOMING",
+      "limit": 10
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "You have two upcoming trips:\n*   **HT-7K3M9Q2X**: Sea Breeze Resort in Goa (Dec 1–3, 2026).\n*   **FL-4KD8M2PQ**: Flight from Delhi to Mumbai (Dec 15, 2026).",
+     "firstTokenMs": 45496.629599999986,
+     "totalMs": 54819.519199999864,
+     "rounds": [
+      {
+       "promptTokens": 1898,
+       "promptMs": 35595.927,
+       "evalTokens": 42,
+       "evalMs": 5385.239,
+       "loadMs": 0.982638,
+       "totalMs": 40994.47849999985,
+       "tools": [
+        "my_bookings"
+       ],
+       "calls": [
+        {
+         "name": "my_bookings",
+         "arguments": {
+          "tab": "UPCOMING",
+          "limit": 10
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 2131,
+       "promptMs": 4487.18,
+       "evalTokens": 72,
+       "evalMs": 9324.181,
+       "loadMs": 0.921237,
+       "totalMs": 13825.001500000013,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "c3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "You would get a refund of ₹3,150 if you cancel HT-7K3M9Q2X.",
+     "firstTokenMs": 25752.36719999998,
+     "totalMs": 28927.36770000006,
+     "rounds": [
+      {
+       "promptTokens": 1912,
+       "promptMs": 17587.925,
+       "evalTokens": 36,
+       "evalMs": 4209.082,
+       "loadMs": 0.942169,
+       "totalMs": 21808.124399999855,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 2140,
+       "promptMs": 3930.169,
+       "evalTokens": 27,
+       "evalMs": 3175.643,
+       "loadMs": 0.845937,
+       "totalMs": 7119.205599999987,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c4",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "FL-4KD8M2PQ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "The PNR for your flight FL-4KD8M2PQ is K7QX2M.",
+     "firstTokenMs": 33921.15090000001,
+     "totalMs": 38673.46940000006,
+     "rounds": [
+      {
+       "promptTokens": 1910,
+       "promptMs": 20466.419,
+       "evalTokens": 35,
+       "evalMs": 6009.231,
+       "loadMs": 1.03814,
+       "totalMs": 26490.21120000002,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "FL-4KD8M2PQ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 2180,
+       "promptMs": 7400.25,
+       "evalTokens": 24,
+       "evalMs": 4750.577,
+       "loadMs": 3.307083,
+       "totalMs": 12183.204900000012,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c8",
+     "role": "CUSTOMER",
+     "tool": "search_flights",
+     "args": {
+      "origin": "DEL",
+      "destination": "BOM",
+      "departureDate": "2026-12-15"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Here are the cheapest flights from Delhi (DEL) to Mumbai (BOM) on 2026-12-15:\n\n*   **Air India AI 504**: Departs 06:45, arrives 08:55. Saver fare ₹4,520.\n*   **IndiGo 6E 2134**: Departs 09:10, arrives 11:20. Flexi fare ₹5,180.",
+     "firstTokenMs": 48544.97539999988,
+     "totalMs": 71234.20620000013,
+     "rounds": [
+      {
+       "promptTokens": 1911,
+       "promptMs": 25488.63,
+       "evalTokens": 62,
+       "evalMs": 12690.083,
+       "loadMs": 5.270286,
+       "totalMs": 38211.75280000013,
+       "tools": [
+        "search_flights"
+       ],
+       "calls": [
+        {
+         "name": "search_flights",
+         "arguments": {
+          "origin": "DEL",
+          "destination": "BOM",
+          "departureDate": "2026-12-15"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 2232,
+       "promptMs": 10230.872,
+       "evalTokens": 112,
+       "evalMs": 22691.631,
+       "loadMs": 1.637634,
+       "totalMs": 33022.39140000008,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x2",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "HT-ZZ9ZZ9ZZ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Booking HT-ZZ9ZZ9ZZ is not found in your account. Please check the reference on the My Trips page.",
+     "firstTokenMs": 38051.18879999989,
+     "totalMs": 43326.2892,
+     "rounds": [
+      {
+       "promptTokens": 1905,
+       "promptMs": 26866.996,
+       "evalTokens": 33,
+       "evalMs": 8061.279,
+       "loadMs": 2.383753,
+       "totalMs": 34965.69069999992,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "HT-ZZ9ZZ9ZZ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1993,
+       "promptMs": 3064.039,
+       "evalTokens": 27,
+       "evalMs": 5274.335,
+       "loadMs": 1.56294,
+       "totalMs": 8360.553500000155,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x3",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Your booking HT-7K3M9Q2X can be cancelled with a ₹3,150 fee and a ₹3,150 refund. To proceed, please go to the \"My Trips\" page on the app, where this quote is shown, and confirm the cancellation there.",
+     "firstTokenMs": 54591.087300000014,
+     "totalMs": 74073.18299999996,
+     "rounds": [
+      {
+       "promptTokens": 1908,
+       "promptMs": 30814.198,
+       "evalTokens": 36,
+       "evalMs": 9944.502,
+       "loadMs": 1.889489,
+       "totalMs": 40779.06929999986,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1982,
+       "promptMs": 3072.921,
+       "evalTokens": 36,
+       "evalMs": 6557.629,
+       "loadMs": 1.454655,
+       "totalMs": 9668.4179,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 2111,
+       "promptMs": 4099.361,
+       "evalTokens": 64,
+       "evalMs": 19489.825,
+       "loadMs": 2.869062,
+       "totalMs": 23625.62450000015,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "a1",
+     "role": "ADMIN",
+     "tool": "run_report",
+     "args": {
+      "report": "BOOKINGS",
+      "range": "THIS_MONTH"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "This month you received 666 bookings.",
+     "firstTokenMs": 50430.59560000012,
+     "totalMs": 51846.54450000008,
+     "rounds": [
+      {
+       "promptTokens": 1920,
+       "promptMs": 40100.948,
+       "evalTokens": 41,
+       "evalMs": 6649.084,
+       "loadMs": 2.672686,
+       "totalMs": 47139.20809999993,
+       "tools": [
+        "run_report"
+       ],
+       "calls": [
+        {
+         "name": "run_report",
+         "arguments": {
+          "report": "BOOKINGS",
+          "range": "THIS_MONTH"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 2057,
+       "promptMs": 3275.415,
+       "evalTokens": 11,
+       "evalMs": 1415.735,
+       "loadMs": 1.001439,
+       "totalMs": 4707.294400000013,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "a2",
+     "role": "ADMIN",
+     "tool": "search_payments",
+     "args": {
+      "status": "FAILED",
+      "from": "2026-10-30",
+      "to": "2026-11-05",
+      "limit": 10
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There were 2 failed payments last week:\n- HT-QWKH9J7S: ₹18,025.68 (declined)\n- HT-SGUZXM27: ₹13,419 (declined)",
+     "firstTokenMs": 40853.80700000026,
+     "totalMs": 52216.50139999995,
+     "rounds": [
+      {
+       "promptTokens": 1919,
+       "promptMs": 21566.432,
+       "evalTokens": 80,
+       "evalMs": 13032.323,
+       "loadMs": 1.12246,
+       "totalMs": 34609.73259999999,
+       "tools": [
+        "search_payments"
+       ],
+       "calls": [
+        {
+         "name": "search_payments",
+         "arguments": {
+          "status": "FAILED",
+          "from": "2026-10-30",
+          "to": "2026-11-05",
+          "limit": 10
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 2175,
+       "promptMs": 6227.929,
+       "evalTokens": 56,
+       "evalMs": 11360.227,
+       "loadMs": 0.983503,
+       "totalMs": 17606.71859999979,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "m1",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_arrivals_departures",
+     "args": {
+      "date": "2026-11-06"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Two guests are arriving today at Sea Breeze Resort: Kavya Menon and Rohan Das.",
+     "firstTokenMs": 52489.9140999997,
+     "totalMs": 75183.35950000002,
+     "rounds": [
+      {
+       "promptTokens": 1355,
+       "promptMs": 32138.967,
+       "evalTokens": 38,
+       "evalMs": 9142.371,
+       "loadMs": 1.46007,
+       "totalMs": 41583.70540000009,
+       "tools": [
+        "hotel_arrivals_departures"
+       ],
+       "calls": [
+        {
+         "name": "hotel_arrivals_departures",
+         "arguments": {
+          "date": "2026-11-06"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1626,
+       "promptMs": 10837.404,
+       "evalTokens": 22,
+       "evalMs": 22696.284,
+       "loadMs": 3.646612,
+       "totalMs": 33599.5943,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "m3",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_occupancy",
+     "args": {
+      "range": "LAST_7_DAYS"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "The occupancy for Sea Breeze Resort over the last 7 days was 61.9%.",
+     "firstTokenMs": 36457.526299999794,
+     "totalMs": 40535.10489999992,
+     "rounds": [
+      {
+       "promptTokens": 1361,
+       "promptMs": 27492.728,
+       "evalTokens": 32,
+       "evalMs": 4883.064,
+       "loadMs": 1.959939,
+       "totalMs": 32401.24589999998,
+       "tools": [
+        "hotel_occupancy"
+       ],
+       "calls": [
+        {
+         "name": "hotel_occupancy",
+         "arguments": {
+          "range": "LAST_7_DAYS"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1506,
+       "promptMs": 4027.657,
+       "evalTokens": 21,
+       "evalMs": 4076.049,
+       "loadMs": 3.642151,
+       "totalMs": 8133.796500000171,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "s1",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_summary",
+     "args": {},
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are 4 open tickets.",
+     "firstTokenMs": 33877.12459999998,
+     "totalMs": 34921.66910000006,
+     "rounds": [
+      {
+       "promptTokens": 1139,
+       "promptMs": 28701.539,
+       "evalTokens": 15,
+       "evalMs": 2751.248,
+       "loadMs": 2.475797,
+       "totalMs": 31831.65789999999,
+       "tools": [
+        "ticket_summary"
+       ],
+       "calls": [
+        {
+         "name": "ticket_summary",
+         "arguments": {}
+        }
+       ]
+      },
+      {
+       "promptTokens": 1198,
+       "promptMs": 2025.937,
+       "evalTokens": 8,
+       "evalMs": 1044.43,
+       "loadMs": 3.11224,
+       "totalMs": 3089.973800000036,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "s2",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_queue",
+     "args": {
+      "status": "OPEN",
+      "limit": 20
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are 2 open tickets:\n- TK-NVTUPEC9: Cancellation issue for FL-88526JVM (HIGH priority)\n- TK-2ZA6UBBK: Refund not received (NORMAL priority)\n\nBoth are unassigned.",
+     "firstTokenMs": 37377.98890000023,
+     "totalMs": 46361.426299999934,
+     "rounds": [
+      {
+       "promptTokens": 1137,
+       "promptMs": 25599.886,
+       "evalTokens": 39,
+       "evalMs": 7949.804,
+       "loadMs": 0.891617,
+       "totalMs": 33557.437700000126,
+       "tools": [
+        "ticket_queue"
+       ],
+       "calls": [
+        {
+         "name": "ticket_queue",
+         "arguments": {
+          "status": "OPEN",
+          "limit": 20
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1320,
+       "promptMs": 3807.132,
+       "evalTokens": 58,
+       "evalMs": 8983.762,
+       "loadMs": 1.228482,
+       "totalMs": 12803.950199999847,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    }
+   ],
+   "toolChoice": "100%",
+   "args": "100%",
+   "answers": "100%",
+   "grounded": "100%",
+   "errors": 0,
+   "medianFirstTokenWarm": 37377.98890000023,
+   "medianTotalWarm": 43326.2892,
+   "medianTotalColdRole": 51846.54450000008,
+   "promptTokensPerSecond": 113,
+   "generatedTokensPerSecond": 4.9,
+   "maxPromptTokens": 2232
+  },
+  {
+   "model": "lfm3:1.7b",
+   "size": "1.2 GiB",
+   "memory": "3.039GiB",
+   "loadMs": 3270.1725999999326,
+   "think": true,
+   "results": [
+    {
+     "id": "c1",
+     "role": "CUSTOMER",
+     "tool": "my_bookings",
+     "args": {
+      "tab": "UPCOMING"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "You have **2 upcoming trips**:\n\n1. **Hotel** – Sea Breeze Resort (Goa)  \n   - Reference: HT-7K3M9Q2X  \n   - Dates: 2026-12-01 to 2026-12-03 (2 nights, 1 room)  \n   - Total: ₹6,300 — Status: Confirmed, Paid  \n\n2. **Flight** – Delhi to Mumbai  \n   - Reference: FL-4KD8M2PQ  \n   - Date: 2026-12-15 (round trip)  \n   - Total: ₹8,450 — Status: Confirmed, Paid  \n\nLet me know if you’d like details on any of these bookings.",
+     "firstTokenMs": 28845.789399999892,
+     "totalMs": 47154.271600000095,
+     "rounds": [
+      {
+       "promptTokens": 1644,
+       "promptMs": 14708.953,
+       "evalTokens": 20,
+       "evalMs": 2080.757,
+       "loadMs": 1.213616,
+       "totalMs": 16800.68150000018,
+       "tools": [
+        "my_bookings"
+       ],
+       "calls": [
+        {
+         "name": "my_bookings",
+         "arguments": {
+          "tab": "UPCOMING"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1844,
+       "promptMs": 12029.761,
+       "evalTokens": 155,
+       "evalMs": 18308.821,
+       "loadMs": 2.198461,
+       "totalMs": 30353.526199999964,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "c3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "For booking **HT-7K3M9Q2X**, the cancellation details are:\n\n- **Paid amount**: ₹6,300  \n- **Cancellation fee**: ₹3,150 (50% of the stay price)  \n- **Refund you would receive**: **₹3,150**  \n\nFree cancellation was available until **3 Nov 2026**. After that, the 50% charge applies. To proceed, go to your **My Trips → UPCOMING** section and cancel on the booking page. Let me know if you need anything else!",
+     "firstTokenMs": 28073.895800000057,
+     "totalMs": 43631.46399999992,
+     "rounds": [
+      {
+       "promptTokens": 1658,
+       "promptMs": 8836.32,
+       "evalTokens": 29,
+       "evalMs": 7428.746,
+       "loadMs": 1.300058,
+       "totalMs": 16283.623200000031,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1861,
+       "promptMs": 11769.898,
+       "evalTokens": 120,
+       "evalMs": 15558.64,
+       "loadMs": 1.214798,
+       "totalMs": 27347.77919999999,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c4",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "FL-4KD8M2PQ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "The PNR for flight FL-4KD8M2PQ is **K7QX2M**. It's a confirmed one-way economy flight from New Delhi (DEL) to Mumbai (BOM) departing on 2026-12-15 at 06:45. Let me know if you need more details!",
+     "firstTokenMs": 19026.023500000127,
+     "totalMs": 23170.24729999993,
+     "rounds": [
+      {
+       "promptTokens": 1655,
+       "promptMs": 8775.758,
+       "evalTokens": 25,
+       "evalMs": 2333.843,
+       "loadMs": 1.829462,
+       "totalMs": 11123.844299999997,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "FL-4KD8M2PQ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1892,
+       "promptMs": 7887.599,
+       "evalTokens": 68,
+       "evalMs": 4142.849,
+       "loadMs": 1.212671,
+       "totalMs": 12046.308699999936,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c8",
+     "role": "CUSTOMER",
+     "tool": "search_flights",
+     "args": {
+      "origin": "Delhi",
+      "destination": "Mumbai",
+      "departureDate": "2026-12-15"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Yes, here are the available flights from Delhi (DEL) to Mumbai (BOM) on **2026-12-15**:\n\n**Option 1 – Air India AI 504**\n- Departure: 06:45 | Arrival: 08:55  \n- Stops: 0 (non-stop)  \n- Fare: Saver (not refundable)  \n- Price: ₹4,520  \n\n**Option 2 – IndiGo 6E 2134**\n- Departure: 09:10 | Arrival: 11:20  \n- Stops: 0 (non-stop)  \n- Fare: Flexi (refundable)  \n- Price: ₹5,180  \n\nLet me know if you’d like to book or need more details!",
+     "firstTokenMs": 27187.398000000045,
+     "totalMs": 40555.30579999997,
+     "rounds": [
+      {
+       "promptTokens": 1653,
+       "promptMs": 6559.574,
+       "evalTokens": 43,
+       "evalMs": 4808.763,
+       "loadMs": 1.468695,
+       "totalMs": 11389.37950000004,
+       "tools": [
+        "search_flights"
+       ],
+       "calls": [
+        {
+         "name": "search_flights",
+         "arguments": {
+          "origin": "Delhi",
+          "destination": "Mumbai",
+          "departureDate": "2026-12-15"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1924,
+       "promptMs": 15765.95,
+       "evalTokens": 166,
+       "evalMs": 13366.597,
+       "loadMs": 1.249893,
+       "totalMs": 29165.866000000155,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x2",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "HT-ZZ9ZZ9ZZ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "I couldn't find a booking with reference **HT-ZZ9ZZ9ZZ** for your account. Please check the booking reference on your My Trips page and let me know the correct one.",
+     "firstTokenMs": 27944.1185000001,
+     "totalMs": 31634.003999999957,
+     "rounds": [
+      {
+       "promptTokens": 1651,
+       "promptMs": 8417.611999,
+       "evalTokens": 24,
+       "evalMs": 7375.586,
+       "loadMs": 8.893098,
+       "totalMs": 15821.15699999989,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "HT-ZZ9ZZ9ZZ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1731,
+       "promptMs": 12097.999,
+       "evalTokens": 41,
+       "evalMs": 3688.294,
+       "loadMs": 1.355078,
+       "totalMs": 15812.799899999984,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "For booking **HT-7K3M9Q2X**:\n- Paid: ₹6,300\n- Cancellation fee: ₹3,150\n- Refund amount: ₹3,150 (net after fee)\n- It is cancellable.\n\nTo proceed, go to **My Trips → UPCOMING** and follow the \"Cancel\" option on the booking page, which will prompt you for confirmation. I can’t cancel it directly — please confirm here to get started.",
+     "firstTokenMs": 21783.86309999996,
+     "totalMs": 37705.800400000066,
+     "rounds": [
+      {
+       "promptTokens": 1654,
+       "promptMs": 8446.33,
+       "evalTokens": 29,
+       "evalMs": 3458.48,
+       "loadMs": 1.1736,
+       "totalMs": 11922.137100000167,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1775,
+       "promptMs": 9843.853,
+       "evalTokens": 101,
+       "evalMs": 15923.819,
+       "loadMs": 2.070836,
+       "totalMs": 25783.578100000042,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "a1",
+     "role": "ADMIN",
+     "tool": "admin_dashboard",
+     "args": {
+      "range": "THIS_MONTH"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": false,
+     "grounded": true,
+     "violation": null,
+     "answer": "For this month (Nov 1–6, 2026), there were **597 upcoming bookings** and **322 hotel bookings**, along with 298 flight bookings. In total, the dashboard reports:\n\n- Bookings created in the range: **597 upcoming, 322 hotel, 298 flight**\n- Completed: 1, Cancelled: 22, Failed/Paid: 46 failed/expired, etc.\n\nIf you want the exact count of *all* bookings (including completed, cancelled, etc.) for the month, let me know and I can pull the detailed breakdown.",
+     "firstTokenMs": 33930.34810000006,
+     "totalMs": 84071.43530000001,
+     "rounds": [
+      {
+       "promptTokens": 1759,
+       "promptMs": 18011.423,
+       "evalTokens": 23,
+       "evalMs": 1354.131,
+       "loadMs": 2.402358,
+       "totalMs": 19409.32300000009,
+       "tools": [
+        "admin_dashboard"
+       ],
+       "calls": [
+        {
+         "name": "admin_dashboard",
+         "arguments": {
+          "range": "THIS_MONTH"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 2010,
+       "promptMs": 14510.018,
+       "evalTokens": 128,
+       "evalMs": 50150.422,
+       "loadMs": 1.196229,
+       "totalMs": 64661.98829999985,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "a2",
+     "role": "ADMIN",
+     "tool": "search_payments",
+     "args": {
+      "status": "FAILED",
+      "from": "2026-10-31",
+      "to": "2026-11-07"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There were **2 failed payments** from last week:\n\n1. **Booking HT-QWKH9J7S** – Sea Breeze Resort · 2 nights · 1 room  \n   Amount: ₹18,025.68  \n   Failure: Demo payment declined (Fail button) – Code: `DEMO_DECLINED`  \n   Created: 2026-11-05\n\n2. **Booking HT-SGUZXM27** – Demo provider  \n   Amount: ₹13,419  \n   Failure: Demo payment declined (Fail button) – Code: `DEMO_DECLINED`  \n   Created: 2026-11-04\n\nLet me know if you’d like details on either booking or help checking refunds/cancellations.",
+     "firstTokenMs": 24766.85810000007,
+     "totalMs": 61872.286700000055,
+     "rounds": [
+      {
+       "promptTokens": 1757,
+       "promptMs": 9278.621,
+       "evalTokens": 45,
+       "evalMs": 3515.824,
+       "loadMs": 3.81392,
+       "totalMs": 12815.81700000004,
+       "tools": [
+        "search_payments"
+       ],
+       "calls": [
+        {
+         "name": "search_payments",
+         "arguments": {
+          "status": "FAILED",
+          "from": "2026-10-31",
+          "to": "2026-11-07"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1975,
+       "promptMs": 11946.329,
+       "evalTokens": 162,
+       "evalMs": 37100.348,
+       "loadMs": 1.323818,
+       "totalMs": 49056.40360000008,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "m1",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_arrivals_departures",
+     "args": {},
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "On **2026-11-06**, two guests are arriving:\n\n1. **Kavya Menon** – Standard Queen room, Booking Ref HT-HH2WXXYK, Confirmation HXB6WXYGE7, Check-out 2026-11-08, Total ₹6,405.\n2. **Rohan Das** – Deluxe Sea View room, Booking Ref HT-3MZQ8RTA, Check-out 2026-11-07, Total ₹4,200.\n\nLet me know if you need more details on either stay.",
+     "firstTokenMs": 34468.60800000001,
+     "totalMs": 45614.16390000004,
+     "rounds": [
+      {
+       "promptTokens": 1170,
+       "promptMs": 18627.513,
+       "evalTokens": 15,
+       "evalMs": 4315.254,
+       "loadMs": 3.451362,
+       "totalMs": 23008.898499999894,
+       "tools": [
+        "hotel_arrivals_departures"
+       ],
+       "calls": [
+        {
+         "name": "hotel_arrivals_departures",
+         "arguments": {}
+        }
+       ]
+      },
+      {
+       "promptTokens": 1409,
+       "promptMs": 11440.66,
+       "evalTokens": 122,
+       "evalMs": 11146.472,
+       "loadMs": 3.134155,
+       "totalMs": 22604.862199999858,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "m3",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_occupancy",
+     "args": {},
+     "toolOk": true,
+     "argsOk": false,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "For **Sea Breeze Resort** over the last 7 days (2026-10-31 to 2026-11-06), the occupancy rate was **61.9%**, with 52 booked room nights out of 84 total room nights. Revenue for that period was ₹2,18,400 with an average daily rate of ₹4,200.",
+     "firstTokenMs": 17665.898500000127,
+     "totalMs": 24981.18240000005,
+     "rounds": [
+      {
+       "promptTokens": 1177,
+       "promptMs": 8272.192999,
+       "evalTokens": 13,
+       "evalMs": 2060.895,
+       "loadMs": 1.20358,
+       "totalMs": 10344.084900000133,
+       "tools": [
+        "hotel_occupancy"
+       ],
+       "calls": [
+        {
+         "name": "hotel_occupancy",
+         "arguments": {}
+        }
+       ]
+      },
+      {
+       "promptTokens": 1296,
+       "promptMs": 7309.18,
+       "evalTokens": 80,
+       "evalMs": 7316.287,
+       "loadMs": 1.595419,
+       "totalMs": 14637.043099999893,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "s1",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_summary",
+     "args": {},
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are **4** open tickets in total. Specifically:\n- Open: 4\n- In Progress: 0\n- Waiting Customer: 2\n- Escalated: 1\n- Unassigned: 4\n- Assigned to Me: 3\n\nLet me know if you'd like details on any specific ticket.",
+     "firstTokenMs": 16529.871700000018,
+     "totalMs": 21199.38870000001,
+     "rounds": [
+      {
+       "promptTokens": 909,
+       "promptMs": 7797.249,
+       "evalTokens": 11,
+       "evalMs": 616.467,
+       "loadMs": 0.888652,
+       "totalMs": 8439.593799999915,
+       "tools": [
+        "ticket_summary"
+       ],
+       "calls": [
+        {
+         "name": "ticket_summary",
+         "arguments": {}
+        }
+       ]
+      },
+      {
+       "promptTokens": 969,
+       "promptMs": 8081.765,
+       "evalTokens": 72,
+       "evalMs": 4668.935,
+       "loadMs": 1.094942,
+       "totalMs": 12759.760600000154,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "s2",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_summary",
+     "args": {},
+     "toolOk": false,
+     "argsOk": false,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are **2 open tickets**:\n\n1. **TK-NVTUPEC9** – Subject: *Cancellation not possible: FL-88526JVM*  \n   Category: CANCELLATION | Priority: HIGH | Booking Ref: FL-88526JVM | Customer: p8-a3aca758@example.com\n\n2. **TK-2ZA6UBBK** – Subject: *Refund not received*  \n   Category: REFUND | Priority: NORMAL | Customer Email: e2e-77@example.com\n\nLet me know if you’d like details on either booking.",
+     "firstTokenMs": 30448.93979999982,
+     "totalMs": 42287.09010000015,
+     "rounds": [
+      {
+       "promptTokens": 907,
+       "promptMs": 8591.061,
+       "evalTokens": 11,
+       "evalMs": 929.991,
+       "loadMs": 1.574713,
+       "totalMs": 9531.249399999855,
+       "tools": [
+        "ticket_summary"
+       ],
+       "calls": [
+        {
+         "name": "ticket_summary",
+         "arguments": {}
+        }
+       ]
+      },
+      {
+       "promptTokens": 954,
+       "promptMs": 8695.283,
+       "evalTokens": 18,
+       "evalMs": 1152.393,
+       "loadMs": 1.163685,
+       "totalMs": 9856.719200000167,
+       "tools": [
+        "ticket_queue"
+       ],
+       "calls": [
+        {
+         "name": "ticket_queue",
+         "arguments": {
+          "status": "OPEN"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1118,
+       "promptMs": 11051.568,
+       "evalTokens": 125,
+       "evalMs": 11839.142,
+       "loadMs": 1.596516,
+       "totalMs": 22899.04209999973,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    }
+   ],
+   "toolChoice": "92%",
+   "args": "83%",
+   "answers": "92%",
+   "grounded": "100%",
+   "errors": 0,
+   "medianFirstTokenWarm": 24766.85810000007,
+   "medianTotalWarm": 37705.800400000066,
+   "medianTotalColdRole": 45614.16390000004,
+   "promptTokensPerSecond": 143,
+   "generatedTokensPerSecond": 7,
+   "maxPromptTokens": 2010
+  },
+  {
+   "model": "llama3.2:3b",
+   "size": "2.9 GiB",
+   "memory": "6.23GiB",
+   "loadMs": 6897.31949999975,
+   "think": false,
+   "results": [
+    {
+     "id": "c1",
+     "role": "CUSTOMER",
+     "tool": "my_bookings",
+     "args": {
+      "limit": "10",
+      "tab": "UPCOMING"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "You have 2 upcoming trips:\n\n1. Sea Breeze Resort, Goa (December 1-3, ₹6,300)\n2. Delhi to Mumbai (December 15, ₹8,450)",
+     "firstTokenMs": 39613.38689999981,
+     "totalMs": 56456.94790000003,
+     "rounds": [
+      {
+       "promptTokens": 1503,
+       "promptMs": 32437.932,
+       "evalTokens": 20,
+       "evalMs": 3232.166,
+       "loadMs": 1.385581,
+       "totalMs": 35689.6614000001,
+       "tools": [
+        "my_bookings"
+       ],
+       "calls": [
+        {
+         "name": "my_bookings",
+         "arguments": {
+          "limit": "10",
+          "tab": "UPCOMING"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 554,
+       "promptMs": 3739.175,
+       "evalTokens": 43,
+       "evalMs": 16847.485,
+       "loadMs": 1.860445,
+       "totalMs": 20767.22549999971,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "c3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "If you cancel your booking HT-7K3M9Q2X, you will get a refund of ₹3,150. You can cancel on the booking page (My Trips) in the app, which will show this quote and ask for confirmation.",
+     "firstTokenMs": 32909.238899999764,
+     "totalMs": 40500.34560000012,
+     "rounds": [
+      {
+       "promptTokens": 1517,
+       "promptMs": 23759.772,
+       "evalTokens": 23,
+       "evalMs": 5385.005,
+       "loadMs": 1.555621,
+       "totalMs": 29158.320100000128,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 565,
+       "promptMs": 3600.154,
+       "evalTokens": 54,
+       "evalMs": 7591.636,
+       "loadMs": 1.566432,
+       "totalMs": 11341.95679999981,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c4",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "FL-4KD8M2PQ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "The PNR of your flight is K7QX2M.",
+     "firstTokenMs": 48222.59670000011,
+     "totalMs": 54223.349299999885,
+     "rounds": [
+      {
+       "promptTokens": 1515,
+       "promptMs": 25913.618,
+       "evalTokens": 21,
+       "evalMs": 11669.211,
+       "loadMs": 1.098159,
+       "totalMs": 37591.29809999978,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "FL-4KD8M2PQ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 600,
+       "promptMs": 10363.443,
+       "evalTokens": 15,
+       "evalMs": 6007.744,
+       "loadMs": 1.60787,
+       "totalMs": 16631.998900000006,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c8",
+     "role": "CUSTOMER",
+     "tool": "search_flights",
+     "args": {
+      "destination": "BOM",
+      "departureDate": "2026-12-15",
+      "origin": "DEL",
+      "maxStops": "0"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are two flights available from Delhi to Mumbai on 2026-12-15:\n\n1. Air India (AI 504) - Departing at 06:45, arriving at 08:55, fare: ₹4,520\n2. IndiGo (6E 2134) - Departing at 09:10, arriving at 11:20, fare: ₹5,180\n\nPlease note that prices and flight details are subject to change. You can book these flights on the app page.",
+     "firstTokenMs": 50167.15500000073,
+     "totalMs": 61701.86500000022,
+     "rounds": [
+      {
+       "promptTokens": 1512,
+       "promptMs": 25965.521,
+       "evalTokens": 35,
+       "evalMs": 19113.89,
+       "loadMs": 2.21102,
+       "totalMs": 45086.98300000001,
+       "tools": [
+        "search_flights"
+       ],
+       "calls": [
+        {
+         "name": "search_flights",
+         "arguments": {
+          "destination": "BOM",
+          "departureDate": "2026-12-15",
+          "origin": "DEL",
+          "maxStops": "0"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 624,
+       "promptMs": 4858.069,
+       "evalTokens": 107,
+       "evalMs": 11537.709,
+       "loadMs": 2.439581,
+       "totalMs": 16614.809599999804,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x2",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "HT-ZZ9ZZ9ZZ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "It looks like the booking HT-ZZ9ZZ9ZZ was not found. You can check the reference on the My Trips page to see if it's listed there.",
+     "firstTokenMs": 3843.904799999669,
+     "totalMs": 7295.61950000003,
+     "rounds": [
+      {
+       "promptTokens": 1510,
+       "promptMs": 420.767,
+       "evalTokens": 19,
+       "evalMs": 2070.771,
+       "loadMs": 1.091812,
+       "totalMs": 2619.653700000141,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "HT-ZZ9ZZ9ZZ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 443,
+       "promptMs": 1124.573,
+       "evalTokens": 36,
+       "evalMs": 3452.973,
+       "loadMs": 1.355081,
+       "totalMs": 4675.916600000113,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "To cancel your booking HT-7K3M9Q2X, please log in to the app and go to My Trips. You will see the booking details, including the cancellation quote. Confirm the cancellation to proceed.",
+     "firstTokenMs": 20519.165999999736,
+     "totalMs": 25342.8311999999,
+     "rounds": [
+      {
+       "promptTokens": 1513,
+       "promptMs": 15978.293,
+       "evalTokens": 23,
+       "evalMs": 2706.953,
+       "loadMs": 1.887988,
+       "totalMs": 18698.203699999955,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 482,
+       "promptMs": 1686.215,
+       "evalTokens": 47,
+       "evalMs": 4824.803,
+       "loadMs": 1.009019,
+       "totalMs": 6644.588100000285,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "a1",
+     "role": "ADMIN",
+     "tool": "search_bookings",
+     "args": {
+      "from": "2026-11-01",
+      "to": "2026-11-30",
+      "q": "",
+      "status": "",
+      "type": "FLIGHT",
+      "limit": 10
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There were 666 bookings made this month.",
+     "firstTokenMs": 29382.823199999984,
+     "totalMs": 30396.70390000008,
+     "rounds": [
+      {
+       "promptTokens": 1521,
+       "promptMs": 20891.128,
+       "evalTokens": 41,
+       "evalMs": 6956.405,
+       "loadMs": 1.070757,
+       "totalMs": 27901.398000000045,
+       "tools": [
+        "search_bookings"
+       ],
+       "calls": [
+        {
+         "name": "search_bookings",
+         "arguments": {
+          "from": "2026-11-01",
+          "to": "2026-11-30",
+          "q": "",
+          "status": "",
+          "type": "FLIGHT",
+          "limit": 10
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 429,
+       "promptMs": 1302.053,
+       "evalTokens": 10,
+       "evalMs": 1014.984,
+       "loadMs": 1.12744,
+       "totalMs": 2495.2595999999903,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "a2",
+     "role": "ADMIN",
+     "tool": "search_payments",
+     "args": {
+      "to": "2026-11-05",
+      "from": "2026-10-30",
+      "limit": "10",
+      "q": "",
+      "status": "FAILED"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Here are the failed payments from last week:\n\n1. Booking Reference: HT-QWKH9J7S\n   - Amount: ₹18,025.68\n   - Status: FAILED\n   - Provider: DEMO\n   - Failure reason: The demo payment was declined (Fail button).\n   - Failure code: DEMO_DECLINED\n\n2. Booking Reference: HT-SGUZXM27\n   - Amount: ₹13,419\n   - Status: FAILED\n   - Provider: DEMO\n   - Failure reason: The demo payment was declined (Fail button).\n   - Failure code: DEMO_DECLINED",
+     "firstTokenMs": 27462.214000000153,
+     "totalMs": 41422.782400000375,
+     "rounds": [
+      {
+       "promptTokens": 1520,
+       "promptMs": 18805.982,
+       "evalTokens": 37,
+       "evalMs": 5154.253,
+       "loadMs": 1.349681,
+       "totalMs": 23968.056799999904,
+       "tools": [
+        "search_payments"
+       ],
+       "calls": [
+        {
+         "name": "search_payments",
+         "arguments": {
+          "to": "2026-11-05",
+          "from": "2026-10-30",
+          "limit": "10",
+          "q": "",
+          "status": "FAILED"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 556,
+       "promptMs": 3319.95,
+       "evalTokens": 129,
+       "evalMs": 13962.595,
+       "loadMs": 1.466496,
+       "totalMs": 17454.679899999872,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "m1",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_arrivals_departures",
+     "args": {
+      "date": "2026-11-06",
+      "hotel": ""
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Two guests are arriving at Sea Breeze Resort today. The guests are Kavya Menon and Rohan Das. They will be checking in on 6 November 2026 and checking out on 8 November 2026 and 7 November 2026 respectively.",
+     "firstTokenMs": 20923.416799999774,
+     "totalMs": 25745.319199999794,
+     "rounds": [
+      {
+       "promptTokens": 1069,
+       "promptMs": 14482.224,
+       "evalTokens": 24,
+       "evalMs": 3413.84,
+       "loadMs": 1.175929,
+       "totalMs": 17959.513400000054,
+       "tools": [
+        "hotel_arrivals_departures"
+       ],
+       "calls": [
+        {
+         "name": "hotel_arrivals_departures",
+         "arguments": {
+          "date": "2026-11-06",
+          "hotel": ""
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 585,
+       "promptMs": 2881.428,
+       "evalTokens": 56,
+       "evalMs": 4822.616,
+       "loadMs": 1.110399,
+       "totalMs": 7785.76220000023,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "m3",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_occupancy",
+     "args": {
+      "from": "today",
+      "hotel": "",
+      "range": "LAST_7_DAYS",
+      "to": "today"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "For Sea Breeze Resort, the occupancy over the last 7 days was 61.9%. The room nights were 84, booked room nights were 52, and the revenue was ₹2,18,400.",
+     "firstTokenMs": 16219.811799999792,
+     "totalMs": 20426.802799999714,
+     "rounds": [
+      {
+       "promptTokens": 1075,
+       "promptMs": 9663.919,
+       "evalTokens": 38,
+       "evalMs": 4015.327,
+       "loadMs": 0.908087,
+       "totalMs": 13688.582700000145,
+       "tools": [
+        "hotel_occupancy"
+       ],
+       "calls": [
+        {
+         "name": "hotel_occupancy",
+         "arguments": {
+          "from": "today",
+          "hotel": "",
+          "range": "LAST_7_DAYS",
+          "to": "today"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 484,
+       "promptMs": 2461.232,
+       "evalTokens": 46,
+       "evalMs": 4208.093,
+       "loadMs": 0.878215,
+       "totalMs": 6738.180499999784,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "s1",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_summary",
+     "args": {},
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are 4 open tickets.",
+     "firstTokenMs": 13322.691700000316,
+     "totalMs": 13898.724100000225,
+     "rounds": [
+      {
+       "promptTokens": 895,
+       "promptMs": 11377.809,
+       "evalTokens": 11,
+       "evalMs": 933.781,
+       "loadMs": 0.90358,
+       "totalMs": 12409.022599999793,
+       "tools": [
+        "ticket_summary"
+       ],
+       "calls": [
+        {
+         "name": "ticket_summary",
+         "arguments": {}
+        }
+       ]
+      },
+      {
+       "promptTokens": 411,
+       "promptMs": 835.813,
+       "evalTokens": 8,
+       "evalMs": 576.293,
+       "loadMs": 0.856312,
+       "totalMs": 1489.6663999999873,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "s2",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_queue",
+     "args": {
+      "status": "OPEN"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are 2 open tickets:\n\n1. TK-NVTUPEC9 - CANCELLATION not possible: FL-88526JVM\n2. TK-2ZA6UBBK - Refund not received",
+     "firstTokenMs": 10834.487499999814,
+     "totalMs": 15268.288399999961,
+     "rounds": [
+      {
+       "promptTokens": 893,
+       "promptMs": 7541.863,
+       "evalTokens": 13,
+       "evalMs": 1064.521,
+       "loadMs": 1.263817,
+       "totalMs": 8613.384899999946,
+       "tools": [
+        "ticket_queue"
+       ],
+       "calls": [
+        {
+         "name": "ticket_queue",
+         "arguments": {
+          "status": "OPEN"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 503,
+       "promptMs": 2143.253,
+       "evalTokens": 45,
+       "evalMs": 4435.646,
+       "loadMs": 0.939617,
+       "totalMs": 6654.858700000215,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    }
+   ],
+   "toolChoice": "100%",
+   "args": "100%",
+   "answers": "100%",
+   "grounded": "100%",
+   "errors": 0,
+   "medianFirstTokenWarm": 20519.165999999736,
+   "medianTotalWarm": 25342.8311999999,
+   "medianTotalColdRole": 25745.319199999794,
+   "promptTokensPerSecond": 91,
+   "generatedTokensPerSecond": 6.2,
+   "maxPromptTokens": 1521
+  },
+  {
+   "model": "qwen2.5:3b",
+   "size": "2.3 GiB",
+   "memory": "3.983GiB",
+   "loadMs": 4231.313300000038,
+   "think": false,
+   "results": [
+    {
+     "id": "c1",
+     "role": "CUSTOMER",
+     "tool": "my_bookings",
+     "args": {
+      "tab": "UPCOMING"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "You have two upcoming trips:\n\n1. A hotel stay at Sea Breeze Resort in Goa from December 1, 2026, to December 3, 2026. The total cost is ₹6,300.\n2. A flight from Delhi to Mumbai on December 15, 2026, for ₹8,450. \n\nPlease check these bookings.",
+     "firstTokenMs": 24876.047199999914,
+     "totalMs": 33574.71949999966,
+     "rounds": [
+      {
+       "promptTokens": 1481,
+       "promptMs": 19782.461,
+       "evalTokens": 23,
+       "evalMs": 2160.622,
+       "loadMs": 1.272604,
+       "totalMs": 21961.9094999996,
+       "tools": [
+        "my_bookings"
+       ],
+       "calls": [
+        {
+         "name": "my_bookings",
+         "arguments": {
+          "tab": "UPCOMING"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1697,
+       "promptMs": 2890.729,
+       "evalTokens": 86,
+       "evalMs": 8699.896,
+       "loadMs": 1.531917,
+       "totalMs": 11612.7583999997,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "c3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "If you cancel your booking HT-7K3M9Q2X, you would get a refund of ₹3,150. The cancellation fee is 50% of the total stay price, which is ₹6,300. Cancellation is free until November 3, 2026. After that, a 50% charge applies. Please cancel it from the booking page on the app.",
+     "firstTokenMs": 14521.798800000455,
+     "totalMs": 42399.59250000026,
+     "rounds": [
+      {
+       "promptTokens": 1495,
+       "promptMs": 1186.398,
+       "evalTokens": 30,
+       "evalMs": 7356.913,
+       "loadMs": 1.249057,
+       "totalMs": 8559.820199999958,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1716,
+       "promptMs": 5932.228,
+       "evalTokens": 90,
+       "evalMs": 27886.877,
+       "loadMs": 5.611855,
+       "totalMs": 33839.72349999985,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c4",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "FL-4KD8M2PQ"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "The PNR of your flight FL-4KD8M2PQ is K7QX2M.",
+     "firstTokenMs": 9199.008500000462,
+     "totalMs": 12657.811400000006,
+     "rounds": [
+      {
+       "promptTokens": 1493,
+       "promptMs": 638.642,
+       "evalTokens": 28,
+       "evalMs": 2771.671,
+       "loadMs": 1.036235,
+       "totalMs": 3423.7995000001974,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "FL-4KD8M2PQ"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1758,
+       "promptMs": 5760.981,
+       "evalTokens": 24,
+       "evalMs": 3458.202,
+       "loadMs": 1.507194,
+       "totalMs": 9233.9402999999,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "c8",
+     "role": "CUSTOMER",
+     "tool": "search_flights",
+     "args": {
+      "destination": "BOM",
+      "departureDate": "2026-12-15",
+      "adults": 1,
+      "origin": "DEL"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are two flights available from Delhi to Mumbai on 2026-12-15:\n\n1. **Air India**:\n   - Departure: 2026-12-15T06:45\n   - Arrival: 2026-12-15T08:55\n   - Duration: 130 minutes\n   - Seats Available: 9\n   - Fare: ₹4,520\n   - Refundable: No\n\n2. **IndiGo**:\n   - Departure: 2026-12-15T09:10\n   - Arrival: 2026-12-15T11:20\n   - Duration: 130 minutes\n   - Seats Available: 5\n   - Fare: ₹5,180\n   - Refundable: Yes\n\nWould you like more details on any of these flights?",
+     "firstTokenMs": 25419.368900000118,
+     "totalMs": 63580.871900000144,
+     "rounds": [
+      {
+       "promptTokens": 1494,
+       "promptMs": 664.282,
+       "evalTokens": 51,
+       "evalMs": 20115.921,
+       "loadMs": 2.521221,
+       "totalMs": 20796.443299999926,
+       "tools": [
+        "search_flights"
+       ],
+       "calls": [
+        {
+         "name": "search_flights",
+         "arguments": {
+          "destination": "BOM",
+          "departureDate": "2026-12-15",
+          "adults": 1,
+          "origin": "DEL"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1799,
+       "promptMs": 4603.212,
+       "evalTokens": 213,
+       "evalMs": 38166.596,
+       "loadMs": 2.640752,
+       "totalMs": 42784.374799999874,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x2",
+     "role": "CUSTOMER",
+     "tool": "booking_details",
+     "args": {
+      "reference": "HT-ZZ9ZZ9ZZ9"
+     },
+     "toolOk": true,
+     "argsOk": false,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "I'm sorry, but there is no booking with the reference HT-ZZ9ZZ9ZZ9 found for you, or you might not have the right to see it. Please check the reference on the My Trips page.",
+     "firstTokenMs": 4357.42119999975,
+     "totalMs": 9171.492099999916,
+     "rounds": [
+      {
+       "promptTokens": 1488,
+       "promptMs": 422.608,
+       "evalTokens": 27,
+       "evalMs": 2381.015,
+       "loadMs": 1.216824,
+       "totalMs": 2817.372700000182,
+       "tools": [
+        "booking_details"
+       ],
+       "calls": [
+        {
+         "name": "booking_details",
+         "arguments": {
+          "reference": "HT-ZZ9ZZ9ZZ9"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1573,
+       "promptMs": 1524.847,
+       "evalTokens": 47,
+       "evalMs": 4814.831,
+       "loadMs": 1.388547,
+       "totalMs": 6354.082600000314,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "x3",
+     "role": "CUSTOMER",
+     "tool": "cancellation_quote",
+     "args": {
+      "reference": "HT-7K3M9Q2X"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Your booking HT-7K3M9Q2X is cancellable. It costs ₹6,300 and would cost ₹3,150 to cancel. You will get ₹3,150 back. Please cancel it on the booking page in the app, which will show this quote and ask for confirmation. I cannot cancel it for you.",
+     "firstTokenMs": 5379.969000000507,
+     "totalMs": 13694.10719999997,
+     "rounds": [
+      {
+       "promptTokens": 1491,
+       "promptMs": 587.007,
+       "evalTokens": 30,
+       "evalMs": 2881.608,
+       "loadMs": 1.055115,
+       "totalMs": 3483.9553999998607,
+       "tools": [
+        "cancellation_quote"
+       ],
+       "calls": [
+        {
+         "name": "cancellation_quote",
+         "arguments": {
+          "reference": "HT-7K3M9Q2X"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1614,
+       "promptMs": 1880.651,
+       "evalTokens": 76,
+       "evalMs": 8313.793,
+       "loadMs": 1.279498,
+       "totalMs": 10210.102400000207,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "a1",
+     "role": "ADMIN",
+     "tool": "admin_dashboard",
+     "args": {
+      "range": "THIS_MONTH"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": false,
+     "grounded": true,
+     "violation": null,
+     "answer": "This month, we have had a total of 144 bookings. Out of these, 2 bookings were cancelled. The total revenue generated from these bookings is ₹54,37,760. The top destination booked this month was Goa with 210 bookings.",
+     "firstTokenMs": 28240.913799999747,
+     "totalMs": 34760.021600000095,
+     "rounds": [
+      {
+       "promptTokens": 1515,
+       "promptMs": 21945.77,
+       "evalTokens": 21,
+       "evalMs": 1952.077,
+       "loadMs": 3.489065,
+       "totalMs": 23989.00509999972,
+       "tools": [
+        "admin_dashboard"
+       ],
+       "calls": [
+        {
+         "name": "admin_dashboard",
+         "arguments": {
+          "range": "THIS_MONTH"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1791,
+       "promptMs": 4236.734,
+       "evalTokens": 60,
+       "evalMs": 6519.835,
+       "loadMs": 1.817973,
+       "totalMs": 10770.96760000009,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "a2",
+     "role": "ADMIN",
+     "tool": "search_payments",
+     "args": {
+      "status": "FAILED",
+      "from": "2026-11-01",
+      "to": "2026-11-07"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Here are the failed payments from last week:\n\n- Booking Reference: HT-QWKH9J7S, Description: Sea Breeze Resort · 2 nights · 1 room, Provider: DEMO, Failure: The demo payment was declined (Fail button), Failure Code: DEMO_DECLINED, Amount: ₹18,025.68, Created At: 2026-11-05T14:10:51Z\n- Booking Reference: HT-SGUZXM27, Provider: DEMO, Failure Code: DEMO_DECLINED, Amount: ₹13,419, Created At: 2026-11-04T10:02:11Z",
+     "firstTokenMs": 9623.187899999786,
+     "totalMs": 29087.742699999828,
+     "rounds": [
+      {
+       "promptTokens": 1514,
+       "promptMs": 384.459,
+       "evalTokens": 50,
+       "evalMs": 5978.722,
+       "loadMs": 1.270121,
+       "totalMs": 6378.7316999998875,
+       "tools": [
+        "search_payments"
+       ],
+       "calls": [
+        {
+         "name": "search_payments",
+         "arguments": {
+          "status": "FAILED",
+          "from": "2026-11-01",
+          "to": "2026-11-07"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1737,
+       "promptMs": 3228.606,
+       "evalTokens": 159,
+       "evalMs": 19466.487,
+       "loadMs": 1.23134,
+       "totalMs": 22708.95479999995,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "m1",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_arrivals_departures",
+     "args": {
+      "date": "2026-11-06",
+      "hotel": ""
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Today, 2 guests are arriving at the Sea Breeze Resort. Here are their details:\n\n1. Booking Reference: HT-HH2WXXYK, Lead Guest: Kavya Menon, Room Type: Standard Queen, Check-In: 2026-11-06, Check-Out: 2026-11-08, Nights: 2, Rooms: 1, Adults: 2, Total Amount: ₹6,405.\n2. Booking Reference: HT-3MZQ8RTA, Lead Guest: Rohan Das, Room Type: Deluxe Sea View, Check-In: 2026-11-06, Check-Out: 2026-11-07, Nights: 1, Rooms: 1, Adults: 1, Total Amount: ₹4,200. \n\nNo guests are leaving today.",
+     "firstTokenMs": 26066.75120000029,
+     "totalMs": 45928.96160000004,
+     "rounds": [
+      {
+       "promptTokens": 1065,
+       "promptMs": 19225.586,
+       "evalTokens": 37,
+       "evalMs": 3147.182,
+       "loadMs": 1.086445,
+       "totalMs": 22427.207200000063,
+       "tools": [
+        "hotel_arrivals_departures"
+       ],
+       "calls": [
+        {
+         "name": "hotel_arrivals_departures",
+         "arguments": {
+          "date": "2026-11-06",
+          "hotel": ""
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1335,
+       "promptMs": 3621.241,
+       "evalTokens": 194,
+       "evalMs": 19866.636,
+       "loadMs": 1.104645,
+       "totalMs": 23501.6847000001,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "m3",
+     "role": "HOTEL_MANAGER",
+     "tool": "hotel_occupancy",
+     "args": {
+      "from": "2026-11-01",
+      "hotel": "",
+      "range": "LAST_7_DAYS"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "The occupancy at Sea Breeze Resort over the last 7 days was 61.9%. The total room nights were 84, with 52 booked, resulting in a room revenue of ₹2,18,400 and an average daily rate of ₹4,200.",
+     "firstTokenMs": 12202.61950000003,
+     "totalMs": 28696.134800000116,
+     "rounds": [
+      {
+       "promptTokens": 1071,
+       "promptMs": 601.924,
+       "evalTokens": 44,
+       "evalMs": 7022.304,
+       "loadMs": 5.429857,
+       "totalMs": 7654.177300000098,
+       "tools": [
+        "hotel_occupancy"
+       ],
+       "calls": [
+        {
+         "name": "hotel_occupancy",
+         "arguments": {
+          "from": "2026-11-01",
+          "hotel": "",
+          "range": "LAST_7_DAYS"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1225,
+       "promptMs": 4528.797,
+       "evalTokens": 64,
+       "evalMs": 16496.551,
+       "loadMs": 1.270211,
+       "totalMs": 21041.9066999997,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    },
+    {
+     "id": "s1",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_summary",
+     "args": {},
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "There are 4 open tickets.",
+     "firstTokenMs": 13486.018399999943,
+     "totalMs": 14102.714499999769,
+     "rounds": [
+      {
+       "promptTokens": 883,
+       "promptMs": 11393.438,
+       "evalTokens": 16,
+       "evalMs": 1261.817,
+       "loadMs": 1.851761,
+       "totalMs": 12698.018800000194,
+       "tools": [
+        "ticket_summary"
+       ],
+       "calls": [
+        {
+         "name": "ticket_summary",
+         "arguments": {}
+        }
+       ]
+      },
+      {
+       "promptTokens": 947,
+       "promptMs": 775.235,
+       "evalTokens": 8,
+       "evalMs": 617.142,
+       "loadMs": 0.95795,
+       "totalMs": 1404.6658000000753,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": true
+    },
+    {
+     "id": "s2",
+     "role": "SUPPORT_AGENT",
+     "tool": "ticket_queue",
+     "args": {
+      "status": "OPEN"
+     },
+     "toolOk": true,
+     "argsOk": true,
+     "answerOk": true,
+     "grounded": true,
+     "violation": null,
+     "answer": "Here are the open support tickets:\n\n1. **Ticket Number**: TK-NVTUPEC9  \n   **Subject**: Cancellation not possible: FL-88526JVM  \n   **Category**: CANCELLATION  \n   **Status**: OPEN  \n   **Priority**: HIGH  \n   **Booking Reference**: FL-88526JVM  \n   **Customer Email**: p8-a3aca758@example.com  \n   **Assigned to Me**: No\n\n2. **Ticket Number**: TK-2ZA6UBBK  \n   **Subject**: Refund not received  \n   **Category**: REFUND  \n   **Status**: OPEN  \n   **Priority**: NORMAL  \n   **Customer Email**: e2e-77@example.com  \n   **Assigned to Me**: No\n\nThese tickets are currently OPEN and need attention.",
+     "firstTokenMs": 3843.4715000004508,
+     "totalMs": 18881.452200000174,
+     "rounds": [
+      {
+       "promptTokens": 881,
+       "promptMs": 275.568,
+       "evalTokens": 20,
+       "evalMs": 1570.783,
+       "loadMs": 1.030022,
+       "totalMs": 1857.2441000002436,
+       "tools": [
+        "ticket_queue"
+       ],
+       "calls": [
+        {
+         "name": "ticket_queue",
+         "arguments": {
+          "status": "OPEN"
+         }
+        }
+       ]
+      },
+      {
+       "promptTokens": 1048,
+       "promptMs": 1977.604,
+       "evalTokens": 173,
+       "evalMs": 15039.048,
+       "loadMs": 0.886827,
+       "totalMs": 17024.16629999969,
+       "tools": [],
+       "calls": []
+      }
+     ],
+     "coldForRole": false
+    }
+   ],
+   "toolChoice": "100%",
+   "args": "92%",
+   "answers": "92%",
+   "grounded": "100%",
+   "errors": 0,
+   "medianFirstTokenWarm": 9199.008500000462,
+   "medianTotalWarm": 18881.452200000174,
+   "medianTotalColdRole": 33574.71949999966,
+   "promptTokensPerSecond": 289,
+   "generatedTokensPerSecond": 6.9,
+   "maxPromptTokens": 1799
+  }
+ ]
+}

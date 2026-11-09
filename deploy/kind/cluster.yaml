@@ -1,0 +1,54 @@
+# Highly available local Kubernetes cluster for flight-hotel-app (KUBERNETES_DEPLOYMENT.md §2).
+#
+#   3 control-plane nodes  etcd, API server, scheduler and controller manager on each; kind puts a load balancer
+#                          (HAProxy container "flight-hotel-external-load-balancer") in front of the three API servers,
+#                          so the cluster keeps working when one control plane is stopped.
+#   3 worker nodes         run every workload (control planes keep their NoSchedule taint). Each worker is labelled
+#                          with its own zone, so topology spread constraints and zone failures can be practised like on
+#                          a 3-AZ EKS cluster.
+#
+# Create:  kind create cluster --config deploy/kind/cluster.yaml   (or deploy/scripts/kind-up.ps1, which also adds
+#          the local image registry). Kubernetes 1.36 (pinned image digest; kind v0.33).
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: flight-hotel
+networking:
+  # The API server is only reachable from this machine.
+  apiServerAddress: "127.0.0.1"
+  # Default CNI (kindnet) enforces NetworkPolicy; pods 10.244.0.0/16, services 10.96.0.0/16.
+# containerd reads per-registry settings from /etc/containerd/certs.d; kind-up.ps1 writes one there so that
+# localhost:5001/... images come from the local registry container (kind's documented local-registry setup).
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      config_path = "/etc/containerd/certs.d"
+nodes:
+  - role: control-plane
+    image: kindest/node:v1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed
+    # The Traefik gateway is a NodePort service (30080 HTTP, 30443 HTTPS) reachable on every node; this node publishes
+    # it on the host, so http://localhost reaches the cluster. Only 127.0.0.1: nothing is exposed to the network.
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 80
+        listenAddress: "127.0.0.1"
+        protocol: TCP
+      - containerPort: 30443
+        hostPort: 443
+        listenAddress: "127.0.0.1"
+        protocol: TCP
+  - role: control-plane
+    image: kindest/node:v1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed
+  - role: control-plane
+    image: kindest/node:v1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed
+  - role: worker
+    image: kindest/node:v1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed
+    labels:
+      topology.kubernetes.io/zone: zone-a
+  - role: worker
+    image: kindest/node:v1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed
+    labels:
+      topology.kubernetes.io/zone: zone-b
+  - role: worker
+    image: kindest/node:v1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed
+    labels:
+      topology.kubernetes.io/zone: zone-c

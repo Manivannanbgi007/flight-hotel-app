@@ -1,0 +1,31 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "analysis": { "normalizer": { "lowercase": { "type": "custom", "filter": ["lowercase", "asciifolding"] } } }
+  },
+  "mappings": {
+    "_meta": { "mappingVersion": 1 },
+    "dynamic": "strict",
+    "properties": {
+      "id":               { "type": "keyword" },
+      "slug":             { "type": "keyword" },
+      "name":             { "type": "text", "fields": { "exact": { "type": "keyword", "normalizer": "lowercase" } } },
+      "city":             { "type": "text", "fields": { "exact": { "type": "keyword", "normalizer": "lowercase" } } },
+      "state":            { "type": "text" },
+      "countryCode":      { "type": "keyword" },
+      "address":          { "type": "text" },
+      "location":         { "type": "geo_point" },
+      "starRating":       { "type": "integer" },
+      "guestRating":      { "type": "float" },
+      "reviewCount":      { "type": "integer" },
+      "propertyType":     { "type": "keyword" },
+      "amenities":        { "type": "keyword" },
+      "freeCancellation": { "type": "boolean" },
+      "breakfast":        { "type": "boolean" },
+      "maxGuestsPerRoom": { "type": "integer" },
+      "minBasePrice":     { "type": "double" },
+      "coverImageId":     { "type": "keyword", "index": false },
+      "dataSource":       { "type": "keyword" }
+    }
+  }
+}

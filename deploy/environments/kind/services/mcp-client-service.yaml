@@ -1,0 +1,24 @@
+# mcp-client-service: The AI assistant's chat API. Without Ollama (kind default) it reports the assistant as unavailable.
+containerPort: 8108
+env:
+  SERVER_PORT: "8108"
+  MCP_SERVER_URL: "http://mcp-server-service:8109"
+  OLLAMA_BASE_URL: "http://ollama.flight-hotel-data.svc.cluster.local:11434"
+  ASSISTANT_CHAT_MODEL: "granite4:tiny-h"
+  ASSISTANT_NUM_CTX: "8192"
+  ASSISTANT_TEMPERATURE: "0.2"
+  ASSISTANT_KEEP_ALIVE: "30m"
+secretEnv:
+  MCP_SERVER_API_KEY: MCP_SERVER_API_KEY
+resources:
+  requests: { cpu: 50m, memory: 320Mi }
+  limits: { memory: 512Mi }
+strategy:
+  type: canary
+  canary:
+    trafficRouting: false     # inside the cluster: the share of pods decides the share of requests
+    steps:
+      - setWeight: 50         # one new pod next to the stable one
+      - pause: { duration: 20s }
+      - smokeTest: true       # its readiness endpoint, three times; a failure rolls back
+      - pause: { duration: 20s }

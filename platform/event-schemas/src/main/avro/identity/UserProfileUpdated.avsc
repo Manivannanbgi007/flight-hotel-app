@@ -1,0 +1,12 @@
+{
+  "type": "record", "name": "UserProfileUpdated", "namespace": "com.flighthotel.events.identity",
+  "doc": "Contact details changed. Topic identity.events.",
+  "fields": [
+    { "name": "userId", "type": "string" },
+    { "name": "email", "type": "string" },
+    { "name": "firstName", "type": "string" },
+    { "name": "lastName", "type": "string" },
+    { "name": "phone", "type": ["null", "string"], "default": null },
+    { "name": "updatedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

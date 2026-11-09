@@ -1,0 +1,8 @@
+# kind: every data service in the cluster, images from the local registry mirror.
+global:
+  imageRegistry: localhost:5001
+mailpit:
+  hostnames: [mail.localhost]
+# The AI assistant's model needs 4-6 GB more memory; enable it only with enough room (see KUBERNETES_DEPLOYMENT.md).
+ollama:
+  enabled: false

@@ -1,0 +1,22 @@
+# payment-service: Payments (DEMO provider locally), refunds, invoices.
+containerPort: 8105
+env:
+  SERVER_PORT: "8105"
+  PAYMENT_PROVIDER: "demo"
+  PAYMENT_DEMO_ENABLED: "true"
+  DEV_SEED_ENABLED: "true"
+secretEnv:
+  PAYMENT_DB_PASSWORD: PAYMENT_DB_PASSWORD
+  PAYMENT_DEMO_SECRET: PAYMENT_DEMO_SECRET
+  RAZORPAY_KEY_ID: RAZORPAY_KEY_ID
+  RAZORPAY_KEY_SECRET: RAZORPAY_KEY_SECRET
+  RAZORPAY_WEBHOOK_SECRET: RAZORPAY_WEBHOOK_SECRET
+strategy:
+  type: canary
+  canary:
+    trafficRouting: false     # inside the cluster: the share of pods decides the share of requests
+    steps:
+      - setWeight: 50         # one new pod next to the stable one
+      - pause: { duration: 20s }
+      - smokeTest: true       # its readiness endpoint, three times; a failure rolls back
+      - pause: { duration: 20s }

@@ -1,0 +1,43 @@
+# frontend: the React web app, served by nginx (non-root, port 8080).
+component: frontend
+containerPort: 8080
+useSharedConfig: false
+env:
+  API_GATEWAY_URL: "http://api-gateway:8080"   # used only when /api reaches nginx (Docker Compose); here the gateway routes /api
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 101                 # nginx in nginxinc/nginx-unprivileged
+  runAsGroup: 101
+  fsGroup: 101
+  seccompProfile: { type: RuntimeDefault }
+writableDirs: [/etc/nginx/conf.d]  # the start script writes the config from the template there
+probes:
+  startupPath: /healthz
+  readinessPath: /healthz
+  livenessPath: /healthz
+  startup: { periodSeconds: 2, failureThreshold: 30, timeoutSeconds: 2 }
+smokeTestPath: /healthz
+preStopSleepSeconds: 5
+terminationGracePeriodSeconds: 20
+resources:
+  requests: { cpu: 20m, memory: 32Mi }
+  limits: { memory: 96Mi }
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+# http://localhost is the live version; http://preview.localhost shows the new one before it is promoted.
+route:
+  enabled: true
+  hostnames: [localhost]
+  pathPrefix: /
+  previewHostnames: [preview.localhost]
+# Blue-green: the new version starts next to the old one, passes its smoke test on the preview service and waits.
+# `kubectl argo rollouts promote frontend -n flight-hotel` switches all traffic at once; the old version stays
+# 60 seconds for an instant rollback (`kubectl argo rollouts undo frontend -n flight-hotel`).
+strategy:
+  type: blueGreen
+  blueGreen:
+    autoPromotionEnabled: false
+    scaleDownDelaySeconds: 60

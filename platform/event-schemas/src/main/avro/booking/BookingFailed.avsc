@@ -1,0 +1,10 @@
+{
+  "type": "record", "name": "BookingFailed", "namespace": "com.flighthotel.events.booking",
+  "doc": "The booking could not be completed before payment (not available, price changed, quote expired, no answer). Inventory owners release anything they still hold for it.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingType", "type": "string" },
+    { "name": "reason", "type": "string" },
+    { "name": "failedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

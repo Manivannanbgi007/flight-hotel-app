@@ -1,0 +1,61 @@
+# MCP Server Service: read-only tools for the AI assistant (AI_ASSISTANT.md).
+# Shared defaults (Redis, actuator, logging, JWT validation) come from common-lib's travel-defaults.yml.
+# Reachable only inside the Docker network: the API gateway has no route to it and no port is published.
+spring:
+  application:
+    name: mcp-server-service
+  config:
+    # Local runs ("mvn spring-boot:run" in this folder) read secrets from the project's .env file.
+    import: optional:file:../../.env[.properties]
+  autoconfigure:
+    # No database and no Kafka: this service only calls the API gateway.
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+      - org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration
+      - org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration
+      - com.flighthotel.common.config.CommonKafkaAutoConfiguration
+  ai:
+    mcp:
+      server:
+        name: flight-hotel-tools
+        version: 1.0.0
+        # Every request stands alone (no MCP session): the user's token is checked on each one.
+        protocol: STATELESS
+        type: SYNC
+        request-timeout: 20s
+        instructions: "Read-only travel data of the signed-in user (bookings, payments, tickets, reports). Tools never change anything."
+        capabilities:
+          tool: true
+          resource: false
+          prompt: false
+          completion: false
+        annotation-scanner:
+          enabled: false
+        streamable-http:
+          mcp-endpoint: /mcp
+
+server:
+  port: ${SERVER_PORT:8109}
+
+mcp-server:
+  # Shared secret with mcp-client-service (.env MCP_SERVER_API_KEY). Required.
+  api-key: ${MCP_SERVER_API_KEY:}
+  gateway:
+    url: ${GATEWAY_URL:http://localhost:8080}
+    connect-timeout: 2s
+    read-timeout: 8s
+  breaker:
+    failure-threshold: 5
+    open-for: 30s
+
+travel:
+  realtime:
+    enabled: false
+
+springdoc:
+  # No REST API of its own (only the MCP endpoint).
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${heading}">Booking email</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f5f9;font-family:Inter,'Segoe UI',Arial,Helvetica,sans-serif;color:#1f2937;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f5f9;padding:24px 12px;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                   style="max-width:560px;background:#ffffff;border-radius:8px;overflow:hidden;">
+                <tr>
+                    <td style="background:#1d4ed8;padding:20px 28px;color:#ffffff;font-size:20px;font-weight:bold;"
+                        th:text="${siteName}">FlightHotel</td>
+                </tr>
+                <tr>
+                    <td style="padding:28px;">
+                        <h1 style="margin:0 0 16px;font-size:22px;color:#111827;" th:text="${heading}">Heading</h1>
+                        <p style="margin:0 0 16px;font-size:15px;line-height:1.5;">
+                            Hello <span th:text="${customerName}">Asha</span>,
+                        </p>
+                        <p th:each="paragraph : ${paragraphs}" style="margin:0 0 16px;font-size:15px;line-height:1.5;"
+                           th:text="${paragraph}">Text</p>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                               style="margin:8px 0 8px;border:1px solid #e5e7eb;border-radius:6px;">
+                            <tr th:each="row : ${rows}">
+                                <td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6;width:38%;vertical-align:top;"
+                                    th:text="${row.label}">Label</td>
+                                <td style="padding:8px 12px;font-size:14px;color:#111827;border-bottom:1px solid #f3f4f6;"
+                                    th:text="${row.value}">Value</td>
+                            </tr>
+                        </table>
+                        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+                            <tr>
+                                <td style="background:#1d4ed8;border-radius:6px;">
+                                    <a th:href="${actionUrl}" th:text="${actionLabel}"
+                                       style="display:inline-block;padding:12px 22px;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;">
+                                        View booking</a>
+                                </td>
+                            </tr>
+                        </table>
+                        <p th:if="${footnote}" style="margin:0;font-size:13px;color:#6b7280;line-height:1.5;"
+                           th:text="${footnote}">Footnote</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#6b7280;">
+                        <span th:text="${siteName}">FlightHotel</span> ·
+                        <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}"
+                           style="color:#6b7280;">support@flighthotel.local</a>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

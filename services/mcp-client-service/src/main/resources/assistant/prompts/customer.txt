@@ -1,0 +1,1 @@
+The user is a customer and can only see their own bookings, payments, support tickets and notifications. Trips = my_bookings (upcoming trips = tab UPCOMING); one booking, its PNR or hotel confirmation number = booking_details; refund if cancelled = cancellation_quote; totals, spending and next trip = my_trip_summary. Hotels, flights and offers can be searched.

@@ -1,0 +1,10 @@
+{
+  "type": "record", "name": "EmailVerified", "namespace": "com.flighthotel.events.identity",
+  "doc": "The user confirmed their email; the account is now ACTIVE. Topic identity.events.",
+  "fields": [
+    { "name": "userId", "type": "string" },
+    { "name": "email", "type": "string" },
+    { "name": "firstName", "type": "string" },
+    { "name": "verifiedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

@@ -1,0 +1,73 @@
+{{- if .Values.elasticsearch.enabled }}
+{{- $ctx := dict "root" . "name" "elasticsearch" }}
+# Elasticsearch 9, single node: hotel search (hotel-service's "hotels" index) and global search (search-service).
+# Security off: local development only (production uses a managed, secured cluster).
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  selector: {{- include "dp.selector" $ctx | nindent 4 }}
+  ports:
+    - { name: http, port: 9200, targetPort: http }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  serviceName: elasticsearch
+  replicas: 1
+  selector:
+    matchLabels: {{- include "dp.selector" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "dp.labels" $ctx | nindent 8 }}
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 0                 # the image's files belong to group 0
+        fsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: elasticsearch
+          image: {{ include "dp.image" (dict "root" . "image" .Values.elasticsearch.image) }}
+          ports:
+            - { name: http, containerPort: 9200 }
+          env:
+            - { name: discovery.type, value: "single-node" }
+            - { name: xpack.security.enabled, value: "false" }
+            - { name: cluster.routing.allocation.disk.threshold_enabled, value: "false" }
+            - { name: ES_JAVA_OPTS, value: {{ .Values.elasticsearch.javaOpts | quote }} }
+          startupProbe:
+            httpGet: { path: "/_cluster/health?local=true", port: http }
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: { path: "/_cluster/health?wait_for_status=yellow&timeout=2s", port: http }
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet: { path: "/_cluster/health?local=true", port: http }
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources: {{- toYaml .Values.elasticsearch.resources | nindent 12 }}
+          {{- include "dp.containerSecurity" . | nindent 10 }}
+          volumeMounts:
+            - { name: data, mountPath: /usr/share/elasticsearch/data }
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- include "dp.storageClass" . | nindent 8 }}
+        resources:
+          requests:
+            storage: {{ .Values.elasticsearch.storage }}
+{{- end }}

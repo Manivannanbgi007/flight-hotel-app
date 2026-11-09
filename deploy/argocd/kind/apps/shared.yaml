@@ -1,0 +1,26 @@
+# Namespace-wide resources of flight-hotel: the common ConfigMap, the NetworkPolicies, quota and limit range.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: shared
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: flight-hotel
+  source:
+    repoURL: https://github.com/YOUR-GITHUB-USER/flight-hotel-app.git
+    targetRevision: main
+    path: deploy/charts/shared
+    helm:
+      releaseName: shared
+      valueFiles:
+        - ../../environments/kind/values.yaml
+        - ../../environments/kind/shared.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: flight-hotel
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

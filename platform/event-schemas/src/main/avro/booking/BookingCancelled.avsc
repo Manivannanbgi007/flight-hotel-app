@@ -1,0 +1,21 @@
+{
+  "type": "record", "name": "BookingCancelled", "namespace": "com.flighthotel.events.booking",
+  "doc": "The hotel or airline confirmed the cancellation. Snapshot for the customer's e-mail, notifications and reports. A refund follows separately (BookingRefundRequested) when refundAmount > 0.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingReference", "type": "string" },
+    { "name": "bookingType", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "cancellationId", "type": "string" },
+    { "name": "title", "type": "string", "doc": "hotel name or route" },
+    { "name": "contactEmail", "type": "string" },
+    { "name": "customerName", "type": "string" },
+    { "name": "initiatedBy", "type": "string" },
+    { "name": "paidAmount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "cancellationFee", "type": "com.flighthotel.events.common.Money" },
+    { "name": "refundAmount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "feeWaived", "type": "boolean", "default": false },
+    { "name": "supplierReference", "type": ["null", "string"], "default": null },
+    { "name": "cancelledAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

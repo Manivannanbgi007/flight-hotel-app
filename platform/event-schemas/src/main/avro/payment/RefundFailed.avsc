@@ -1,0 +1,14 @@
+{
+  "type": "record", "name": "RefundFailed", "namespace": "com.flighthotel.events.payment",
+  "doc": "The provider rejected the refund; support must follow up.",
+  "fields": [
+    { "name": "refundId", "type": "string" },
+    { "name": "refundRequestId", "type": "string" },
+    { "name": "paymentId", "type": "string" },
+    { "name": "bookingId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "amount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "reason", "type": "string" },
+    { "name": "failedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

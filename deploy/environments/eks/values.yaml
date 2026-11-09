@@ -1,0 +1,13 @@
+# EKS (AWS) environment: settings every service shares (the `global` block of deploy/charts/microservice).
+# Prepared, not deployed yet: see README.md in this folder for what the EKS phase adds.
+global:
+  image:
+    # Image = <registry>/<service>:<tag>. GHCR (what CD pushes today) or ECR (docs/CI_CD.md, section 4.4).
+    registry: ghcr.io/YOUR-GITHUB-USER/flighthotel
+    # Written by the promote-eks pull request of CD (a full commit SHA). Keep the key: CD refuses to add it.
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  gateway:
+    name: traefik-gateway
+    namespace: traefik
+  storageClassName: gp3            # EBS CSI driver, encrypted gp3 volumes

@@ -1,0 +1,62 @@
+# Hotel Service: only service-specific settings here.
+# Shared defaults (Kafka, Redis, JPA, actuator, logging, ...) come from common-lib's travel-defaults.yml.
+spring:
+  application:
+    name: hotel-service
+  config:
+    # Local runs ("mvn spring-boot:run" in this folder) read secrets from the project's .env file.
+    import: optional:file:../../.env[.properties]
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+  servlet:
+    multipart:
+      # Hotel photos: max 5 MB each (checked again in ManagerHotelService).
+      max-file-size: 6MB
+      max-request-size: 6MB
+
+server:
+  port: ${SERVER_PORT:8102}
+
+hotel:
+  booking:
+    # How long rooms stay held for an unpaid booking: payment window (15 min) + grace (5 min), BOOKING_WORKFLOW.md §2.
+    hold-duration: ${HOTEL_HOLD_DURATION:20m}
+    expiry-check-interval: 30s
+  demo-data:
+    # Labelled sample hotels (data_source = DEMO) for local development and demos. Always off in prod.
+    enabled: ${DEMO_DATA_ENABLED:true}
+    manager-email: ${DEMO_MANAGER_EMAIL:manager@flighthotel.local}
+  # Local development only: three hotels with reservations and reviews for the dev.* accounts
+  # (docs/DEVELOPMENT_TEST_ACCOUNTS.md). Off unless DEV_SEED_ENABLED=true, always off in prod.
+  dev-seed:
+    enabled: ${DEV_SEED_ENABLED:false}
+
+reviews:
+  photos:
+    # Photos on reviews are not supported (API_DOCUMENTATION.md §14.4): there is no upload endpoint and nothing reads
+    # this switch yet. It documents the decision; turning it on changes nothing.
+    enabled: false
+
+travel:
+  db:
+    name: hotel_db
+    username: ${DB_USERNAME:hotel_user}
+    password: ${HOTEL_DB_PASSWORD:}
+  storage:
+    local-root: ${STORAGE_ROOT:./storage}
+  security:
+    public-paths:
+      - "GET /api/hotels/**"
+      - "POST /api/hotels/availability"
+      - "GET /api/reviews/featured"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+hotel:
+  demo-data:
+    enabled: false
+  dev-seed:
+    enabled: false

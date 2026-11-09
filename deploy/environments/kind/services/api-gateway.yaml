@@ -1,0 +1,41 @@
+# api-gateway: the single entry point for /api (JWT check, rate limits, routing to the services).
+component: gateway
+containerPort: 8080
+env:
+  SERVER_PORT: "8080"
+  CORS_ALLOWED_ORIGINS: "http://localhost,http://preview.localhost"
+  IDENTITY_SERVICE_URL: "http://identity-service:8101"
+  HOTEL_SERVICE_URL: "http://hotel-service:8102"
+  FLIGHT_SERVICE_URL: "http://flight-service:8103"
+  BOOKING_SERVICE_URL: "http://booking-service:8104"
+  PAYMENT_SERVICE_URL: "http://payment-service:8105"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:8106"
+  REPORTING_SERVICE_URL: "http://reporting-service:8107"
+  MCP_CLIENT_SERVICE_URL: "http://mcp-client-service:8108"
+  SEARCH_SERVICE_URL: "http://search-service:8110"
+resources:
+  requests: { cpu: 50m, memory: 320Mi }
+  limits: { memory: 512Mi }
+# Two replicas at least (one per zone), more under load.
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+# http://localhost/api/... (and the same for the web app's preview).
+route:
+  enabled: true
+  hostnames: [localhost, preview.localhost]
+  pathPrefix: /api
+# Canary with real traffic weights: Argo Rollouts moves 10 %, then 50 % of the requests to the new version through
+# the HTTPRoute (Gateway API plugin), with a smoke test in between; a failure sends everything back to the stable one.
+strategy:
+  type: canary
+  canary:
+    trafficRouting: true
+    steps:
+      - setWeight: 10
+      - pause: { duration: 30s }
+      - smokeTest: true
+      - setWeight: 50
+      - pause: { duration: 30s }

@@ -1,0 +1,20 @@
+{
+  "type": "record", "name": "InvoiceIssued", "namespace": "com.flighthotel.events.payment",
+  "doc": "A tax invoice with a gap-free number was issued for a confirmed booking.",
+  "fields": [
+    { "name": "invoiceId", "type": "string" },
+    { "name": "invoiceNumber", "type": "string" },
+    { "name": "bookingId", "type": "string" },
+    { "name": "paymentId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "totalAmount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "issuedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "bookingReference", "type": ["null", "string"], "default": null, "doc": "Phase 8: what the invoice PDF shows" },
+    { "name": "billingName", "type": ["null", "string"], "default": null },
+    { "name": "billingEmail", "type": ["null", "string"], "default": null },
+    { "name": "description", "type": ["null", "string"], "default": null },
+    { "name": "taxableAmount", "type": ["null", "com.flighthotel.events.common.Money"], "default": null },
+    { "name": "taxAmount", "type": ["null", "com.flighthotel.events.common.Money"], "default": null },
+    { "name": "discountAmount", "type": ["null", "com.flighthotel.events.common.Money"], "default": null }
+  ]
+}

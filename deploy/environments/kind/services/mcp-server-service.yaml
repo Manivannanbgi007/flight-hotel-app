@@ -1,0 +1,19 @@
+# mcp-server-service: Read-only MCP tools for the assistant (calls the API gateway with the user's own token).
+containerPort: 8109
+env:
+  SERVER_PORT: "8109"
+  GATEWAY_URL: "http://api-gateway:8080"
+secretEnv:
+  MCP_SERVER_API_KEY: MCP_SERVER_API_KEY
+resources:
+  requests: { cpu: 50m, memory: 288Mi }
+  limits: { memory: 448Mi }
+strategy:
+  type: canary
+  canary:
+    trafficRouting: false     # inside the cluster: the share of pods decides the share of requests
+    steps:
+      - setWeight: 50         # one new pod next to the stable one
+      - pause: { duration: 20s }
+      - smokeTest: true       # its readiness endpoint, three times; a failure rolls back
+      - pause: { duration: 20s }

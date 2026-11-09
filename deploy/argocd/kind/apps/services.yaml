@@ -1,0 +1,57 @@
+# One Application per file in deploy/environments/kind/services/ (12 today): add a file and Argo CD deploys a new
+# service, remove it and Argo CD removes the service (the finalizer deletes its resources; PVCs are kept by the chart).
+# Each is a release of deploy/charts/microservice named after the file, exactly like deploy/scripts/deploy-apps.ps1.
+#
+# A new image tag in deploy/environments/kind/values.yaml (CD writes it) changes every Rollout; Argo Rollouts then runs
+# each service's canary or blue-green steps. Argo CD shows a Rollout that waits for promotion as "Suspended".
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: flight-hotel-services
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/YOUR-GITHUB-USER/flight-hotel-app.git
+        revision: main
+        files:
+          - path: deploy/environments/kind/services/*.yaml
+  template:
+    metadata:
+      name: '{{ trimSuffix ".yaml" .path.filename }}'
+      labels:
+        app.kubernetes.io/part-of: flight-hotel
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: flight-hotel
+      source:
+        repoURL: https://github.com/YOUR-GITHUB-USER/flight-hotel-app.git
+        targetRevision: main
+        path: deploy/charts/microservice
+        helm:
+          releaseName: '{{ trimSuffix ".yaml" .path.filename }}'
+          valueFiles:
+            - ../../environments/kind/values.yaml
+            - '../../environments/kind/services/{{ .path.filename }}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: flight-hotel
+      # During a traffic-weighted canary (api-gateway) Argo Rollouts changes the HTTPRoute weights (90/10, 50/50, ...).
+      # Argo CD must neither report that as drift nor put the weights back (RespectIgnoreDifferences).
+      ignoreDifferences:
+        - group: gateway.networking.k8s.io
+          kind: HTTPRoute
+          jqPathExpressions:
+            - .spec.rules[].backendRefs[].weight
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - RespectIgnoreDifferences=true
+        retry:
+          limit: 5
+          backoff: { duration: 10s, factor: 2, maxDuration: 3m }

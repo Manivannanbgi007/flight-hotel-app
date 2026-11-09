@@ -1,0 +1,22 @@
+# reporting-service: Dashboards, reports, audit log, system settings, background exports of the audit log.
+containerPort: 8107
+env:
+  SERVER_PORT: "8107"
+  STORAGE_ROOT: "/app/storage"
+secretEnv:
+  REPORTING_DB_PASSWORD: REPORTING_DB_PASSWORD
+# Finished export files (kept 24 h); an export of 10 million entries is about 0.8 GB (measured 781 MB as Excel).
+persistence:
+  enabled: true
+  size: 3Gi
+# Exports are written in /tmp before they are stored.
+tmpSizeLimit: 3Gi
+strategy:
+  type: canary
+  canary:
+    trafficRouting: false     # inside the cluster: the share of pods decides the share of requests
+    steps:
+      - setWeight: 50         # one new pod next to the stable one
+      - pause: { duration: 20s }
+      - smokeTest: true       # its readiness endpoint, three times; a failure rolls back
+      - pause: { duration: 20s }

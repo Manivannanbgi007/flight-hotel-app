@@ -1,0 +1,10 @@
+apiVersion: v2
+name: microservice
+description: >-
+  One flight-hotel-app service (a Spring Boot service or the web app) on Kubernetes: an Argo Rollout (canary or
+  blue-green) or a Deployment, its Services, HTTPRoute, autoscaler, disruption budget, config and storage.
+  Installed once per service with that service's values (deploy/environments/<env>/services/<service>.yaml).
+type: application
+version: 1.0.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.30.0-0"

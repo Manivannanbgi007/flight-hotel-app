@@ -1,0 +1,10 @@
+{
+  "type": "record", "name": "BookingPaid", "namespace": "com.flighthotel.events.booking",
+  "doc": "Payment for the booking succeeded: the inventory owner must now confirm the reservation (held rooms become booked).",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingType", "type": "string" },
+    { "name": "paymentId", "type": "string" },
+    { "name": "paidAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

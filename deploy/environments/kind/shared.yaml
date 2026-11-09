@@ -1,0 +1,8 @@
+# kind: namespace-wide settings (deploy/charts/shared). The defaults already point at the in-cluster data services.
+resourceQuota:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 12Gi
+    limits.memory: 16Gi
+    pods: "60"
+    persistentvolumeclaims: "10"

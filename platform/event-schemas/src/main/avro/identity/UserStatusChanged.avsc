@@ -1,0 +1,11 @@
+{
+  "type": "record", "name": "UserStatusChanged", "namespace": "com.flighthotel.events.identity",
+  "doc": "An admin activated or deactivated an account. Topic identity.events.",
+  "fields": [
+    { "name": "userId", "type": "string" },
+    { "name": "status", "type": "string" },
+    { "name": "reason", "type": ["null", "string"], "default": null },
+    { "name": "changedBy", "type": "string" },
+    { "name": "changedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

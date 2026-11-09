@@ -1,0 +1,14 @@
+# kind (local) environment: settings every service shares (the `global` block of deploy/charts/microservice).
+global:
+  image:
+    # Image = <registry>/<service>:<tag>. The local registry next to the cluster (deploy/scripts/kind-up.ps1);
+    # deploy/scripts/push-images.ps1 pushes the images built by Docker Compose there. To run the images CD publishes
+    # instead: ghcr.io/<owner>/flighthotel (docs/CI_CD.md, section 4.3).
+    registry: localhost:5001/flighthotel
+    # The version every service runs. Change it to deploy a new version (CI/CD does this on main):
+    # every service then goes through its canary / blue-green rollout.
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  gateway:
+    name: traefik-gateway
+    namespace: traefik

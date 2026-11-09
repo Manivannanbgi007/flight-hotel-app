@@ -1,0 +1,14 @@
+{
+  "type": "record", "name": "PaymentSucceeded", "namespace": "com.flighthotel.events.payment",
+  "doc": "A captured payment, verified on the backend (signature + provider lookup, or a signed webhook). Topic payment.events, key booking id.",
+  "fields": [
+    { "name": "paymentId", "type": "string" },
+    { "name": "bookingId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "provider", "type": "string", "doc": "DEMO or RAZORPAY" },
+    { "name": "providerPaymentId", "type": "string" },
+    { "name": "amount", "type": "com.flighthotel.events.common.Money" },
+    { "name": "method", "type": ["null", "string"], "default": null, "doc": "card, upi, netbanking, ... (never instrument details)" },
+    { "name": "succeededAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

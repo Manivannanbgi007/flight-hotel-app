@@ -1,0 +1,82 @@
+# Notification Service: only service-specific settings here.
+# Shared defaults (Kafka, Redis, JPA, actuator, logging, ...) come from common-lib's travel-defaults.yml.
+spring:
+  application:
+    name: notification-service
+  config:
+    # Local runs ("mvn spring-boot:run" in this folder) read secrets from the project's .env file.
+    import: optional:file:../../.env[.properties]
+
+  mvc:
+    async:
+      # SSE streams manage their own timeout (RealtimeHub); no global async timeout.
+      request-timeout: -1
+
+  # Locally every email goes to Mailpit (http://localhost:8025). Production: Amazon SES SMTP with credentials.
+  mail:
+    host: ${SPRING_MAIL_HOST:localhost}
+    port: ${SPRING_MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+
+  thymeleaf:
+    # Only email templates; this service renders no web pages.
+    check-template-location: false
+
+# The PDFs embed their own fonts (Inter); PDFBox still maps the 14 standard PDF fonts on every render and warns
+# when the machine has none (Docker). That warning says nothing about our documents.
+logging:
+  level:
+    org.apache.pdfbox.pdmodel.font: ERROR
+
+server:
+  port: ${SERVER_PORT:8106}
+  tomcat:
+    # Each open SSE stream is one connection (no thread is held while idle).
+    max-connections: 20000
+
+notification:
+  email:
+    from: ${MAIL_FROM:no-reply@flighthotel.local}
+    # Links in emails point here (Docker: http://localhost:3000, Vite dev server: http://localhost:5173).
+    app-public-url: ${APP_PUBLIC_URL:http://localhost:3000}
+  # Phase 8: travel reminders (24 h before check-in / departure) and the newsletter's signed unsubscribe links.
+  reminders:
+    lead-time: 24h
+  newsletter:
+    secret: ${NEWSLETTER_SECRET:}
+    confirm-validity: 48h
+  # Local development only: bell notifications and support tickets for the dev.* accounts, no e-mail
+  # (docs/DEVELOPMENT_TEST_ACCOUNTS.md). Off unless DEV_SEED_ENABLED=true, always off in prod.
+  dev-seed:
+    enabled: ${DEV_SEED_ENABLED:false}
+  realtime:
+    heartbeat-interval: 25s
+    max-stream-lifetime: 30m
+    max-connections-per-user: 5
+    max-connections-per-instance: 10000
+
+travel:
+  db:
+    name: notification_db
+    username: ${DB_USERNAME:notification_user}
+    password: ${NOTIFICATION_DB_PASSWORD:}
+  security:
+    public-paths:
+      - "POST /api/newsletter/**"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+notification:
+  dev-seed:
+    enabled: false
+  newsletter:
+    # Production must set its own secret (startup fails otherwise, see NewsletterTokens).
+    secret: ${NEWSLETTER_SECRET}

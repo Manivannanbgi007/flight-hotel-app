@@ -1,0 +1,26 @@
+{
+  "type": "record", "name": "FlightSlice", "namespace": "com.flighthotel.events.common",
+  "doc": "One direction of a flight trip (outbound or return) with its flights. Times are local to the airport. Shared by flight and booking events.",
+  "fields": [
+    { "name": "origin", "type": "string", "doc": "IATA code" },
+    { "name": "destination", "type": "string", "doc": "IATA code" },
+    { "name": "originCity", "type": "string" },
+    { "name": "destinationCity", "type": "string" },
+    { "name": "departureLocal", "type": "string", "doc": "yyyy-MM-dd'T'HH:mm, local time of the origin airport" },
+    { "name": "arrivalLocal", "type": "string", "doc": "yyyy-MM-dd'T'HH:mm, local time of the destination airport" },
+    { "name": "durationMinutes", "type": "int", "doc": "door to door, including layovers" },
+    { "name": "stops", "type": "int" },
+    { "name": "segments", "type": { "type": "array", "items": {
+      "type": "record", "name": "FlightSegmentInfo",
+      "fields": [
+        { "name": "flightNumber", "type": "string" },
+        { "name": "airlineCode", "type": "string" },
+        { "name": "airlineName", "type": "string" },
+        { "name": "origin", "type": "string" },
+        { "name": "destination", "type": "string" },
+        { "name": "departureLocal", "type": "string" },
+        { "name": "arrivalLocal", "type": "string" },
+        { "name": "durationMinutes", "type": "int" }
+      ] } } }
+  ]
+}

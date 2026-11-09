@@ -1,0 +1,81 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "analysis": {
+      "normalizer": {
+        "lowercase": { "type": "custom", "filter": ["lowercase", "asciifolding"] }
+      },
+      "filter": {
+        "word_prefixes": { "type": "edge_ngram", "min_gram": 2, "max_gram": 20 },
+        "plurals": { "type": "stemmer", "language": "minimal_english" }
+      },
+      "analyzer": {
+        "folded": { "type": "custom", "tokenizer": "standard", "filter": ["lowercase", "asciifolding", "plurals"] },
+        "prefixes": { "type": "custom", "tokenizer": "standard", "filter": ["lowercase", "asciifolding", "word_prefixes"] }
+      }
+    }
+  },
+  "mappings": {
+    "_meta": { "mappingVersion": 2 },
+    "dynamic": "strict",
+    "properties": {
+      "category":         { "type": "keyword" },
+      "entityId":         { "type": "keyword" },
+      "complete":         { "type": "boolean" },
+      "stateAt":          { "type": "long" },
+      "stateRank":        { "type": "integer" },
+
+      "title": {
+        "type": "text", "analyzer": "folded",
+        "fields": {
+          "exact":  { "type": "keyword", "normalizer": "lowercase", "ignore_above": 256 },
+          "prefix": { "type": "text", "analyzer": "prefixes", "search_analyzer": "folded" }
+        }
+      },
+      "subtitle": {
+        "type": "text", "analyzer": "folded",
+        "fields": { "prefix": { "type": "text", "analyzer": "prefixes", "search_analyzer": "folded" } }
+      },
+      "keywords": {
+        "type": "text", "analyzer": "folded",
+        "fields": { "prefix": { "type": "text", "analyzer": "prefixes", "search_analyzer": "folded" } }
+      },
+      "names": {
+        "type": "text", "analyzer": "folded",
+        "fields": { "prefix": { "type": "text", "analyzer": "prefixes", "search_analyzer": "folded" } }
+      },
+      "details": {
+        "type": "text", "analyzer": "folded",
+        "fields": { "prefix": { "type": "text", "analyzer": "prefixes", "search_analyzer": "folded" } }
+      },
+      "description":      { "type": "text", "analyzer": "folded" },
+      "identifiers":      { "type": "keyword", "normalizer": "lowercase", "ignore_above": 256 },
+      "extraIdentifiers": { "type": "keyword", "normalizer": "lowercase", "ignore_above": 256 },
+      "reference":        { "type": "keyword", "normalizer": "lowercase" },
+
+      "status":           { "type": "keyword" },
+      "type":             { "type": "keyword" },
+      "paymentStatus":    { "type": "keyword" },
+      "roles":            { "type": "keyword" },
+      "priority":         { "type": "keyword" },
+      "method":           { "type": "keyword" },
+      "provider":         { "type": "keyword" },
+      "amount":           { "type": "scaled_float", "scaling_factor": 100 },
+      "currency":         { "type": "keyword" },
+      "date":             { "type": "date" },
+      "endDate":          { "type": "date" },
+      "createdAt":        { "type": "date" },
+
+      "ownerUserId":      { "type": "keyword" },
+      "hotelId":          { "type": "keyword" },
+      "bookingId":        { "type": "keyword" },
+      "reservationId":    { "type": "keyword" },
+      "audience":         { "type": "keyword" },
+      "permission":       { "type": "keyword" },
+      "perHotel":         { "type": "boolean" },
+
+      "display":          { "type": "object", "enabled": false }
+    }
+  }
+}

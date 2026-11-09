@@ -1,0 +1,275 @@
+# API Gateway: the only entry point for browsers.
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: optional:file:../../.env[.properties]
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2s
+  cloud:
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            connect-timeout: 3000
+            response-timeout: 30s
+          # Client IPs for login history, audit logs and rate limits. X-Forwarded-* from these peers is kept and
+          # extended; from anyone else it is dropped (it could be forged). Default: loopback + private networks
+          # (nginx in Docker, Vite on localhost). Production: the load balancer's subnet.
+          trusted-proxies: '${GATEWAY_TRUSTED_PROXIES:127\.0\.0\.1|0:0:0:0:0:0:0:1|::1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}}'
+          x-forwarded:
+            enabled: true
+          # Only X-Forwarded-For is sent on: Spring would prefer a "Forwarded" header, whose "for" is the proxy.
+          forwarded:
+            enabled: false
+          default-filters:
+            # Default limit: 20 requests/second per user (or IP) and route, bursts up to 40. A route with a limit of
+            # its own sets metadata own-rate-limit: true; there this filter gets no key and steps aside
+            # (deny-empty-key: false), so a request is never charged twice (RateLimitConfig explains why).
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@defaultLimitKeyResolver}"
+                deny-empty-key: false
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                redis-rate-limiter.requestedTokens: 1
+            # Services echo the same correlation ID the gateway sent; keep a single header.
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials X-Correlation-Id, RETAIN_FIRST
+          routes:
+            # ---- Realtime (SSE): long-lived stream, so no response timeout; strict connect rate. ----
+            - id: realtime
+              uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8106}
+              order: -10
+              predicates:
+                - Path=/api/realtime/**
+              metadata:
+                response-timeout: -1
+                own-rate-limit: true
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userOrIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: 1
+                    redis-rate-limiter.burstCapacity: 5
+                    redis-rate-limiter.requestedTokens: 1
+
+            # ---- AI assistant (Phase 11). A question streams its answer (SSE) for up to a few minutes on this CPU, so
+            #      no response timeout; each question costs 10 tokens: a burst of 3, then one every 10 s per user. ----
+            - id: assistant-chat
+              uri: ${MCP_CLIENT_SERVICE_URL:http://localhost:8108}
+              order: -9
+              predicates:
+                - Path=/api/assistant/chat
+              metadata:
+                response-timeout: -1
+                own-rate-limit: true
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userOrIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: 1
+                    redis-rate-limiter.burstCapacity: 30
+                    redis-rate-limiter.requestedTokens: 10
+
+            # ---- The rest of the assistant (config, conversations, voice): stricter than the default; speech can
+            #      take up to a minute on this CPU. ----
+            - id: assistant
+              uri: ${MCP_CLIENT_SERVICE_URL:http://localhost:8108}
+              order: -8
+              predicates:
+                - Path=/api/assistant/**
+              metadata:
+                response-timeout: 90000
+                own-rate-limit: true
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userOrIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: 2
+                    redis-rate-limiter.burstCapacity: 10
+                    redis-rate-limiter.requestedTokens: 1
+
+            # ---- Session refresh/logout: need the HttpOnly cookie (nothing to guess) and are called on every page
+            #      load and by every tab, so only the default limit applies. Must come before identity-auth. ----
+            - id: identity-session
+              uri: ${IDENTITY_SERVICE_URL:http://localhost:8101}
+              order: -6
+              predicates:
+                - Path=/api/auth/refresh,/api/auth/logout
+
+            # ---- Authentication: strict limits against brute force. ----
+            - id: identity-auth
+              uri: ${IDENTITY_SERVICE_URL:http://localhost:8101}
+              order: -5
+              predicates:
+                - Path=/api/auth/**
+              metadata:
+                own-rate-limit: true
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userOrIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: 2
+                    redis-rate-limiter.burstCapacity: 10
+                    redis-rate-limiter.requestedTokens: 1
+
+            # ---- Reporting must come before hotel-service because of /api/hotel-manager/reports. ----
+            - id: reporting
+              uri: ${REPORTING_SERVICE_URL:http://localhost:8107}
+              order: -1
+              predicates:
+                - Path=/api/admin/dashboard/**,/api/admin/reports/**,/api/admin/audit-logs/**,/api/admin/settings/**,/api/hotel-manager/reports/**,/api/public/**
+
+            - id: identity
+              uri: ${IDENTITY_SERVICE_URL:http://localhost:8101}
+              predicates:
+                - Path=/api/customers/**,/api/admin/users/**,/.well-known/jwks.json
+            - id: hotel
+              uri: ${HOTEL_SERVICE_URL:http://localhost:8102}
+              predicates:
+                - Path=/api/hotels/**,/api/hotel-manager/**,/api/reviews/**,/api/admin/hotels/**,/api/admin/reviews/**
+            - id: flight
+              uri: ${FLIGHT_SERVICE_URL:http://localhost:8103}
+              predicates:
+                - Path=/api/flights/**,/api/airports/**,/api/airlines/**,/api/admin/flight-providers/**
+            - id: booking
+              uri: ${BOOKING_SERVICE_URL:http://localhost:8104}
+              predicates:
+                - Path=/api/bookings/**,/api/offers/**,/api/coupons/**,/api/admin/bookings/**,/api/admin/coupons/**,/api/admin/offers/**,/api/support/bookings/**
+            - id: payment
+              uri: ${PAYMENT_SERVICE_URL:http://localhost:8105}
+              predicates:
+                - Path=/api/payments/**,/api/invoices/**,/api/admin/payments/**,/api/admin/refunds/**
+            # Global search (signed out too: public results only). /api/admin/search/** is admin index maintenance.
+            - id: search
+              uri: ${SEARCH_SERVICE_URL:http://localhost:8110}
+              predicates:
+                - Path=/api/search,/api/search/**,/api/admin/search/**
+            - id: notification
+              uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8106}
+              predicates:
+                - Path=/api/notifications/**,/api/documents/**,/api/support/tickets/**,/api/newsletter/**,/api/admin/support/**
+
+            # ---- API docs of each service, shown together in the gateway's Swagger UI. ----
+            - id: docs-identity
+              uri: ${IDENTITY_SERVICE_URL:http://localhost:8101}
+              predicates: [ "Path=/api-docs/identity-service" ]
+              filters: [ "SetPath=/v3/api-docs" ]
+            - id: docs-hotel
+              uri: ${HOTEL_SERVICE_URL:http://localhost:8102}
+              predicates: [ "Path=/api-docs/hotel-service" ]
+              filters: [ "SetPath=/v3/api-docs" ]
+            - id: docs-flight
+              uri: ${FLIGHT_SERVICE_URL:http://localhost:8103}
+              predicates: [ "Path=/api-docs/flight-service" ]
+              filters: [ "SetPath=/v3/api-docs" ]
+            - id: docs-booking
+              uri: ${BOOKING_SERVICE_URL:http://localhost:8104}
+              predicates: [ "Path=/api-docs/booking-service" ]
+              filters: [ "SetPath=/v3/api-docs" ]
+            - id: docs-payment
+              uri: ${PAYMENT_SERVICE_URL:http://localhost:8105}
+              predicates: [ "Path=/api-docs/payment-service" ]
+              filters: [ "SetPath=/v3/api-docs" ]
+            - id: docs-notification
+              uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8106}
+              predicates: [ "Path=/api-docs/notification-service" ]
+              filters: [ "SetPath=/v3/api-docs" ]
+            - id: docs-reporting
+              uri: ${REPORTING_SERVICE_URL:http://localhost:8107}
+              predicates: [ "Path=/api-docs/reporting-service" ]
+              filters: [ "SetPath=/v3/api-docs" ]
+            - id: docs-search
+              uri: ${SEARCH_SERVICE_URL:http://localhost:8110}
+              predicates: [ "Path=/api-docs/search-service" ]
+              filters: [ "SetPath=/v3/api-docs" ]
+            - id: docs-assistant
+              uri: ${MCP_CLIENT_SERVICE_URL:http://localhost:8108}
+              predicates: [ "Path=/api-docs/mcp-client-service" ]
+              filters: [ "SetPath=/v3/api-docs" ]
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+gateway:
+  jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8101/.well-known/jwks.json}
+  issuer: ${JWT_ISSUER:flight-hotel-identity}
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
+  # Keep in sync with each service's travel.security.public-paths.
+  public-paths:
+    - "/api/auth/**"
+    - "GET /.well-known/jwks.json"
+    - "GET /api/hotels/**"
+    - "POST /api/hotels/availability"
+    - "GET /api/flights/**"
+    - "GET /api/airports/**"
+    - "POST /api/flights/revalidate"
+    - "GET /api/offers/**"
+    - "GET /api/reviews/featured"
+    - "POST /api/payments/webhook"
+    - "POST /api/newsletter/**"
+    - "GET /api/public/**"
+    - "GET /api/search/**"
+  # Staff areas: only these roles get past the gateway (others: 403 before a service reads the request).
+  # Each service still checks the exact permission (for example REFUND_MANAGE) itself.
+  role-paths:
+    - "/api/admin/** ADMIN,SUPPORT_AGENT"
+    - "/api/hotel-manager/** HOTEL_MANAGER,ADMIN"
+    - "/api/support/bookings/** SUPPORT_AGENT,ADMIN"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  # api-docs must stay enabled for the Swagger UI to load; the gateway itself has no endpoints to document.
+  swagger-ui:
+    path: /swagger-ui.html
+    urls-primary-name: identity-service
+    urls:
+      - { name: identity-service, url: /api-docs/identity-service }
+      - { name: hotel-service, url: /api-docs/hotel-service }
+      - { name: flight-service, url: /api-docs/flight-service }
+      - { name: booking-service, url: /api-docs/booking-service }
+      - { name: payment-service, url: /api-docs/payment-service }
+      - { name: notification-service, url: /api-docs/notification-service }
+      - { name: reporting-service, url: /api-docs/reporting-service }
+      - { name: mcp-client-service (assistant), url: /api-docs/mcp-client-service }
+      - { name: search-service, url: /api-docs/search-service }
+
+logging:
+  level:
+    root: INFO
+    gateway.access: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker,prod
+logging:
+  structured:
+    format:
+      console: ecs
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

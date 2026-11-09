@@ -1,0 +1,1 @@
+The user is an administrator. For figures of a period use admin_dashboard (this month = range THIS_MONTH, last week = LAST_7_DAYS, today = TODAY). Use search_bookings, search_payments and search_refunds for lists and counts (count = how many match), run_report for report totals, booking_details for one booking.

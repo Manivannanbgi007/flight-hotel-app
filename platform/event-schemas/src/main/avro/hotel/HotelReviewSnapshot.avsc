@@ -1,0 +1,22 @@
+{
+  "type": "record", "name": "HotelReviewSnapshot", "namespace": "com.flighthotel.events.hotel",
+  "doc": "A guest review as it is now, published by hotel-service whenever the review is written or moderated (and once for every existing review by the backfill). Read models (search-service) keep the snapshot with the newest changedAt.",
+  "fields": [
+    { "name": "reviewId", "type": "string" },
+    { "name": "hotelId", "type": "string" },
+    { "name": "hotelName", "type": ["null", "string"], "default": null },
+    { "name": "hotelCity", "type": ["null", "string"], "default": null },
+    { "name": "reservationId", "type": "string" },
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingReference", "type": "string" },
+    { "name": "userId", "type": "string", "doc": "the guest who wrote it" },
+    { "name": "authorName", "type": "string" },
+    { "name": "stayedOn", "type": { "type": "int", "logicalType": "date" } },
+    { "name": "rating", "type": "int", "doc": "1 to 5" },
+    { "name": "title", "type": ["null", "string"], "default": null },
+    { "name": "text", "type": "string" },
+    { "name": "status", "type": "string", "doc": "PENDING, APPROVED or REJECTED" },
+    { "name": "createdAt", "type": { "type": "long", "logicalType": "timestamp-millis" } },
+    { "name": "changedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

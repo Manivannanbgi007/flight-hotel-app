@@ -1,0 +1,91 @@
+{{- if .Values.ollama.enabled }}
+{{- $ctx := dict "root" . "name" "ollama" }}
+# Ollama: the AI assistant's local model (CPU). The model is downloaded once into the volume by ollama-init.
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  selector: {{- include "dp.selector" $ctx | nindent 4 }}
+  ports:
+    - { name: http, port: 11434, targetPort: http }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-models
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- include "dp.storageClass" . | nindent 2 }}
+  resources:
+    requests:
+      storage: {{ .Values.ollama.storage }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  strategy: { type: Recreate }        # the model volume is ReadWriteOnce
+  selector:
+    matchLabels: {{- include "dp.selector" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "dp.labels" $ctx | nindent 8 }}
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: ollama
+          image: {{ include "dp.image" (dict "root" . "image" .Values.ollama.image) }}
+          ports:
+            - { name: http, containerPort: 11434 }
+          env:
+            - { name: OLLAMA_HOST, value: "0.0.0.0:11434" }
+            - { name: OLLAMA_KEEP_ALIVE, value: "30m" }
+            - { name: OLLAMA_NUM_PARALLEL, value: "1" }
+            - { name: OLLAMA_MAX_LOADED_MODELS, value: "1" }
+          readinessProbe:
+            httpGet: { path: /api/tags, port: http }
+            periodSeconds: 10
+          resources: {{- toYaml .Values.ollama.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - { name: models, mountPath: /root/.ollama }
+      volumes:
+        - name: models
+          persistentVolumeClaim: { claimName: ollama-models }
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ollama-init
+  labels: {{- include "dp.labels" (dict "root" . "name" "ollama-init") | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "3"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      containers:
+        - name: pull-model
+          image: {{ include "dp.image" (dict "root" . "image" .Values.ollama.image) }}
+          command: ["/bin/sh", "-c", "ollama pull {{ .Values.ollama.model }}"]
+          env:
+            - { name: OLLAMA_HOST, value: "http://ollama.{{ .Release.Namespace }}.svc.cluster.local:11434" }
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { memory: 128Mi }
+{{- end }}

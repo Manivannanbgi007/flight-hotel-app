@@ -1,0 +1,18 @@
+# search-service: Global search (Elasticsearch read model fed by the Kafka events).
+containerPort: 8110
+env:
+  SERVER_PORT: "8110"
+  HOTEL_SERVICE_URL: "http://hotel-service:8102"
+  FLIGHT_SERVICE_URL: "http://flight-service:8103"
+resources:
+  requests: { cpu: 50m, memory: 320Mi }
+  limits: { memory: 512Mi }
+strategy:
+  type: canary
+  canary:
+    trafficRouting: false     # inside the cluster: the share of pods decides the share of requests
+    steps:
+      - setWeight: 50         # one new pod next to the stable one
+      - pause: { duration: 20s }
+      - smokeTest: true       # its readiness endpoint, three times; a failure rolls back
+      - pause: { duration: 20s }

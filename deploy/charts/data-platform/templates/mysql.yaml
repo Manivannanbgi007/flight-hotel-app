@@ -1,0 +1,100 @@
+{{- if .Values.mysql.enabled }}
+{{- $ctx := dict "root" . "name" "mysql" }}
+# MySQL 8.4: one database and one user per service, created on first start by files/mysql/init (same script as
+# Docker Compose). Binlog with GTIDs on, for Debezium.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+data:
+  {{- (.Files.Glob "files/mysql/conf.d/*").AsConfig | nindent 2 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+data:
+  {{- (.Files.Glob "files/mysql/init/*").AsConfig | nindent 2 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  selector: {{- include "dp.selector" $ctx | nindent 4 }}
+  ports:
+    - { name: mysql, port: 3306, targetPort: mysql }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  labels: {{- include "dp.labels" $ctx | nindent 4 }}
+spec:
+  serviceName: mysql
+  replicas: 1
+  selector:
+    matchLabels: {{- include "dp.selector" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "dp.labels" $ctx | nindent 8 }}
+      annotations:
+        checksum/config: {{ .Files.Get "files/mysql/conf.d/flighthotel.cnf" | sha256sum }}
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        fsGroup: 999                 # the image starts as root, then runs mysqld as mysql (999)
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: mysql
+          image: {{ include "dp.image" (dict "root" . "image" .Values.mysql.image) }}
+          ports:
+            - { name: mysql, containerPort: 3306 }
+          env:
+            {{- include "dp.secretEnv" (dict "root" . "env" "MYSQL_ROOT_PASSWORD") | nindent 12 }}
+            {{- range list "IDENTITY_DB_PASSWORD" "HOTEL_DB_PASSWORD" "FLIGHT_DB_PASSWORD" "BOOKING_DB_PASSWORD" "PAYMENT_DB_PASSWORD" "NOTIFICATION_DB_PASSWORD" "REPORTING_DB_PASSWORD" "DEBEZIUM_DB_PASSWORD" }}
+            {{- include "dp.secretEnv" (dict "root" $ "env" .) | nindent 12 }}
+            {{- end }}
+          startupProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\" --silent"]
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\" --silent"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\" --silent"]
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources: {{- toYaml .Values.mysql.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/mysql }
+            - { name: config, mountPath: /etc/mysql/conf.d, readOnly: true }
+            - { name: init, mountPath: /docker-entrypoint-initdb.d, readOnly: true }
+      volumes:
+        - name: config
+          configMap: { name: mysql-config }
+        - name: init
+          configMap: { name: mysql-init, defaultMode: 0555 }
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- include "dp.storageClass" . | nindent 8 }}
+        resources:
+          requests:
+            storage: {{ .Values.mysql.storage }}
+{{- end }}

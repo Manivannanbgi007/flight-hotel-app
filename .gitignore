@@ -1,0 +1,43 @@
+# Secrets — never commit real environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.jks
+secrets/
+
+# Java / Maven
+target/
+*.class
+*.log
+hs_err_pid*
+.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+.settings/
+.project
+.classpath
+.factorypath
+
+# Frontend
+node_modules/
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# Local runtime data
+data/
+storage/
+logs/
+
+# OS
+.DS_Store
+Thumbs.db

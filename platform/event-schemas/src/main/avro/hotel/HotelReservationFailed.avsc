@@ -1,0 +1,10 @@
+{
+  "type": "record", "name": "HotelReservationFailed", "namespace": "com.flighthotel.events.hotel",
+  "doc": "The booking was paid but the rooms could not be confirmed (the hold had expired and the rooms are sold). booking-service refunds the customer.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "reservationId", "type": "string" },
+    { "name": "reason", "type": "string" },
+    { "name": "failedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

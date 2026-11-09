@@ -1,0 +1,76 @@
+# Argo CD 3.6 (chart argo/argo-cd 10.15.0): GitOps continuous deployment. http://argocd.localhost
+# A small, single-replica setup for kind. For EKS use the HA settings at the bottom (commented).
+global:
+  domain: argocd.localhost
+
+configs:
+  params:
+    # TLS ends at the gateway (or there is none locally); Argo CD serves plain HTTP behind it.
+    server.insecure: true
+  cm:
+    # Argo CD knows Rollout health (Progressing, Paused, Degraded) out of the box. Check Git every minute.
+    timeout.reconciliation: 60s
+    # Health of an Application = the health it reports. The root app (deploy/argocd/<env>/root.yaml) then waits for
+    # each sync wave (data platform -> shared -> services) to be healthy before it starts the next one.
+    resource.customizations.health.argoproj.io_Application: |
+      hs = {}
+      hs.status = "Progressing"
+      hs.message = ""
+      if obj.status ~= nil and obj.status.health ~= nil then
+        hs.status = obj.status.health.status
+        if obj.status.health.message ~= nil then
+          hs.message = obj.status.health.message
+        end
+      end
+      return hs
+
+server:
+  httproute:
+    enabled: true
+    parentRefs:
+      - name: traefik-gateway
+        namespace: traefik
+    hostnames:
+      - argocd.localhost
+  resources:
+    requests: { cpu: 20m, memory: 96Mi }
+    limits: { memory: 256Mi }
+
+repoServer:
+  resources:
+    requests: { cpu: 20m, memory: 128Mi }
+    limits: { memory: 512Mi }
+
+controller:
+  resources:
+    # Syncing all 16 Applications at once (first bootstrap) needs well over 768Mi; it was OOM-killed with that limit.
+    requests: { cpu: 100m, memory: 512Mi }
+    limits: { memory: 1536Mi }
+
+applicationSet:
+  resources:
+    requests: { cpu: 10m, memory: 48Mi }
+    limits: { memory: 128Mi }
+
+redis:
+  resources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { memory: 128Mi }
+
+# Not needed locally: single sign-on (Dex) and notifications.
+dex:
+  enabled: false
+notifications:
+  enabled: false
+
+# EKS (production):
+# redis-ha:
+#   enabled: true
+# controller:
+#   replicas: 1          # sharded by cluster; 1 is enough for one cluster
+# server:
+#   replicas: 2
+# repoServer:
+#   replicas: 2
+# applicationSet:
+#   replicas: 2

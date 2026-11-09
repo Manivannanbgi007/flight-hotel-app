@@ -1,0 +1,3 @@
+org.springframework.boot.EnvironmentPostProcessor=\
+com.flighthotel.common.config.AvroTrustEnvironmentPostProcessor,\
+com.flighthotel.common.config.TravelDefaultsEnvironmentPostProcessor

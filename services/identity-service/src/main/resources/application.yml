@@ -1,0 +1,73 @@
+# Identity Service: only service-specific settings here.
+# Shared defaults (Kafka, Redis, JPA, actuator, logging, ...) come from common-lib's travel-defaults.yml.
+spring:
+  application:
+    name: identity-service
+  config:
+    # Local runs ("mvn spring-boot:run" in this folder) read secrets from the project's .env file.
+    import: optional:file:../../.env[.properties]
+  servlet:
+    multipart:
+      max-file-size: 3MB
+      max-request-size: 3MB
+
+server:
+  port: ${SERVER_PORT:8101}
+
+identity:
+  tokens:
+    access-token-ttl: 15m
+    refresh-token-ttl: 1d
+    remember-me-ttl: 30d
+    # A refresh token that was just rotated may be used again for this long (several tabs refreshing at once).
+    refresh-reuse-grace: 30s
+    email-verification-ttl: 24h
+    password-reset-ttl: 1h
+    invitation-ttl: 72h
+    # Minimum time between two verification/reset emails for the same account.
+    email-resend-interval: 60s
+  cookie:
+    name: fh_refresh
+    secure: ${AUTH_COOKIE_SECURE:false}
+  login:
+    max-failed-attempts: 5
+    lockout-duration: 15m
+  retention:
+    login-history: 180d
+  photo:
+    max-bytes: 2097152
+    max-dimension: 512
+  # Local development only: creates admin/customer/hotel-manager/support accounts with DEMO_USER_PASSWORD.
+  demo-users:
+    enabled: ${DEMO_USERS_ENABLED:false}
+    password: ${DEMO_USER_PASSWORD:}
+  # Local development only: dev.admin@, dev.customer1@ ... accounts with related data (docs/DEVELOPMENT_TEST_ACCOUNTS.md).
+  dev-seed:
+    enabled: ${DEV_SEED_ENABLED:false}
+
+travel:
+  db:
+    name: identity_db
+    username: ${DB_USERNAME:identity_user}
+    password: ${IDENTITY_DB_PASSWORD:}
+  storage:
+    local-root: ${STORAGE_ROOT:./storage}
+  security:
+    # Encrypts passport numbers and the token-signing private key. Required.
+    data-encryption-key: ${DATA_ENCRYPTION_KEY:}
+    public-paths:
+      - "/api/auth/**"
+      - "GET /.well-known/**"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+identity:
+  cookie:
+    secure: true
+  demo-users:
+    enabled: false
+  dev-seed:
+    enabled: false

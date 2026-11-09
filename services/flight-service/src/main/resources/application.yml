@@ -1,0 +1,52 @@
+# Flight Service: only service-specific settings here.
+# Shared defaults (Kafka, Redis, JPA, actuator, logging, ...) come from common-lib's travel-defaults.yml.
+spring:
+  application:
+    name: flight-service
+  config:
+    # Local runs ("mvn spring-boot:run" in this folder) read secrets from the project's .env file.
+    import: optional:file:../../.env[.properties]
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+
+server:
+  port: ${SERVER_PORT:8103}
+
+travel:
+  db:
+    name: flight_db
+    username: ${DB_USERNAME:flight_user}
+    password: ${FLIGHT_DB_PASSWORD:}
+  security:
+    public-paths:
+      - "GET /api/flights/**"
+      - "GET /api/airports/**"
+      - "POST /api/flights/revalidate"
+
+flight:
+  offer-ttl: 20m
+  hold-duration: 20m
+  reconcile:
+    max-attempts: 3
+    not-found-after: 5m
+    escalate-after: 2h
+  demo:
+    # Labelled DEMO airports, airlines and timetable. Always off in prod.
+    enabled: ${FLIGHT_DEMO_ENABLED:true}
+    failure-rate: 0
+    timeout-rate: 0
+  # Local development only: the dev timetable and the airline-side records of the dev.* customers' flight bookings
+  # (docs/DEVELOPMENT_TEST_ACCOUNTS.md). Off unless DEV_SEED_ENABLED=true, always off in prod.
+  dev-seed:
+    enabled: ${DEV_SEED_ENABLED:false}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+flight:
+  demo:
+    enabled: false
+  dev-seed:
+    enabled: false

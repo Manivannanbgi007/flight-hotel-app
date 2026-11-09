@@ -1,0 +1,871 @@
+@import 'tailwindcss';
+/* Inter, self-hosted (CSP font-src 'self'): weight 100–900 and optical size, so large headings get Inter's tighter
+   display design and small text its open text design, from one variable font. */
+@import '@fontsource-variable/inter/opsz.css';
+@import './icon-colors.css';
+
+/*
+ * Design system v2 (DESIGN_SYSTEM.md). Every color, radius, shadow, font and motion value of the UI comes from here.
+ * `static`: every token is emitted as a CSS variable, also when no utility uses it (illustrations, charts and inline
+ * styles read them with var(--...)).
+ */
+@theme static {
+  /* ---- Typography: one self-hosted variable font (CSP font-src 'self') ---- */
+  --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Inter Variable', Inter, ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  /* ---- Brand: vivid azure (v3). 600 and darker carry white text (AA 4.5:1: 600 = 5.6:1, 700 = 7.3:1); 500 and
+     lighter are decorative. 700 is the link colour (6.7:1 even on brand-50). ---- */
+  --color-brand-50: #f0f6ff;
+  --color-brand-100: #e1ecff;
+  --color-brand-200: #c4d9ff;
+  --color-brand-300: #98bcff;
+  --color-brand-400: #6496ff;
+  --color-brand-500: #3b76f8;
+  --color-brand-600: #1f5ce8;
+  --color-brand-700: #1a4bc8;
+  --color-brand-800: #1b40a0;
+  --color-brand-900: #1b3a7e;
+  --color-brand-950: #13224b;
+
+  /* ---- Accent: warm sunset. 600 and darker carry white text; 300–500 for highlights and illustrations. ---- */
+  --color-accent-50: #fff6ed;
+  --color-accent-100: #ffead4;
+  --color-accent-200: #ffd1a8;
+  --color-accent-300: #ffb070;
+  --color-accent-400: #ff8a3d;
+  --color-accent-500: #f26b1d;
+  --color-accent-600: #c2490b;
+  --color-accent-700: #a33c0c;
+  --color-accent-800: #833211;
+  --color-accent-900: #6b2b12;
+
+  /* ---- Semantic colors: 600 is the text/icon step (AA on white and on its 50 step). ---- */
+  --color-success-50: #ecfdf3;
+  --color-success-100: #d1fadf;
+  --color-success-200: #a6f4c5;
+  --color-success-500: #12b76a;
+  --color-success-600: #067647;
+  --color-success-700: #085d3a;
+
+  --color-warning-50: #fffaeb;
+  --color-warning-100: #fef0c7;
+  --color-warning-200: #fedf89;
+  --color-warning-500: #f79009;
+  --color-warning-600: #b54708;
+  --color-warning-700: #93370d;
+
+  --color-danger-50: #fef3f2;
+  --color-danger-100: #fee4e2;
+  --color-danger-200: #fecdca;
+  --color-danger-500: #f04438;
+  --color-danger-600: #b42318;
+  --color-danger-700: #912018;
+
+  --color-info-50: #ecf8fe;
+  --color-info-100: #d7f0fc;
+  --color-info-200: #aee0f9;
+  --color-info-500: #0ba5ec;
+  --color-info-600: #0277b8;
+  --color-info-700: #065f8e;
+
+  /* Neutrals: Tailwind's slate (text-slate-900 headings, -700 body, -600 secondary, -500 muted, -200 borders). */
+  /* The page canvas behind cards (a cool, very light grey; cards are white on it). No darker than slate-50: muted text
+     (slate-500) placed directly on the canvas must keep 4.5:1. */
+  --color-canvas: #f8fafc;
+
+  /*
+   * ---- Radii: no box is rounder than 10 px. lg, xl, 2xl, 3xl (and 4xl) are all 10 px, so controls, cards, dialogs and
+   * bands match; sm and md stay smaller for small parts. Only `rounded-full` goes further: circles (avatars, dots, round
+   * icon buttons) and pills (badges, chips). Write the steps, never `rounded-[2rem]`, so this one place keeps the cap.
+   */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.625rem;
+  --radius-3xl: 0.625rem;
+  --radius-4xl: 0.625rem;
+
+  /* ---- Layered soft shadows (a tight contact shadow + a wide, diffuse ambient one), tinted navy. ---- */
+  --shadow-xs: 0 1px 2px 0 rgb(16 24 40 / 0.05);
+  --shadow-sm: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.06);
+  --shadow-md: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 6px 16px -4px rgb(16 24 40 / 0.08);
+  --shadow-lg: 0 2px 4px -2px rgb(16 24 40 / 0.05), 0 16px 32px -8px rgb(16 24 40 / 0.12);
+  --shadow-xl: 0 4px 8px -4px rgb(16 24 40 / 0.06), 0 28px 56px -12px rgb(16 24 40 / 0.18);
+  --shadow-2xl: 0 8px 16px -6px rgb(16 24 40 / 0.08), 0 40px 80px -20px rgb(16 24 40 / 0.26);
+  --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 4px 16px -6px rgb(16 24 40 / 0.07);
+  --shadow-glow: 0 10px 28px -10px rgb(31 92 232 / 0.55);
+  --shadow-glow-accent: 0 10px 28px -10px rgb(242 107 29 / 0.5);
+
+  /* ---- Motion ---- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-fade-in: fade-in 420ms var(--ease-out-soft) both;
+  --animate-fade-up: fade-up 560ms var(--ease-out-soft) both;
+  --animate-scale-in: scale-in 220ms var(--ease-out-soft) both;
+  --animate-slide-in-left: slide-in-left 280ms var(--ease-out-soft) both;
+  --animate-slide-down: slide-down 220ms var(--ease-out-soft) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-float: float 6s var(--ease-in-out-soft) infinite;
+  --animate-drift: drift 18s var(--ease-in-out-soft) infinite;
+  --animate-pulse-ring: pulse-ring 2s var(--ease-out-soft) infinite;
+  --animate-message-in: message-in 260ms var(--ease-out-soft) both;
+  --animate-row-in: row-in 360ms var(--ease-out-soft) both;
+  --animate-typing: typing 1.2s var(--ease-in-out-soft) infinite;
+  /*
+   * Checkout motion (quote and payment pages). Under reduced motion every animation jumps to its last frame, so each
+   * one ends in a still, complete state: the sheen off the element, the halo faded out, the line drawn, the badge shown.
+   */
+  --animate-sheen: sheen 4.2s var(--ease-in-out-soft) 1.2s infinite;
+  --animate-gradient-pan: gradient-pan 16s var(--ease-in-out-soft) infinite;
+  --animate-draw-x: draw-x 900ms var(--ease-out-soft) 250ms both;
+  --animate-pop: pop 560ms var(--ease-spring) both;
+  --animate-halo: halo 2.4s var(--ease-out-soft) infinite;
+  --animate-indeterminate: indeterminate 1.5s var(--ease-in-out-soft) infinite;
+  /*
+   * Profile motion. draw-path: an SVG path with pathLength="1" and stroke-dasharray 1 draws itself (use it on a mask
+   * path to reveal a dashed line). ring-fill: a progress ring with pathLength="100" fills from empty to its own
+   * stroke-dashoffset; `backwards`, so later changes of the value are left to a transition.
+   */
+  --animate-draw-path: draw-path 1.6s var(--ease-out-soft) 300ms both;
+  --animate-ring-fill: ring-fill 1.2s var(--ease-out-soft) 250ms backwards;
+  /*
+   * Flight results motion. fly-route: an element on a CSS motion path (`offset-path`) flies from the start of the path
+   * to its own `offset-distance` (only a start frame, fill `backwards`, like ring-fill).
+   */
+  --animate-fly-route: fly-route 1.5s var(--ease-out-soft) 300ms backwards;
+  /*
+   * Home page motion. fly-loop: a plane on a CSS motion path flies the whole path, fades out at the end and starts
+   * again. No fill mode: under reduced motion it rests at its own `offset-distance`, fully visible.
+   */
+  --animate-fly-loop: fly-loop 7s var(--ease-in-out-soft) infinite;
+
+  /* A collapsed sidebar's label: it slides out of its icon. */
+  @keyframes nav-tooltip-in {
+    from { opacity: 0; transform: translateX(-6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96) translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes slide-in-left {
+    from { transform: translateX(-100%); }
+    to { transform: none; }
+  }
+  @keyframes slide-down {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes shimmer {
+    from { background-position: 150% 0; }
+    to { background-position: -50% 0; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  /* The backdrop's blobs: a slow wander, never more than a few percent of the window. */
+  @keyframes aurora-a {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(6vw, 5vh, 0) scale(1.12); }
+  }
+  @keyframes aurora-b {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+    50% { transform: translate3d(-7vw, 6vh, 0) scale(0.95); }
+  }
+  @keyframes aurora-c {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(5vw, -6vh, 0) scale(1.1); }
+  }
+  @keyframes drift {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(14px); }
+  }
+  /* A table row arriving (rows follow one another: the stagger-rows utility). */
+  @keyframes row-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  /* A chat message arriving. */
+  @keyframes message-in {
+    from { opacity: 0; transform: translateY(6px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+  /* The assistant's "typing" dots (each dot starts a little later). */
+  @keyframes typing {
+    0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-3px); }
+  }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 currentColor; opacity: 0.6; }
+    100% { box-shadow: 0 0 0 6px currentColor; opacity: 0; }
+  }
+  /* A band of light crossing a button or a total (the `sheen-sweep` utility), then a pause. */
+  @keyframes sheen {
+    0% { transform: translateX(-160%) skewX(-20deg); }
+    45%, 100% { transform: translateX(420%) skewX(-20deg); }
+  }
+  /* A slow drift of a 200%-wide gradient (the checkout band). */
+  @keyframes gradient-pan {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  /* A line drawing itself from its transform origin (origin-left: left to right). */
+  @keyframes draw-x {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  /* A badge or icon arriving with a small spring. */
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: none; }
+  }
+  /* A soft ring growing out of an icon and fading (secure checkout, waiting states). Give the ring `opacity-0`, so it
+     is invisible whenever it is not animating (under reduced motion). */
+  @keyframes halo {
+    from { transform: scale(0.85); opacity: 0.55; }
+    to { transform: scale(1.7); opacity: 0; }
+  }
+  /* The moving part of a progress bar without a known end. */
+  @keyframes indeterminate {
+    from { transform: translateX(-110%); }
+    to { transform: translateX(260%); }
+  }
+  @keyframes draw-path {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
+  }
+  /* Only a start frame: the ring ends at its own value. */
+  @keyframes ring-fill {
+    from { stroke-dashoffset: 100; }
+  }
+  /* Only a start frame: the element ends at its own place on the path. */
+  @keyframes fly-route {
+    from { offset-distance: 0%; }
+  }
+  @keyframes fly-loop {
+    0% { offset-distance: 0%; opacity: 0; }
+    8% { opacity: 1; }
+    78% { opacity: 1; }
+    88%, 100% { offset-distance: 100%; opacity: 0; }
+  }
+}
+
+/*
+ * Role accent: `bg-role-600`, `text-role-700`, `ring-role-500`, ... follow the portal the page is shown in.
+ * The staff shell sets .role-admin / .role-manager / .role-support; everywhere else the role accent is the brand.
+ */
+@theme inline {
+  --color-role-50: var(--role-50);
+  --color-role-100: var(--role-100);
+  --color-role-200: var(--role-200);
+  --color-role-300: var(--role-300);
+  --color-role-400: var(--role-400);
+  --color-role-500: var(--role-500);
+  --color-role-600: var(--role-600);
+  --color-role-700: var(--role-700);
+  --color-role-800: var(--role-800);
+  --color-role-900: var(--role-900);
+  --color-role-950: var(--role-950);
+}
+
+:root {
+  /* Durations: duration-(--duration-base) etc. */
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 420ms;
+  --duration-slower: 700ms;
+
+  /* Gradients: bg-gradient-sky, bg-gradient-ocean, bg-gradient-sunset, bg-gradient-dusk (utilities below). */
+  --gradient-sky: linear-gradient(180deg, #e6efff 0%, #f3f7ff 55%, #fff7ef 100%);
+  --gradient-ocean: linear-gradient(135deg, #13224b 0%, #1a4bc8 55%, #3b76f8 100%);
+  --gradient-sunset: linear-gradient(135deg, #ffb070 0%, #f26b1d 55%, #c2490b 100%);
+  /* Heroes: white text sits on the left 0–65 % (white on #173a9c = 9.9:1, on #1f5ce8 = 5.6:1). */
+  --gradient-dusk: linear-gradient(150deg, #0e1d52 0%, #173a9c 42%, #1f5ce8 78%, #4f86f7 100%);
+  --gradient-brand: linear-gradient(135deg, #1a4bc8 0%, #1f5ce8 45%, #3b76f8 100%);
+  --gradient-mesh:
+    radial-gradient(60% 50% at 10% 0%, rgb(152 188 255 / 0.38) 0%, transparent 70%),
+    radial-gradient(50% 40% at 95% 10%, rgb(255 176 112 / 0.26) 0%, transparent 70%);
+
+  --role-50: var(--color-brand-50);
+  --role-100: var(--color-brand-100);
+  --role-200: var(--color-brand-200);
+  --role-300: var(--color-brand-300);
+  --role-400: var(--color-brand-400);
+  --role-500: var(--color-brand-500);
+  --role-600: var(--color-brand-600);
+  --role-700: var(--color-brand-700);
+  --role-800: var(--color-brand-800);
+  --role-900: var(--color-brand-900);
+  --role-950: var(--color-brand-950);
+}
+
+.role-admin {
+  --role-50: var(--color-indigo-50);
+  --role-100: var(--color-indigo-100);
+  --role-200: var(--color-indigo-200);
+  --role-300: var(--color-indigo-300);
+  --role-400: var(--color-indigo-400);
+  --role-500: var(--color-indigo-500);
+  --role-600: var(--color-indigo-600);
+  --role-700: var(--color-indigo-700);
+  --role-800: var(--color-indigo-800);
+  --role-900: var(--color-indigo-900);
+  --role-950: var(--color-indigo-950);
+}
+.role-manager {
+  --role-50: var(--color-teal-50);
+  --role-100: var(--color-teal-100);
+  --role-200: var(--color-teal-200);
+  --role-300: var(--color-teal-300);
+  --role-400: var(--color-teal-400);
+  --role-500: var(--color-teal-500);
+  /* teal-600 is below 4.5:1 with white text: the "600" step of this role is teal-700. */
+  --role-600: var(--color-teal-700);
+  --role-700: var(--color-teal-800);
+  --role-800: var(--color-teal-800);
+  --role-900: var(--color-teal-900);
+  --role-950: var(--color-teal-950);
+}
+.role-support {
+  --role-50: var(--color-violet-50);
+  --role-100: var(--color-violet-100);
+  --role-200: var(--color-violet-200);
+  --role-300: var(--color-violet-300);
+  --role-400: var(--color-violet-400);
+  --role-500: var(--color-violet-500);
+  --role-600: var(--color-violet-600);
+  --role-700: var(--color-violet-700);
+  --role-800: var(--color-violet-800);
+  --role-900: var(--color-violet-900);
+  --role-950: var(--color-violet-950);
+}
+
+@layer base {
+  html {
+    @apply bg-canvas font-sans text-slate-900 antialiased;
+    text-rendering: optimizeLegibility;
+    /* The browser picks Inter's optical size from the font size (text design for body copy, display for headings). */
+    font-optical-sizing: auto;
+  }
+  body {
+    @apply bg-canvas;
+  }
+  h1, h2, h3 {
+    /* The display optical size is already tighter; a little more keeps big headings compact. */
+    letter-spacing: -0.01em;
+    font-family: var(--font-display);
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-600;
+  }
+  /*
+   * Everything that can be clicked shows the hand cursor (Tailwind v4's preflight leaves buttons on the arrow);
+   * disabled controls show "not allowed".
+   */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  select:not(:disabled),
+  summary,
+  label[for],
+  label:has(> input:not(:disabled)),
+  input[type='checkbox']:not(:disabled),
+  input[type='radio']:not(:disabled),
+  input[type='file']:not(:disabled),
+  input[type='color']:not(:disabled),
+  input[type='range']:not(:disabled),
+  [role='option']:not([aria-disabled='true']),
+  [role='tab'],
+  [role='menuitem'],
+  [role='switch']:not(:disabled) {
+    cursor: pointer;
+  }
+  button:disabled,
+  select:disabled,
+  input:disabled,
+  textarea:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+  ::selection {
+    @apply bg-brand-200 text-brand-950;
+  }
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ---- Gradient utilities ---- */
+@utility bg-gradient-sky {
+  background-image: var(--gradient-sky);
+}
+@utility bg-gradient-ocean {
+  background-image: var(--gradient-ocean);
+}
+@utility bg-gradient-sunset {
+  background-image: var(--gradient-sunset);
+}
+@utility bg-gradient-dusk {
+  background-image: var(--gradient-dusk);
+}
+@utility bg-gradient-brand {
+  background-image: var(--gradient-brand);
+}
+@utility bg-gradient-mesh {
+  background-image: var(--gradient-mesh);
+}
+@utility text-gradient-brand {
+  background-image: linear-gradient(120deg, var(--color-brand-700), var(--color-brand-500) 60%, var(--color-accent-500));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* ---- App canvas: the portals and the customer area. A soft wash of the portal colour at the top, then the canvas. ---- */
+@utility bg-app {
+  background-color: #f4f6ff;
+}
+
+/*
+ * The colourful canvas behind the staff portals and the customer area: soft blobs of sky blue, violet, coral, mint and
+ * sun on a pale canvas, fixed to the window so the page scrolls over them. `<AppBackdrop />` draws it, with three
+ * blurred blobs that drift slowly (off under reduced motion). Cards stay white on top, so text keeps its contrast.
+ */
+@utility app-aurora-mesh {
+  background-image:
+    radial-gradient(46rem 30rem at 6% -6rem, rgb(96 165 250 / 0.34), transparent 70%),
+    radial-gradient(44rem 28rem at 96% -4rem, rgb(167 139 250 / 0.30), transparent 70%),
+    radial-gradient(40rem 30rem at 104% 52%, rgb(251 146 160 / 0.22), transparent 70%),
+    radial-gradient(42rem 32rem at -4% 78%, rgb(45 212 191 / 0.22), transparent 70%),
+    radial-gradient(36rem 26rem at 58% 108%, rgb(251 191 36 / 0.16), transparent 70%);
+}
+
+/*
+ * ---- Faint grid on dark gradient panels (heroes, the sign-in story): 1 px lines every 44 px, faded out towards the
+ * edges by a radial mask. Decorative only; put it on an aria-hidden layer.
+ */
+@utility bg-grid-faint {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.07) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 40%, black 25%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 40%, black 25%, transparent 75%);
+}
+
+/* The same grid in slate for light surfaces (the sign-in form column on phones, light heroes). */
+@utility bg-grid-light {
+  background-image:
+    linear-gradient(rgb(15 23 42 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(15 23 42 / 0.045) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 20%, transparent 70%);
+}
+
+/* ---- Glass surface (sticky headers, floating bars) ---- */
+@utility glass {
+  background-color: rgb(255 255 255 / 0.78);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+}
+
+/* ---- Hover lift: cards and tiles rise a little and cast a longer shadow ---- */
+@utility hover-lift {
+  transition:
+    transform var(--duration-base) var(--ease-out-soft),
+    box-shadow var(--duration-base) var(--ease-out-soft),
+    border-color var(--duration-base) var(--ease-out-soft);
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/*
+ * ---- Sheen sweep: a band of light crosses the element every few seconds (the main checkout buttons, the total to
+ * pay). Decorative: a pseudo-element, so it adds nothing to the accessible name. Gone under reduced motion.
+ */
+@utility sheen-sweep {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 35%;
+    background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.3), transparent);
+    /* Off the element when it is not moving (between sweeps, and under reduced motion once the single frame ran). */
+    transform: translateX(-160%) skewX(-20deg);
+    animation: var(--animate-sheen);
+    pointer-events: none;
+  }
+}
+
+/* ---- Skeleton shimmer ---- */
+@utility skeleton {
+  background-color: var(--color-slate-200);
+  background-image: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.55) 50%, transparent 100%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: var(--animate-shimmer);
+}
+
+/* ---- Staggered fade-in: direct children appear one after another ---- */
+@utility stagger {
+  & > * {
+    animation: var(--animate-fade-up);
+  }
+  & > *:nth-child(2) { animation-delay: 60ms; }
+  & > *:nth-child(3) { animation-delay: 120ms; }
+  & > *:nth-child(4) { animation-delay: 180ms; }
+  & > *:nth-child(5) { animation-delay: 240ms; }
+  & > *:nth-child(6) { animation-delay: 300ms; }
+  & > *:nth-child(7) { animation-delay: 360ms; }
+  & > *:nth-child(8) { animation-delay: 420ms; }
+  & > *:nth-child(n + 9) { animation-delay: 480ms; }
+}
+
+/* ---- Table rows: the first rows come in one after another (20 ms apart), the rest together ---- */
+@utility stagger-rows {
+  & > tr {
+    animation: var(--animate-row-in);
+  }
+  & > tr:nth-child(2) { animation-delay: 20ms; }
+  & > tr:nth-child(3) { animation-delay: 40ms; }
+  & > tr:nth-child(4) { animation-delay: 60ms; }
+  & > tr:nth-child(5) { animation-delay: 80ms; }
+  & > tr:nth-child(6) { animation-delay: 100ms; }
+  & > tr:nth-child(7) { animation-delay: 120ms; }
+  & > tr:nth-child(8) { animation-delay: 140ms; }
+  & > tr:nth-child(9) { animation-delay: 160ms; }
+  & > tr:nth-child(10) { animation-delay: 180ms; }
+  & > tr:nth-child(n + 11) { animation-delay: 200ms; }
+}
+
+/* ---- Reveal on scroll (components/ui/Reveal.tsx adds data-revealed when the element enters the viewport) ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity var(--duration-slower) var(--ease-out-soft),
+    transform var(--duration-slower) var(--ease-out-soft);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal[data-revealed] {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- Toasts (sonner): our surfaces, radii and semantic colors (specific enough to beat sonner's own theme) ---- */
+:root [data-sonner-toaster][data-sonner-theme] {
+  --border-radius: var(--radius-xl);
+  --normal-bg: #ffffff;
+  --normal-border: var(--color-slate-200);
+  --normal-text: var(--color-slate-900);
+  --success-bg: var(--color-success-50);
+  --success-border: var(--color-success-200);
+  --success-text: var(--color-success-700);
+  --info-bg: var(--color-info-50);
+  --info-border: var(--color-info-200);
+  --info-text: var(--color-info-700);
+  --warning-bg: var(--color-warning-50);
+  --warning-border: var(--color-warning-200);
+  --warning-text: var(--color-warning-700);
+  --error-bg: var(--color-danger-50);
+  --error-border: var(--color-danger-200);
+  --error-text: var(--color-danger-700);
+  font-family: var(--font-sans);
+}
+:root [data-sonner-toaster] [data-sonner-toast] {
+  box-shadow: var(--shadow-lg);
+}
+
+/*
+ * ---- Form controls (fieldStyles.ts: selectClass, checkboxClass, radioClass) ----
+ * A select stays a native <select>: keyboard, screen readers, phones' own pickers and forms keep working. Every browser
+ * gets the closed look (our chevron); browsers with customizable selects (appearance: base-select, Chrome and Edge 135+)
+ * also get our open list: a rounded panel with a soft shadow, highlighted options and a check mark on the chosen one.
+ */
+@layer components {
+  .ui-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    background-size: 1.1rem;
+    cursor: pointer;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ui-select:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Checkbox and radio: drawn boxes in the portal's accent colour, a check mark or dot that pops in. */
+  .ui-checkbox,
+  .ui-radio {
+    appearance: none;
+    display: inline-grid;
+    flex-shrink: 0;
+    place-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+    border: 1.5px solid var(--color-slate-300);
+    background-color: #fff;
+    box-shadow: var(--shadow-xs);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) var(--ease-out-soft),
+      border-color var(--duration-fast) var(--ease-out-soft),
+      box-shadow var(--duration-fast) var(--ease-out-soft);
+  }
+  .ui-checkbox {
+    border-radius: 0.375rem;
+  }
+  .ui-radio {
+    border-radius: 9999px;
+  }
+  .ui-checkbox::before,
+  .ui-radio::before {
+    content: '';
+    background-color: #fff;
+    transform: scale(0);
+    transition: transform var(--duration-fast) var(--ease-spring);
+  }
+  .ui-checkbox::before {
+    width: 0.75rem;
+    height: 0.75rem;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .ui-radio::before {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+  }
+  .ui-checkbox:hover:not(:disabled, :checked),
+  .ui-radio:hover:not(:disabled, :checked) {
+    border-color: var(--role-400);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--role-600) 10%, transparent);
+  }
+  .ui-checkbox:checked,
+  .ui-radio:checked {
+    border-color: var(--role-600);
+    background-color: var(--role-600);
+  }
+  .ui-checkbox:checked::before,
+  .ui-radio:checked::before {
+    transform: scale(1);
+  }
+  .ui-checkbox:focus-visible,
+  .ui-radio:focus-visible {
+    outline: 2px solid var(--role-600);
+    outline-offset: 2px;
+  }
+  .ui-checkbox:disabled,
+  .ui-radio:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .ui-checkbox[aria-invalid='true'],
+  .ui-radio[aria-invalid='true'] {
+    border-color: var(--color-danger-600);
+  }
+}
+
+/* Layered, so utilities on a select (w-auto, hidden, ...) still win; selectClass() adds the flex layout. */
+@layer components {
+  @supports (appearance: base-select) {
+    .ui-select,
+    .ui-select::picker(select) {
+      appearance: base-select;
+    }
+    .ui-select {
+      background-image: none;
+    }
+    .ui-select::picker-icon {
+      content: '';
+      width: 1.1rem;
+      height: 1.1rem;
+      margin-inline-start: auto;
+      background-color: var(--color-slate-500);
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+      transition: rotate var(--duration-base) var(--ease-out-soft);
+    }
+    .ui-select:open::picker-icon {
+      rotate: 180deg;
+    }
+    /* Our panel sits right under the field (this also undoes the right padding kept free for the fallback chevron). */
+    .ui-select::picker(select) {
+      margin-block: 0.375rem;
+      padding: 0.375rem;
+      border: 1px solid var(--color-slate-200);
+      border-radius: var(--radius-xl);
+      background-color: #fff;
+      box-shadow: var(--shadow-xl);
+      max-block-size: min(20rem, 70dvh);
+      opacity: 1;
+      translate: 0 0;
+      transition:
+        opacity var(--duration-fast) var(--ease-out-soft),
+        translate var(--duration-fast) var(--ease-out-soft),
+        display var(--duration-fast) allow-discrete,
+        overlay var(--duration-fast) allow-discrete;
+    }
+    .ui-select:not(:open)::picker(select) {
+      opacity: 0;
+      translate: 0 -4px;
+    }
+    @starting-style {
+      .ui-select:open::picker(select) {
+        opacity: 0;
+        translate: 0 -4px;
+      }
+    }
+    .ui-select option {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0.625rem;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      color: var(--color-slate-700);
+      cursor: pointer;
+      transition: background-color var(--duration-fast) var(--ease-out-soft);
+    }
+    .ui-select option:hover,
+    .ui-select option:focus-visible {
+      background-color: var(--color-slate-100);
+      color: var(--color-slate-900);
+      outline: none;
+    }
+    .ui-select option:checked {
+      background-color: var(--role-50);
+      color: var(--role-700);
+      font-weight: 600;
+    }
+    .ui-select option::checkmark {
+      order: 1;
+      margin-inline-start: auto;
+      color: var(--role-600);
+    }
+    .ui-select option:disabled {
+      color: var(--color-slate-400);
+      cursor: not-allowed;
+    }
+    .ui-select optgroup {
+      padding-block: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--color-slate-500);
+    }
+    .ui-select optgroup + optgroup {
+      margin-top: 0.25rem;
+      border-top: 1px solid var(--color-slate-100);
+    }
+  }
+}
+
+/*
+ * ---- Page transitions (View Transitions API: sidebar and main navigation links use `viewTransition`) ----
+ * The page cross-fades quickly; the header and sidebar (named) stay put. Browsers without the API just navigate.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: var(--ease-out-soft);
+}
+
+/* ---- The assistant's mascot (AssistantMascot.tsx): bob, blink, twinkle, pulsing antenna, "looking around" while busy ---- */
+.mascot-bob {
+  animation: mascot-bob 3.4s var(--ease-in-out-soft) infinite;
+}
+.mascot-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascot-blink 5s ease-in-out infinite;
+}
+.mascot-eye--late {
+  animation-delay: 0.04s;
+}
+.mascot-twinkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascot-twinkle 2.6s ease-in-out infinite;
+}
+.mascot-twinkle--late {
+  animation-delay: 1.2s;
+}
+.mascot-antenna-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascot-antenna 1.9s ease-out infinite;
+}
+.mascot--busy .mascot-look {
+  animation: mascot-look 1.1s ease-in-out infinite alternate;
+}
+.mascot--busy .mascot-antenna-glow {
+  animation-duration: 0.8s;
+}
+@keyframes mascot-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.6px); }
+}
+@keyframes mascot-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(0.08); }
+}
+@keyframes mascot-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.55) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(20deg); }
+}
+@keyframes mascot-antenna {
+  0% { opacity: 0.6; transform: scale(0.7); }
+  100% { opacity: 0; transform: scale(1.7); }
+}
+@keyframes mascot-look {
+  from { transform: translateX(-1.6px); }
+  to { transform: translateX(1.6px); }
+}
+
+/* ---- Reduced motion: no movement anywhere; revealed content is simply there ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .hover-lift:hover {
+    transform: none;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

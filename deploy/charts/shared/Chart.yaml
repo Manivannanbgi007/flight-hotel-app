@@ -1,0 +1,8 @@
+apiVersion: v2
+name: shared
+description: >-
+  Namespace-wide resources of the flight-hotel application namespace: the settings every service shares, network
+  policies (default deny, then only the traffic the application needs), a resource quota and default limits.
+type: application
+version: 1.0.0
+appVersion: "0.1.0"

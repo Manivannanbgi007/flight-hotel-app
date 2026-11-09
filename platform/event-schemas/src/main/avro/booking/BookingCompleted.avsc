@@ -1,0 +1,9 @@
+{
+  "type": "record", "name": "BookingCompleted", "namespace": "com.flighthotel.events.booking",
+  "doc": "The trip is over (after check-out / arrival).",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "bookingType", "type": "string" },
+    { "name": "completedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

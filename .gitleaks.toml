@@ -1,0 +1,16 @@
+# gitleaks configuration: the default rules plus one narrow exception.
+# Used by CI (.github/workflows/ci.yml, job "secret-scan") and locally (docs/CI_CD.md, "Run the checks locally").
+
+[extend]
+useDefault = true
+
+# Test sources contain fixed, non-secret values on purpose: test passwords, idempotency keys, test-only data
+# encryption keys and API keys (TESTING_GUIDE.md section 7.4). Only the heuristic "generic-api-key" rule is relaxed
+# there; every specific rule (AWS, GitHub, Stripe, private keys, JWTs, ...) still applies to test files too.
+[[allowlists]]
+description = "Fixed test values in test sources"
+targetRules = ["generic-api-key"]
+paths = [
+  '''(^|/)src/test/''',
+  '''(^|/)frontend/src/.+\.test\.tsx?$''',
+]

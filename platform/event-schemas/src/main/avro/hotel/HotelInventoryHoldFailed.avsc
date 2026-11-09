@@ -1,0 +1,12 @@
+{
+  "type": "record", "name": "HotelInventoryHoldFailed", "namespace": "com.flighthotel.events.hotel",
+  "doc": "The rooms could not be held. Nothing is reserved.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "reason", "type": "string", "doc": "QUOTE_EXPIRED, SOLD_OUT, PRICE_CHANGED, INVALID_GUESTS" },
+    { "name": "message", "type": "string", "doc": "safe to show to the customer" },
+    { "name": "newTotal", "type": ["null", "com.flighthotel.events.common.Money"], "default": null, "doc": "PRICE_CHANGED: today's price for the same stay" },
+    { "name": "hotelName", "type": ["null", "string"], "default": null },
+    { "name": "failedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

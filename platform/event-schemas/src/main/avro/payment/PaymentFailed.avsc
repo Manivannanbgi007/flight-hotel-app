@@ -1,0 +1,13 @@
+{
+  "type": "record", "name": "PaymentFailed", "namespace": "com.flighthotel.events.payment",
+  "doc": "A payment attempt failed. The booking stays payable until its deadline; the customer may try again.",
+  "fields": [
+    { "name": "paymentId", "type": "string" },
+    { "name": "bookingId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "provider", "type": "string" },
+    { "name": "failureCode", "type": "string" },
+    { "name": "failureReason", "type": ["null", "string"], "default": null },
+    { "name": "failedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

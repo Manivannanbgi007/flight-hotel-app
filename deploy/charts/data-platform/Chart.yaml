@@ -1,0 +1,11 @@
+apiVersion: v2
+name: data-platform
+description: >-
+  The stateful services flight-hotel-app needs, for local and development clusters (kind): MySQL (one database per
+  service), Redis, Kafka (KRaft), Schema Registry, Kafka Connect with Debezium (outbox → Kafka), Elasticsearch, Mailpit
+  and, optionally, Ollama for the AI assistant. Production on EKS uses managed AWS services instead (RDS, MSK,
+  ElastiCache, OpenSearch, SES): see deploy/environments/eks/README.md.
+  The files/ folder is a copy of infra/ (used by Docker Compose); CI fails when they drift apart.
+type: application
+version: 1.0.0
+appVersion: "0.1.0"

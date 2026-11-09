@@ -1,0 +1,14 @@
+{{- /* A budget only makes sense with 2+ replicas: with one, it would block every node drain. */ -}}
+{{- if and .Values.pdb.enabled (ge (int (include "ms.minReplicas" .)) 2) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "ms.name" . }}
+  labels:
+    {{- include "ms.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "ms.selectorLabels" . | nindent 6 }}
+{{- end }}

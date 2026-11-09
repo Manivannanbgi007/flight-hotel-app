@@ -1,0 +1,17 @@
+{
+  "type": "record", "name": "FlightBookingConfirmed", "namespace": "com.flighthotel.events.flight",
+  "doc": "The airline (supplier) issued the booking: pnr and ticket numbers exist. Only now may they be shown to the customer.",
+  "fields": [
+    { "name": "bookingId", "type": "string" },
+    { "name": "holdId", "type": "string" },
+    { "name": "supplierOrderId", "type": "string" },
+    { "name": "pnr", "type": "string" },
+    { "name": "tickets", "type": { "type": "array", "items": {
+      "type": "record", "name": "FlightTicketInfo",
+      "fields": [
+        { "name": "passengerIndex", "type": "int", "doc": "1-based, as sent in BookingInitiated" },
+        { "name": "ticketNumber", "type": "string" }
+      ] } } },
+    { "name": "confirmedAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

@@ -1,0 +1,24 @@
+{{- $name := include "ms.name" . -}}
+{{- $port := include "ms.port" . -}}
+{{- $services := list $name -}}
+{{- if eq .Values.strategy.type "canary" }}{{ $services = append $services (printf "%s-canary" $name) }}{{ end -}}
+{{- if eq .Values.strategy.type "blueGreen" }}{{ $services = append $services (printf "%s-preview" $name) }}{{ end -}}
+{{- range $services }}
+---
+# {{ . }}: {{ if hasSuffix "-canary" . }}only the canary pods during a rollout (Argo Rollouts sets the selector){{ else if hasSuffix "-preview" . }}only the new (preview) version during a blue-green rollout{{ else }}the stable / active version (what the rest of the system calls){{ end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ . }}
+  labels:
+    {{- include "ms.labels" $ | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "ms.selectorLabels" $ | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ $port }}
+      targetPort: http
+      protocol: TCP
+{{- end }}
